@@ -1,0 +1,10 @@
+requests
+bs4
+playwright
+sqlmodel 
+psycopg2-binary
+pgvector
+loguru
+langchain
+langchain_experimental
+langchain_openai
