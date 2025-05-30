@@ -2,19 +2,20 @@ from pgvector.sqlalchemy import Vector
 from sqlmodel import Session, SQLModel, Field, create_engine, Index, select
 from typing import Any
 import os
-from dotenv import load_dotenv
 import re
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from uuid import UUID
 import uuid
 import sqlalchemy as sa
-from db import Khan_Academy_Lesson
+from src.db import Khan_Academy_Lesson
+from settings import settings
 
-load_dotenv()
-PG_PASSWORD = os.getenv("password")
+PG_PASSWORD = settings.password
+MODEL = settings.model
+PORT = settings.port
 
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+embeddings = OpenAIEmbeddings(model=MODEL)
 
 text_splitter = SemanticChunker(embeddings)
 
@@ -32,8 +33,8 @@ class Lesson_Embeddings(SQLModel, table=True):
     content: str
     embeddings: Any = Field(sa_type=Vector(1536))
 
-db_name = "Khan_Academy"
-postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:5432/{db_name}"
+db_name = settings.dbname
+postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{db_name}"
 
 engine = create_engine(postgres_url, echo=True)
 

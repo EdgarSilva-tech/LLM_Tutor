@@ -1,12 +1,13 @@
 from sqlmodel import SQLModel, Field, create_engine, Session
 from datetime import datetime
 import os
-from dotenv import load_dotenv
 from uuid import UUID
 import uuid
+from settings import settings
 
-load_dotenv()
-PG_PASSWORD = os.getenv("password")
+PG_PASSWORD = settings.password
+DB_NAME = settings.dbname
+PORT = settings.port
 
 class Khan_Academy_Lesson(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -15,8 +16,7 @@ class Khan_Academy_Lesson(SQLModel, table=True):
     topic: str
     date: datetime
 
-db_name = "Khan_Academy"
-postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:5432/{db_name}"
+postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
 
 engine = create_engine(postgres_url, echo=True)
 
