@@ -1,4 +1,4 @@
-from utils.prompts import QUIZ_GENERATOR_PROMPT, EVALUATOR_PROMPT, QUESTION_PROMPT
+from utils.prompts import QUIZ_GENERATOR_PROMPT, EVALUATOR_PROMPT, QUESTION_PROMPT, ROUTER_PROMPT
 from typing import List
 
 def format_quizz_prompt(topic: str, num_questions: int, difficulty: str, style: str) -> str:
@@ -9,3 +9,6 @@ def format_evaluator_prompt(question: str, answer: str) -> str:
 
 def format_question_prompt(question: str, context: List[float]) -> str:
     return QUESTION_PROMPT.format(question=question, context=context)
+
+def format_router_prompt(message: str) -> str:
+    return ROUTER_PROMPT.format(message=message)

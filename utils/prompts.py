@@ -210,6 +210,7 @@ Please give your answer to the question and compare it witn the when evaluating 
 
 PLANNER_PROMPT = """
 You are a planner agent in a smart tutoring system. Your job is to interpret what the student wants to do, and route the request to the appropriate agent.
+In case of detecting the student's intent to do a quizz, but not given all the details, you will further question the student to obtain the necessary details for the quizz
 
 You will be given a student message. Your job is to extract:
 1. The task: "Q&A", "Quizz", or "Eval"
@@ -283,4 +284,46 @@ Only fill in fields that are relevant. Leave others null.
 ---
 
 Now extract the task and details from the following user input:
+{message}
+"""
+
+ROUTER_PROMPT = """
+You are a router agent in a smart tutoring system.
+
+Given a student's message, your job is to classify the type of task they want to do:
+- "Q&A": They are asking a direct math question (e.g., "What is a derivative?")
+- "Eval": They are asking for feedback on their answer (e.g., "I got 2x, is that right?")
+- "Quizz": They are requesting a quiz or practice problems
+- If you are unsure, but it looks like a general study or planning request, return "Quizz", else return "Q&A"
+
+Respond ONLY with one of the following exact strings:
+- Q&A
+- Eval
+- Quizz
+
+---
+
+### 📘 Example 1
+User: "Can you give me 3 hard questions on the chain rule?"
+→ Quizz
+
+### 📘 Example 2
+User: "What is the difference between a derivative and an integral?"
+→ Q&A
+
+### 📘 Example 3
+User: "I answered x² * sin(x), but I don’t know if it’s right."
+→ Eval
+
+### 📘 Example 4
+User: "I want to review limits and derivatives this week."
+→ Quizz
+
+---
+
+Now classify the following message:
+{message}
+"""
+
+SPACED_REPITION_PROMPT = """
 """

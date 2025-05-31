@@ -1,34 +1,33 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from utils.prompts import EVALUATOR_PROMPT, QUIZ_GENERATOR_PROMPT, QUESTION_PROMPT, PLANNER_PROMPT
+from utils.prompts import EVALUATOR_PROMPT, QUIZ_GENERATOR_PROMPT, QUESTION_PROMPT, PLANNER_PROMPT, ROUTER_PROMPT
 from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated, TypedDict
 from graph.state import State
-from utils.format_prompt import format_question_prompt
-
-class next_task(BaseModel):
-    task: Literal["Q&A", "Eval", "Quizz"] = Field(description="The setup of the joke")
+from utils.format_prompt import format_question_prompt, format_quizz_prompt, format_evaluator_prompt, format_router_prompt
 
     
-def get_llm(prompt: str, model_name: str = "gpt-4o-mini", temperature: float = 0.7) -> ChatOpenAI:
-    prompt_template = ChatPromptTemplate.from_template(prompt)
+def get_llm(model_name: str = "gpt-4o-mini", temperature: float = 0.7) -> ChatOpenAI:
     llm = ChatOpenAI(model=model_name, temperature=temperature)
     return llm
 
 def evaluate_answer(question: str, answer: str) -> str:
-    evaluator = get_llm(EVALUATOR_PROMPT)
-    return evaluator.invoke({"question": question, "answer": answer})
+    llm = get_llm(EVALUATOR_PROMPT)
+    prompt = format_evaluator_prompt(question, answer)
+    return llm.invoke(prompt)
 
 def generate_quiz(topic: str, num_questions: int, difficulty: str, style: str) -> str:
-    quiz_generator = get_llm(QUIZ_GENERATOR_PROMPT)
-    return quiz_generator.invoke({"topic": topic, "num_questions": num_questions, "dificulty": difficulty, "style": style})
+    llm = get_llm(QUIZ_GENERATOR_PROMPT)
+    prompt = format_quizz_prompt(topic, num_questions, difficulty, style)
+    return llm.invoke(prompt)
 
 def question_answer(question: str, context: List[str]) -> str:
-    answer = get_llm(QUESTION_PROMPT)
+    llm = get_llm(QUESTION_PROMPT)
     prompt = format_question_prompt(question, context)
-    return answer.invoke(prompt)
+    return llm.invoke(prompt)
 
-def planner(question: str) -> str:
-    plan = get_llm(PLANNER_PROMPT).with_structured_output(next_task)
-    return plan.invoke(question)
+def route(question: str) -> str:
+    llm = get_llm(ROUTER_PROMPT)
+    prompt = format_router_prompt(question)
+    return llm.invoke(prompt)
