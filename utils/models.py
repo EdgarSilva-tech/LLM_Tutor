@@ -26,7 +26,7 @@ def route(question: str) -> str:
     prompt = format_router_prompt(question)
     return llm.invoke(prompt)
 
-def planner(task: str, message: str) -> str:
+def planner(task: str, messages: str) -> str:
     llm = get_llm()
-    prompt = format_planner_prompt(task, message)
+    prompt = format_planner_prompt(task, messages)
     return llm.invoke(prompt)

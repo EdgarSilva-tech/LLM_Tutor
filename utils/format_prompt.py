@@ -5,7 +5,7 @@ def format_quizz_prompt(topic: str, num_questions: int, difficulty: str, style: 
     return QUIZ_GENERATOR_PROMPT.format(topic=topic, num_questions=num_questions, difficulty=difficulty, style=style)
 
 def format_evaluator_prompt(question: str, answer: str) -> str:
-    return EVALUATOR_PROMPT.format(question=question, answer=answer)
+    return EVALUATOR_PROMPT.format(question=question, student_response=answer)
 
 def format_question_prompt(question: str, context: List[float]) -> str:
     return QUESTION_PROMPT.format(question=question, context=context)
@@ -13,5 +13,5 @@ def format_question_prompt(question: str, context: List[float]) -> str:
 def format_router_prompt(message: str) -> str:
     return ROUTER_PROMPT.format(message=message)
 
-def format_planer_prompt(task: str, message: str) -> str:
-    return PLANNER_PROMPT.format(task=task, message=message)
+def format_planner_prompt(task: str, messages: str) -> str:
+    return PLANNER_PROMPT.format(task=task, messages=messages)

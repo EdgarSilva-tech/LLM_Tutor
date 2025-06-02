@@ -7,11 +7,13 @@ class State(MessagesState):
     num_questions: Optional[int] = None
     difficulty: Optional[Literal["easy", "medium", "hard"]] = None
     style: Optional[Literal["conceptual", "computational", "mixed"]] = None
-    quiz_questions: Optional[list[str]] = None
+    quizz_questions: Optional[list[str]] = None
     current_question_index: Optional[int] = None
     question: Optional[str] = None
     correct_answer: Optional[str] = None
+    final_answers: Optional[dict[str]] = None
     student_response: Optional[str] = None
+    student_responses: Optional[list[str]] = None
     explanation: Optional[str] = None
     feedback: Optional[str] = None
     user_feedback: Optional[str] = None
