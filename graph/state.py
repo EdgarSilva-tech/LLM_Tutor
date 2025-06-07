@@ -2,7 +2,7 @@ from langgraph.graph import MessagesState
 from typing import Literal, Optional
 
 class State(MessagesState):
-    task: Literal["Q&A", "Eval", "Quizz"]
+    task: Literal["Q&A", "Eval", "Quizz"] = None
     topic: str
     num_questions: Optional[int] = None
     difficulty: Optional[Literal["easy", "medium", "hard"]] = None

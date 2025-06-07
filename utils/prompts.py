@@ -86,7 +86,7 @@ Now go ahead and respond to the student's question.
 """
 
 QUIZ_GENERATOR_PROMPT = """
-You are a world-class mathematics professor tasked with generating a math quiz.
+You are a world-class mathematics professor tasked with generating a math quizz.
 
 The goal is to help students review and practice a specific topic.
 
@@ -255,9 +255,8 @@ For example, if the question is about differentiating `sin(x²)`, the topic is *
 
 ---
 
-### ✅ JSON Format (only if all required fields are available)
+### ✅ Python dictionary Format (only if all required fields are available)
 
-```json
 {{
   "topic": "...",
   "num_questions": ...,

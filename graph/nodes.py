@@ -5,6 +5,7 @@ from src.vectordb import Lesson_Embeddings
 from sqlmodel import create_engine, Session, select
 from utils.models import question_answer, generate_quiz, planner, evaluate_answer, route
 from langgraph.types import interrupt
+import json
 
 embeddings = OpenAIEmbeddings(model=settings.model)
 PG_PASSWORD = settings.password
@@ -14,7 +15,7 @@ PORT = settings.port
 postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
 
 def answer(state: State):
-    question = embeddings.embed_query(state['question'])
+    question = embeddings.embed_query(state["messages"][-1].content)
     
     engine = create_engine(postgres_url, echo=True)
 
@@ -23,11 +24,12 @@ def answer(state: State):
 
         content = [text.content for text in context]
 
-    answer = question_answer(state['question'], content)
+    answer = question_answer(state["messages"][-1].content, content)
 
     return {"messages": state["messages"] + [answer.content]}
 
 def quizz(state: State):
+    print(state)
 
     answer = generate_quiz(state["topic"], state["num_questions"], state["difficulty"], state["style"])
 
@@ -35,15 +37,22 @@ def quizz(state: State):
 
 def router(state: State):
     task = route(state["messages"][-1])
-    state["task"] = task
-    return {"task": task.content}
+    state["task"] = task.content
+
+    return {"task": state["task"]}
 
 
 def plan(state: State):
     if len(state["messages"]) >= 5:
-        return planner(state["task"], state["messages"][-5]).content
+        plan = json.loads(planner(state["task"], state["messages"][-5]).content)
+        print(f"Full state: {state}")
+        print(plan)
+        return plan
     else:
-        return planner(state["task"], state["messages"]).content
+        plan = json.loads(planner(state["task"], state["messages"]).content)
+        print(f"Full state: {state}")
+        print(plan)
+        return plan
     
 def eval(state: State):
     feedback = []
