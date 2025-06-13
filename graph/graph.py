@@ -2,8 +2,10 @@ from graph.state import State
 from langgraph.graph import END, START, StateGraph
 from graph.nodes import answer, quizz, plan, router, eval
 from graph.edges import task_selector
+from langgraph.checkpoint.memory import InMemorySaver
 
 def graph():
+
     graph_builder = StateGraph(State)
     graph_builder.add_node("router", router)
     graph_builder.add_node("task_selector", task_selector)
@@ -25,4 +27,5 @@ def graph():
 
 
 # # Compiled without a checkpointer. Used for LangGraph Studio
-# graph = graph().compile()
+checkpointer = InMemorySaver()
+graph = graph().compile(checkpointer=checkpointer)

@@ -29,11 +29,11 @@ def answer(state: State):
     return {"messages": state["messages"] + [answer.content]}
 
 def quizz(state: State):
-    print(state)
 
-    answer = generate_quiz(state["topic"], state["num_questions"], state["difficulty"], state["style"])
+    quizz = generate_quiz(state["topic"], state["num_questions"], state["difficulty"], state["style"])
+    print(f"{type([quizz.content])}")
 
-    return {"quizz_questions": answer.content}
+    return {"quizz_questions": [quizz.content]}
 
 def router(state: State):
     task = route(state["messages"][-1])
@@ -45,19 +45,20 @@ def router(state: State):
 def plan(state: State):
     if len(state["messages"]) >= 5:
         plan = json.loads(planner(state["task"], state["messages"][-5]).content)
-        print(f"Full state: {state}")
-        print(plan)
+        
         return plan
     else:
         plan = json.loads(planner(state["task"], state["messages"]).content)
-        print(f"Full state: {state}")
-        print(plan)
+        
         return plan
     
 def eval(state: State):
     feedback = []
+    print("Check 1")
     if state["quizz_questions"]:
+        print("Check 2")
         for question in state["quizz_questions"]:
+            print("Check 3")
             state["student_response"] = interrupt({"query": question})["data"]
             state["correct_answer"] = evaluate_answer(question, state["student_response"]).content
             state["student_responses"].append(state["student_response"])
