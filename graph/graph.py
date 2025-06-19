@@ -3,7 +3,7 @@ from langgraph.graph import END, START, StateGraph
 from graph.nodes import answer, quizz, plan, router, eval
 from graph.edges import task_selector
 from langgraph.checkpoint.memory import InMemorySaver
-from opik import OpikTracer
+from opik.integrations.langchain import OpikTracer
 
 def graph():
 
