@@ -1,4 +1,9 @@
-QUESTION_PROMPT = """
+import opik
+from dotenv import load_dotenv
+
+load_dotenv()
+
+QUESTION_PROMPT = opik.Prompt(name="Question_Prompt" , prompt="""
 You are a world-class mathematics tutor helping a student understand a question. Your role is to explain the solution step by step in a way that is clear, friendly, and easy to follow.
 
 Instructions:
@@ -83,9 +88,9 @@ Would you like an analogy for this? Think of it like driving a car: if you trave
 ---
 
 Now go ahead and respond to the student's question.
-"""
+""")
 
-QUIZ_GENERATOR_PROMPT = """
+QUIZ_GENERATOR_PROMPT = opik.Prompt(name="Quizz_Generator_Promt", prompt="""
 You are a world-class mathematics professor tasked with generating a math quizz.
 
 The goal is to help students review and practice a specific topic.
@@ -138,9 +143,9 @@ Now generate the quiz:
 - Number of questions: {num_questions}
 - Difficulty: {difficulty}
 - Style: {style}
-"""
+""")
 
-EVALUATOR_PROMPT = """
+EVALUATOR_PROMPT = opik.Prompt(name="Evaluator_Prompt", prompt="""
 You are an expert mathematics teacher. Your task is to evaluate a student's answer to a math question.
 
 You are given:
@@ -208,9 +213,9 @@ Now evaluate the student's answer below using the same format:
 - Student Response: {student_response}
 
 Please give your answer to the question and compare it witn the when evaluating and explain the reason behind the grade
-"""
+""")
 
-PLANNER_PROMPT = """
+PLANNER_PROMPT = opik.Prompt(name="Planner_Prompt", prompt="""
 You are a Planner Agent in a smart tutoring system. A Router Agent has already classified the task as one of the following: "Q&A", "Eval", or "Quizz".
 
 Your job is to extract only the relevant information required for the specified task. If the user’s message is missing important required fields, you should respond with a clarifying question — do not guess or hallucinate missing values.
@@ -322,9 +327,9 @@ Now, based on the provided task and student message, either return a complete JS
 
 Task: {task}
 Messages: {messages}
-"""
+""")
 
-ROUTER_PROMPT = """
+ROUTER_PROMPT = opik.Prompt(name="Router_Prompt", prompt="""
 You are a router agent in a smart tutoring system.
 
 Given a student's message, your job is to classify the type of task they want to do:
@@ -360,7 +365,7 @@ User: "I want to review limits and derivatives this week."
 
 Now classify the following message:
 {message}
-"""
+""")
 
 SPACED_REPITITION_PROMPT = """
 """

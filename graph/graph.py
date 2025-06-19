@@ -3,6 +3,7 @@ from langgraph.graph import END, START, StateGraph
 from graph.nodes import answer, quizz, plan, router, eval
 from graph.edges import task_selector
 from langgraph.checkpoint.memory import InMemorySaver
+from opik import OpikTracer
 
 def graph():
 
@@ -25,7 +26,10 @@ def graph():
 
     return graph_builder
 
-
 # # Compiled without a checkpointer. Used for LangGraph Studio
 checkpointer = InMemorySaver()
+thread_config = {"configurable": {"thread_id": "1"}}
 graph = graph().compile(checkpointer=checkpointer)
+opik_tracer = OpikTracer(graph=graph.get_graph(xray=True))
+config = {"configurable": {"thread_id": "1"},
+          "callbacks": [opik_tracer]}

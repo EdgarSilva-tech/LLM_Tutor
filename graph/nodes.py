@@ -31,15 +31,14 @@ def answer(state: State):
 def quizz(state: State):
 
     quizz = generate_quiz(state["topic"], state["num_questions"], state["difficulty"], state["style"])
-    print(f"{type([quizz.content])}")
 
     return {"quizz_questions": [quizz.content]}
 
 def router(state: State):
     task = route(state["messages"][-1])
-    state["task"] = task.content
+    #state["task"] = task.content
 
-    return {"task": state["task"]}
+    return {"task": task.content}
 
 
 def plan(state: State):
@@ -54,13 +53,11 @@ def plan(state: State):
     
 def eval(state: State):
     feedback = []
-    print("Check 1")
     if state["quizz_questions"]:
-        print("Check 2")
         for question in state["quizz_questions"]:
-            print("Check 3")
-            state["student_response"] = interrupt({"query": question})["data"]
+            state["student_response"] = interrupt({f"{question}": input(question)})
             state["correct_answer"] = evaluate_answer(question, state["student_response"]).content
+            print(f"State: {state}")
             state["student_responses"].append(state["student_response"])
             feedback.append({"question": question, "student_answer": state["student_response"], "correct_answer": state["correct_answer"]})
         return feedback
