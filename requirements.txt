@@ -10,3 +10,5 @@ langchain_experimental
 langchain_openai
 python-dotenv
 langgraph
+langgraph-checkpoint-postgres
+psycopg

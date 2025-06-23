@@ -14,10 +14,11 @@ from settings import settings
 PG_PASSWORD = settings.password
 MODEL = settings.model
 PORT = settings.port
+DB_NAME = settings.dbname
 
 embeddings = OpenAIEmbeddings(model=MODEL)
-
 text_splitter = SemanticChunker(embeddings)
+postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
 
 def clean_transcript(text: str) -> str:
     #text = text.replace('\n', ' ')                         # flatten newlines
@@ -32,9 +33,6 @@ class Lesson_Embeddings(SQLModel, table=True):
     chunk_index: int
     content: str
     embeddings: Any = Field(sa_type=Vector(1536))
-
-db_name = settings.dbname
-postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{db_name}"
 
 engine = create_engine(postgres_url, echo=True)
 
@@ -85,7 +83,6 @@ def create_embeddings():
             postgresql_ops={'embeddings': 'vector_cosine_ops'}
         )
         index.create(engine)
-
 
 if __name__ == "__main__":
     create_db_and_tables()
