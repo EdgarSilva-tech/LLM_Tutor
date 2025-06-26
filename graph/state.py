@@ -13,7 +13,7 @@ class State(MessagesState):
     correct_answer: Optional[str] = None
     final_answers: Optional[dict[str]] = None
     student_response: Optional[str] = None
-    student_responses: Optional[list[str]] = None
+    student_responses: list[str]
     explanation: Optional[str] = None
     feedback: Optional[str] = None
     user_feedback: Optional[str] = None

@@ -44,21 +44,26 @@ def router(state: State):
 def plan(state: State):
     if len(state["messages"]) >= 5:
         plan = json.loads(planner(state["task"], state["messages"][-5]).content)
+        print(plan)
         
         return plan
     else:
         plan = json.loads(planner(state["task"], state["messages"]).content)
+        print(plan)
         
         return plan
     
 def eval(state: State):
     feedback = []
     if state["quizz_questions"]:
-        for question in state["quizz_questions"]:
-            state["student_response"] = interrupt({f"{question}": input(question)})
+        print(f"List of questions: {"".join(state['quizz_questions']).split("\n")}")
+        question_list = "".join(state['quizz_questions']).split("\n")
+        for question in question_list:
+            print(f"Current Question: {question.strip()}")
+            state["student_response"] = interrupt(f"{question.strip()}: ")
             state["correct_answer"] = evaluate_answer(question, state["student_response"]).content
             print(f"State: {state}")
-            state["student_responses"].append(state["student_response"])
+            #state["student_responses"].append(state["student_response"])
             feedback.append({"question": question, "student_answer": state["student_response"], "correct_answer": state["correct_answer"]})
         return feedback
     else:
