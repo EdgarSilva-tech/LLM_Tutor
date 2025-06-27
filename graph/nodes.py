@@ -56,16 +56,17 @@ def plan(state: State):
 def eval(state: State):
     feedback = []
     if state["quizz_questions"]:
-        print(f"List of questions: {"".join(state['quizz_questions']).split("\n")}")
-        question_list = "".join(state['quizz_questions']).split("\n")
+        print(f"List of questions: {"".join(state['quizz_questions']).replace("  ", "").split("\n")}")
+        question_list = "".join(state['quizz_questions']).replace("  ", "").split("\n")
+        print(f"Question list: {question_list}")
         for question in question_list:
             print(f"Current Question: {question.strip()}")
             state["student_response"] = interrupt(f"{question.strip()}: ")
             state["correct_answer"] = evaluate_answer(question, state["student_response"]).content
             print(f"State: {state}")
             #state["student_responses"].append(state["student_response"])
-            feedback.append({"question": question, "student_answer": state["student_response"], "correct_answer": state["correct_answer"]})
-        return feedback
+            final_feedback = {"feedback" : feedback.append({"question": question, "student_answer": state["student_response"], "correct_answer": state["correct_answer"]})}
+        return final_feedback
     else:
         state["student_response"] = interrupt({"query": question})["data"]
         state["correct_answer"] = evaluate_answer(state["question"], state["student_response"]).content
