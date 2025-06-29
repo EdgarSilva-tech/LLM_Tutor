@@ -1,7 +1,7 @@
 requests
 bs4
 playwright
-sqlmodel 
+sqlmodel
 psycopg2-binary
 pgvector
 loguru
@@ -12,3 +12,7 @@ python-dotenv
 langgraph
 langgraph-checkpoint-postgres
 psycopg
+fastapi
+pytest
+pytest-mock
+pre-commit

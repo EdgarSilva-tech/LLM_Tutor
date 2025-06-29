@@ -50,10 +50,11 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-tests/
 llm_tutor/
 data/
 chunks/
+experiments/
+LLM_Tutor_Production_Roadmap.txt
 
 # Translations
 *.mo
