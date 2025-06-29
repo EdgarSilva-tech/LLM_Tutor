@@ -2,12 +2,7 @@ import os
 import uuid
 from datetime import datetime
 from uuid import UUID
-
-from sqlmodel import create_engine
-from sqlmodel import Field
-from sqlmodel import Session
-from sqlmodel import SQLModel
-
+from sqlmodel import create_engine, Field, Session, SQLModel
 from settings import settings
 
 PG_PASSWORD = settings.password
@@ -23,7 +18,9 @@ class Khan_Academy_Lesson(SQLModel, table=True):
     date: datetime
 
 
-postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
+postgres_url = (
+    f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
+    )
 
 engine = create_engine(postgres_url, echo=True)
 

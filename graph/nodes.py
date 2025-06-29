@@ -22,7 +22,9 @@ PG_PASSWORD = settings.password
 DB_NAME = settings.dbname
 PORT = settings.port
 
-postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
+postgres_url = (
+    f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
+    )
 
 
 def answer(state: State):
@@ -76,7 +78,7 @@ def plan(state: State):
 def eval(state: State):
     feedback = []
     if state["quizz_questions"]:
-        question_list = "".join(state["quizz_questions"]).replace("  ", "").split("\n")    
+        question_list = "".join(state["quizz_questions"]).replace("  ", "").split("\n")
         for question in question_list:
             print(f"Current Question: {question.strip()}")
             state["student_response"] = interrupt(f"{question.strip()}: ")

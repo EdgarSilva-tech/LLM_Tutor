@@ -3,8 +3,12 @@ from utils import models
 
 def test_evaluate_answer(mocker):
     mock_llm = mocker.Mock()
-    mocker.patch("utils.models.get_llm", return_value=mock_llm)
-    mocker.patch("utils.models.format_evaluator_prompt", return_value="eval prompt")
+    mocker.patch(
+        "utils.models.get_llm", return_value=mock_llm
+        )
+    mocker.patch(
+        "utils.models.format_evaluator_prompt", return_value="eval prompt"
+        )
     mock_llm.invoke.return_value = "eval result"
 
     result = models.evaluate_answer("Q", "A")
@@ -16,11 +20,15 @@ def test_evaluate_answer(mocker):
 
 def test_generate_quiz(mocker):
     mock_llm = mocker.Mock()
-    mocker.patch("utils.models.get_llm", return_value=mock_llm)
-    mocker.patch("utils.models.format_quizz_prompt", return_value="quiz prompt")
+    mocker.patch(
+        "utils.models.get_llm", return_value=mock_llm
+        )
+    mocker.patch(
+        "utils.models.format_quizz_prompt", return_value="quiz prompt"
+        )
     mock_llm.invoke.return_value = "quiz result"
 
-    result = models.generate_quiz("math", 5, "easy", "multiple-choice")
+    result = models.generate_quizz("math", 5, "easy", "multiple-choice")
 
     models.format_quizz_prompt.assert_called_once_with(
         "math", 5, "easy", "multiple-choice"
@@ -31,8 +39,12 @@ def test_generate_quiz(mocker):
 
 def test_question_answer(mocker):
     mock_llm = mocker.Mock()
-    mocker.patch("utils.models.get_llm", return_value=mock_llm)
-    mocker.patch("utils.models.format_question_prompt", return_value="qa prompt")
+    mocker.patch(
+        "utils.models.get_llm", return_value=mock_llm
+        )
+    mocker.patch(
+        "utils.models.format_question_prompt", return_value="qa prompt"
+        )
     mock_llm.invoke.return_value = "answer"
 
     result = models.question_answer("What is AI?", ["context1", "context2"])
@@ -46,8 +58,12 @@ def test_question_answer(mocker):
 
 def test_route(mocker):
     mock_llm = mocker.Mock()
-    mocker.patch("utils.models.get_llm", return_value=mock_llm)
-    mocker.patch("utils.models.format_router_prompt", return_value="route prompt")
+    mocker.patch(
+        "utils.models.get_llm", return_value=mock_llm
+        )
+    mocker.patch(
+        "utils.models.format_router_prompt", return_value="route prompt"
+        )
     mock_llm.invoke.return_value = "route result"
 
     result = models.route("What should I do?")
@@ -59,8 +75,12 @@ def test_route(mocker):
 
 def test_planner(mocker):
     mock_llm = mocker.Mock()
-    mocker.patch("utils.models.get_llm", return_value=mock_llm)
-    mocker.patch("utils.models.format_planner_prompt", return_value="planner prompt")
+    mocker.patch(
+        "utils.models.get_llm", return_value=mock_llm
+        )
+    mocker.patch(
+        "utils.models.format_planner_prompt", return_value="planner prompt"
+        )
     mock_llm.invoke.return_value = "plan result"
 
     result = models.planner("task", "messages")
