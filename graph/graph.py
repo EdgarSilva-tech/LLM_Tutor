@@ -8,6 +8,7 @@ from psycopg import Connection
 
 postgres_url = f"postgresql://postgres:{settings.password}@localhost:{settings.port}/{settings.dbname}?sslmode=disable"
 
+
 def graph():
 
     conn = Connection.connect(postgres_url, autocommit=True)

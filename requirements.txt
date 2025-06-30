@@ -12,7 +12,8 @@ python-dotenv
 langgraph
 langgraph-checkpoint-postgres
 psycopg
-fastapi
+fastapi[standard]
 pytest
 pytest-mock
 pre-commit
+websockets
