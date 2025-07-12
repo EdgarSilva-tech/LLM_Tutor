@@ -55,6 +55,7 @@ data/
 chunks/
 experiments/
 LLM_Tutor_Production_Roadmap.txt
+docs/
 
 # Translations
 *.mo
