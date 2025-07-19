@@ -1,15 +1,10 @@
-from infra.redis_cache import redis_client
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List
 from graph.nodes import eval
 from datetime import datetime
 from settings import settings
-from sqlmodel import create_engine, Field, Session, SQLModel
+from sqlmodel import create_engine, Session, SQLModel
 
 app = FastAPI(title="Evaluation Service")
 PG_PASSWORD = settings.password

@@ -6,7 +6,7 @@ class Settings(BaseSettings):
 
     dbname: str = "LLM_Tutor"
     username: str
-    password: str
+    PG_PASSWORD: str
     host: str
     port: int = 5432
     OPENAI_API_KEY: str

@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlmodel import create_engine, Field, Session, SQLModel
 from settings import settings
 
-PG_PASSWORD = settings.password
+PG_PASSWORD = settings.PG_PASSWORD
 DB_NAME = settings.dbname
 PORT = settings.port
 

@@ -18,3 +18,5 @@ pytest-mock
 pre-commit
 websockets
 redis
+pyjwt
+"passlib[bcrypt]"
