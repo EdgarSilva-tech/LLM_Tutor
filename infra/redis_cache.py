@@ -10,17 +10,15 @@ class RedisConfig:
         self.password = settings.REDIS_PASSWORD
         self.port = settings.REDIS_PORT
 
-
     def get_client(self) -> redis.Redis:
         return redis.Redis(
             host=self.host,
             username=self.username,
             password=self.password,
-            ssl=True,
+            ssl=False,
             port=self.port,
             decode_responses=True
         )
-
 
 
 redis_client = RedisConfig().get_client()

@@ -95,7 +95,7 @@ You are a world-class mathematics professor tasked with generating a math quizz.
 
 The goal is to help students review and practice a specific topic.
 
-Generate a quiz based on the following inputs:
+Generate a quizz based on the following inputs:
 - **Topic**: {topic}
 - **Number of questions**: {num_questions}
 - **Difficulty**: {difficulty} (easy | medium | hard)
@@ -106,7 +106,7 @@ Guidelines:
 - The difficulty should match the level specified
 - The style should match: e.g., "conceptual" = explanations or reasoning, "computational" = step-by-step problems
 - You must return only the questions — no answers, no explanations
-- Format clearly using numbered list (e.g., 1., 2., 3., ...)
+- Format clearly using numbered python list (e.g., 1., 2., 3., ...)
 - Include only the questions and don't insert unneccessary text such as ### Generated Quiz:
 
 ---
@@ -119,9 +119,9 @@ Guidelines:
 **Style**: computational
 
 **Generated Quiz**:
-1. Differentiate the function f(x) = (3x² + 5x)⁴.  
-2. Find the derivative of y = sin(2x³ + 1).  
-3. If f(x) = e^(x²), what is f '(x)?
+[1. Differentiate the function f(x) = (3x² + 5x)⁴,  
+2. Find the derivative of y = sin(2x³ + 1),
+3. If f(x) = e^(x²), what is f '(x)?]
 
 ---
 
@@ -133,8 +133,8 @@ Guidelines:
 **Style**: conceptual
 
 
-1. Explain how the second derivative of a function relates to the concavity of its graph and provide an example.  
-2. A function has a local maximum at x = 2. What conditions must be true about its first and second derivatives at that point?
+[1. Explain how the second derivative of a function relates to the concavity of its graph and provide an example, 
+2. A function has a local maximum at x = 2. What conditions must be true about its first and second derivatives at that point?]
 
 ---
 

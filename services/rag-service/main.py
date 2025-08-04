@@ -1,31 +1,14 @@
 from fastapi import FastAPI, HTTPException
-from typing import List
-from model import question_answer
+from .model import question_answer
 from infra.vectordb import Lesson_Embeddings, postgres_url
 from sqlmodel import Session, select, create_engine
 from settings import settings
 from langchain_openai.embeddings import OpenAIEmbeddings
-from pydantic import BaseModel
 from infra.redis_cache import redis_client
-
-
-class QueryRequest(BaseModel):
-    question: str
-    top_k: int = 5
-
-
-class QueryResponse(BaseModel):
-    answer: str
-    context: List[str]
-    sources: List[str]
-
-
-class EmbeddingRequest(BaseModel):
-    text: str
-
-
-class EmbeddingResponse(BaseModel):
-    embedding: List[float]
+from utils.data_models import (
+    QueryRequest, QueryResponse, EmbeddingRequest, EmbeddingResponse
+)
+import json
 
 
 app = FastAPI(title="RAG Service")
@@ -34,23 +17,35 @@ engine = create_engine(postgres_url)
 
 
 @app.post("/rag-service/query")
-def query(request: QueryRequest) -> str:
+def query(request: QueryRequest) -> QueryResponse:
     try:
+        print(f"request.question: {request.question}")
         question_emb = redis_client.get(request.question)
+        print(f"question_emb: {question_emb}")
 
-        if question_emb is None:
+        if question_emb:
+            question_emb = json.loads(question_emb)
+            print(f"question_emb: {question_emb}")
+        else:
+            print("No redis")
             question_emb = embeddings.embed_query(request.question)
-            redis_client.set(request.question, question_emb)
+            print("Embeddings generated")
+            print(f"embeddings: {question_emb}")
+            redis_client.set(request.question, json.dumps(question_emb))
+            print("Redis set")
 
         with Session(engine) as session:
+            print("Session")
             context = session.exec(
                 select(Lesson_Embeddings)
                 .order_by(
                     Lesson_Embeddings.embeddings.cosine_distance(question_emb)
                     ).limit(request.top_k)
             )
+            print(f"Context: {context}")
 
             content = [text.content for text in context]
+            print(f"Content: {content}")
 
         response = question_answer(request.question, content)
 
@@ -60,8 +55,8 @@ def query(request: QueryRequest) -> str:
                 sources=[f"chunk_{i}" for i in range(len(content))]
             )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro no RAG: {str(e)}")
-    
+        raise HTTPException(status_code=500, detail=f"RAG error: {str(e)}")
+
 
 @app.post("/embed", response_model=EmbeddingResponse)
 async def generate_embedding(request: EmbeddingRequest):
@@ -71,13 +66,20 @@ async def generate_embedding(request: EmbeddingRequest):
     try:
         embedding = redis_client.get(request.text)
 
-        if embedding is None:
+        if embedding:
+            embedding = json.loads(embedding)
+            print(f"embedding: {embedding}")
+        else:
             embedding = embeddings.embed_query(request.text)
-            redis_client.set(request.text, embedding)
+            print(f"embedding: {embedding}")
+            redis_client.set(request.text, json.dumps(embedding))
 
         return EmbeddingResponse(embedding=embedding)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao gerar embedding: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error while generating embeddings: {str(e)}"
+            )
 
 
 @app.get("/search")
@@ -88,17 +90,21 @@ async def search_similar(text: str, top_k: int = 5):
     try:
         text_embedding = redis_client.get(text)
 
-        if text_embedding is None:
+        if text_embedding:
+            text_embedding = json.loads(text_embedding)
+            print(f"text_embedding: {text_embedding}")
+        else:
             text_embedding = embeddings.embed_query(text)
-            redis_client.set(text, text_embedding)
+            redis_client.set(text, json.dumps(text_embedding))
 
         with Session(engine) as session:
             results = session.exec(
                 select(Lesson_Embeddings)
-                .order_by(Lesson_Embeddings.embeddings.cosine_distance(text_embedding))
-                .limit(top_k)
+                .order_by(Lesson_Embeddings
+                          .embeddings
+                          .cosine_distance(text_embedding)).limit(top_k)
             )
-            
+
             return {
                 "query": text,
                 "results": [
@@ -110,11 +116,6 @@ async def search_similar(text: str, top_k: int = 5):
                     for result in results
                 ]
             }
-            
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro na busca: {str(e)}")
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+        raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")

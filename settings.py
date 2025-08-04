@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     REDIS_USERNAME: str = "default"
     REDIS_ENDPOINT: str
     REDIS_PASSWORD: str
+    AUTH_SECRET: str
+    ALGORITHM: str = "HS256"
 
 
 settings = Settings()

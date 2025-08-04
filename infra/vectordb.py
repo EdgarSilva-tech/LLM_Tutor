@@ -12,7 +12,7 @@ from sqlmodel import create_engine, Field, Index, select, Session, SQLModel
 from settings import settings
 from src.db import Khan_Academy_Lesson
 
-PG_PASSWORD = settings.password
+PG_PASSWORD = settings.PG_PASSWORD
 MODEL = settings.model
 PORT = settings.port
 DB_NAME = settings.dbname

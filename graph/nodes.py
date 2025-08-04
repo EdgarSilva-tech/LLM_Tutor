@@ -22,7 +22,7 @@ from functools import lru_cache
 
 
 embeddings = OpenAIEmbeddings(model=settings.model)
-PG_PASSWORD = settings.password
+PG_PASSWORD = settings.PG_PASSWORD
 DB_NAME = settings.dbname
 PORT = settings.port
 

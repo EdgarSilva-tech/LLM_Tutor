@@ -1,25 +1,14 @@
-from sqlmodel import create_engine, Session, SQLModel, Field, select
-from .auth_settings import auth_settings
+from sqlmodel import create_engine, Session, SQLModel, select
+from settings import settings
 from passlib.context import CryptContext
-from uuid import UUID
-import uuid
+from utils.data_models import User_Auth
 
 
-PG_PASSWORD = auth_settings.PG_PASSWORD
-DB_NAME = auth_settings.DB_NAME
-PORT = auth_settings.PORT
+PG_PASSWORD = settings.PG_PASSWORD
+DB_NAME = "Users"
+PORT = settings.port
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-class User_Auth(SQLModel, table=True):
-    user_id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
-    hashed_password: str
-
 
 POSTGRES_URL = (
     f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
