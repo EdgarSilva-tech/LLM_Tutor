@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from uuid import UUID
 import uuid
 from sqlmodel import Field, SQLModel
-from datetime import datetime
 from typing import List
 
 
@@ -42,19 +41,19 @@ class User_Auth(SQLModel, table=True):
     hashed_password: str
 
 
-class EvaluationRequest(BaseModel):
-    student_id: str
-    quizz_questions: List[str]
-    student_answers: List[str]
+# class EvaluationRequest(BaseModel):
+#     student_id: str
+#     quizz_questions: List[str]
+#     student_answers: List[str]
 
 
-class Evaluation(SQLModel, table=True):
-    eval_id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    username: str = Field(index=True)
-    question: str
-    answer: str
-    feedback: str
-    date: datetime
+# class Evaluation(SQLModel, table=True):
+#     eval_id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+#     username: str = Field(index=True)
+#     question: str
+#     answer: str
+#     feedback: str
+#     date: datetime
 
 
 class QueryRequest(BaseModel):

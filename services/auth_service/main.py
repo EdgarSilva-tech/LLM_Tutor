@@ -2,9 +2,9 @@ from datetime import timedelta
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from .user_db import add_user
-from utils.data_models import Token, User
-from utils.auth_utils import (
+from services.auth_service.user_db import add_user
+from services.auth_service.data_models import Token, User
+from services.auth_service.auth_utils import (
     authenticate_user, create_access_token,
     get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES
 )

@@ -1,5 +1,4 @@
-from utils.format_prompt import format_question_prompt
-from utils.models import get_llm
+from services.rag_service.rag_utils import get_llm, format_question_prompt
 from typing import List
 
 

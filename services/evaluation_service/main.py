@@ -2,40 +2,43 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 from datetime import datetime, timedelta
-from settings import settings
+from services.evaluation_service.eval_settings import eval_settings
 from sqlmodel import create_engine, Session, SQLModel
-from utils.data_models import Evaluation, EvaluationRequest, User
-from utils.auth_utils import get_current_active_user
-from .model import eval_answer
+from services.evaluation_service.data_models import (
+    Evaluation, EvaluationRequest, User
+    )
+from services.evaluation_service.model import eval_answer
 import hashlib
 import json
-from infra.redis_cache import redis_client
-from utils.data_models import Token
+from services.evaluation_service.cache import redis_client
+from services.evaluation_service.data_models import Token
 from utils.auth_utils import (
     authenticate_user, create_access_token,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    ACCESS_TOKEN_EXPIRE_MINUTES, get_current_active_user
 )
 
 
 app = FastAPI(title="Evaluation Service")
-PG_PASSWORD = settings.PG_PASSWORD
-DB_NAME = settings.dbname
-PORT = settings.port
+PG_PASSWORD = eval_settings.PG_PASSWORD
+DB_NAME = eval_settings.DB_NAME
+PORT = eval_settings.DB_PORT
 
-postgres_url = (
+POSTGRES_URL = (
     f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
     )
 
-engine = create_engine(postgres_url, echo=True)
+engine = create_engine(POSTGRES_URL, echo=True)
 SQLModel.metadata.create_all(engine)
 
 
-def store_evals(question: str, answer: str, feedback: str, username: str):
+def store_evals(question: str, answer: str, correct_answer: str,
+                score: float, feedback: str, username: str):
 
     with Session(engine) as session:
         try:
             eval = Evaluation(username=username.username,
                               question=question, answer=answer,
+                              correct_answer=correct_answer, score=score,
                               feedback=feedback, date=datetime.now())
 
             session.add(eval)
@@ -75,18 +78,23 @@ def evaluation(request: EvaluationRequest,
             answer_list = request.student_answers
 
             for question, answer in zip(question_list, answer_list):
-                correct_answer = eval_answer(
+                correct_answer = json.loads(eval_answer(
                     question, answer
-                ).content
+                ).content)
+                print(f"correct_answer: {correct_answer}")
                 # request.student_responses.append(request.student_response)
                 store_evals(
-                    question, answer, correct_answer, current_user
+                    question, answer, correct_answer["correct_answer"],
+                    correct_answer["score"], correct_answer["feedback"],
+                    current_user
                     )
 
                 feedback.append({
                             "question": question,
                             "student_answer": answer,
-                            "correct_answer": correct_answer,
+                            "correct_answer": correct_answer["correct_answer"],
+                            "feedback": correct_answer["feedback"],
+                            "score": correct_answer["score"],
                         })
 
             question_str = json.dumps(feedback, sort_keys=True)
@@ -104,7 +112,7 @@ def evaluation(request: EvaluationRequest,
 def evaluate_answer(question: str, answer: str):
     try:
         response = eval_answer(question, answer)
-        return response.content
+        return json.loads(response.content)
 
     except Exception as e:
         return e

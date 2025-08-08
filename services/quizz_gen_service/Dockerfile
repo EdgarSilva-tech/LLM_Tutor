@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -9,9 +9,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy only the specific service directory
+COPY services/quizz-gen-service/ .
 
 EXPOSE 8004
 
-# Comando para executar a aplicação
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8004"] 
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8004}"]

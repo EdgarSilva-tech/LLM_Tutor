@@ -1,12 +1,12 @@
 from sqlmodel import create_engine, Session, SQLModel, select
-from settings import settings
+from services.auth_service.auth_settings import auth_settings
 from passlib.context import CryptContext
-from utils.data_models import User_Auth
+from services.auth_service.data_models import User_Auth
 
 
-PG_PASSWORD = settings.PG_PASSWORD
-DB_NAME = "Users"
-PORT = settings.port
+PG_PASSWORD = auth_settings.PG_PASSWORD
+DB_NAME = auth_settings.DB_NAME
+PORT = auth_settings.DB_PORT
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

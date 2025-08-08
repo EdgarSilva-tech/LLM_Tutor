@@ -1,18 +1,18 @@
 from fastapi import FastAPI, HTTPException
-from .model import question_answer
+from services.rag_service.model import question_answer
 from infra.vectordb import Lesson_Embeddings, postgres_url
 from sqlmodel import Session, select, create_engine
-from settings import settings
+from rag_settings import rag_settings
 from langchain_openai.embeddings import OpenAIEmbeddings
-from infra.redis_cache import redis_client
-from utils.data_models import (
+from services.rag_service.cache import redis_client
+from services.rag_service.data_models import (
     QueryRequest, QueryResponse, EmbeddingRequest, EmbeddingResponse
 )
 import json
 
 
 app = FastAPI(title="RAG Service")
-embeddings = OpenAIEmbeddings(model=settings.model)
+embeddings = OpenAIEmbeddings(model=rag_settings.model)
 engine = create_engine(postgres_url)
 
 

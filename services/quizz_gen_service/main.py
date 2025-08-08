@@ -1,17 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
-from infra.redis_cache import redis_client
-from .model import quizz_generator
-from utils.data_models import QuizzRequest
-from utils.data_models import Token
+from services.quizz_gen_service.cache import redis_client
+from services.quizz_gen_service.model import quizz_generator
+from services.quizz_gen_service.data_models import QuizzRequest, Token, User
 from utils.auth_utils import (
     authenticate_user, create_access_token,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    ACCESS_TOKEN_EXPIRE_MINUTES, get_current_active_user
 )
 from datetime import timedelta
-from utils.data_models import User
-from utils.auth_utils import get_current_active_user
 import hashlib
 import json
 

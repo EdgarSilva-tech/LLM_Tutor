@@ -1,0 +1,13 @@
+fastapi[standard]
+uvicorn
+sqlmodel
+psycopg2-binary
+redis
+pyjwt
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+langchain-openai
+python-dotenv
+orjson
+opik

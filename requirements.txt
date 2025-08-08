@@ -19,4 +19,4 @@ pre-commit
 websockets
 redis
 pyjwt
-"passlib[bcrypt]"
+passlib[bcrypt]

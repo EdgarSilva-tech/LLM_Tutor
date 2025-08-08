@@ -1,0 +1,11 @@
+opik
+pydantic
+pydantic-settings
+langchain-openai
+fastapi
+uvicorn
+python-dotenv
+redis
+sqlmodel
+passlib
+jwt
