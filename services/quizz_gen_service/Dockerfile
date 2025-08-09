@@ -6,11 +6,11 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY ./services/quizz_gen_service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy only the specific service directory
-COPY services/quizz-gen-service/ .
+COPY services/quizz_gen_service/ .
 
 EXPOSE 8004
 

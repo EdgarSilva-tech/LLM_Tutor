@@ -6,8 +6,8 @@ psycopg2-binary
 pgvector
 loguru
 langchain
-langchain_experimental
-langchain_openai
+langchain-experimental
+langchain-openai
 python-dotenv
 langgraph
 langgraph-checkpoint-postgres

@@ -1,5 +1,4 @@
 # docker-compose.yml
-version: '3.8'
 
 services:
   nginx:
@@ -19,7 +18,7 @@ services:
   auth-service:
     build:
       context: .
-      dockerfile: services/auth-service/Dockerfile
+      dockerfile: services/auth_service/Dockerfile
     # No need to expose ports externally - only nginx needs access
     expose:
       - "8001"
@@ -31,7 +30,7 @@ services:
   rag-service:
     build:
       context: .
-      dockerfile: services/rag-service/Dockerfile
+      dockerfile: services/rag_service/Dockerfile
     expose:
       - "8002"
     environment:
@@ -42,7 +41,7 @@ services:
   evaluation-service:
     build:
       context: .
-      dockerfile: services/evaluation-service/Dockerfile
+      dockerfile: services/evaluation_service/Dockerfile
     expose:
       - "8003"
     environment:
@@ -53,7 +52,7 @@ services:
   quiz-service:
     build:
       context: .
-      dockerfile: services/quizz-gen-service/Dockerfile
+      dockerfile: services/quizz_gen_service/Dockerfile
     expose:
       - "8004"
     environment:

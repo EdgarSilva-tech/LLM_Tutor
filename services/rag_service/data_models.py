@@ -41,3 +41,10 @@ class Khan_Academy_Lesson(SQLModel, table=True):
     module: str
     topic: str
     date: datetime
+
+
+class User(BaseModel):
+    username: str
+    email: str | None = None
+    full_name: str | None = None
+    disabled: bool | None = None

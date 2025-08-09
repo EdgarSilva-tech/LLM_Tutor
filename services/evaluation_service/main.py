@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
-from datetime import datetime, timedelta
+from datetime import datetime
 from services.evaluation_service.eval_settings import eval_settings
 from sqlmodel import create_engine, Session, SQLModel
 from services.evaluation_service.data_models import (
@@ -11,11 +10,7 @@ from services.evaluation_service.model import eval_answer
 import hashlib
 import json
 from services.evaluation_service.cache import redis_client
-from services.evaluation_service.data_models import Token
-from utils.auth_utils import (
-    authenticate_user, create_access_token,
-    ACCESS_TOKEN_EXPIRE_MINUTES, get_current_active_user
-)
+from services.evaluation_service.auth_client import get_current_active_user
 
 
 app = FastAPI(title="Evaluation Service")
@@ -47,24 +42,6 @@ def store_evals(question: str, answer: str, correct_answer: str,
 
         except Exception as e:
             return f"Error saving evaluation: {e}"
-
-
-@app.post("/token")
-async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-) -> Token:
-    user = authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return Token(access_token=access_token, token_type="bearer")
 
 
 @app.post("/eval-service")
@@ -105,7 +82,10 @@ def evaluation(request: EvaluationRequest,
             return {"request_id": question_hash, "feedback": feedback}
 
     except Exception as e:
-        return e
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Evaluation failed: {str(e)}"
+        )
 
 
 @app.post("/eval-service/evaluate_answer")
@@ -115,7 +95,10 @@ def evaluate_answer(question: str, answer: str):
         return json.loads(response.content)
 
     except Exception as e:
-        return e
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Evaluation failed: {str(e)}"
+        )
 
 
 @app.get("/eval-service/get-feedback")
@@ -139,3 +122,23 @@ def get_feedback(current_user:
         return values
     else:
         return "No keys found for the pattern."
+
+
+# Health check endpoint
+@app.get("/eval-service/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "evaluation-service"}
+
+
+# Protected endpoint to test authentication
+@app.get("/eval-service/me")
+async def get_my_info(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+        ):
+
+    """Get current user info (for testing auth integration)"""
+    return {
+        "message": f"Hello {current_user.username}!",
+        "user_info": current_user
+    }

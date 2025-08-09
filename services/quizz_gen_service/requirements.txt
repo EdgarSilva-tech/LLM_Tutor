@@ -9,3 +9,4 @@ redis
 sqlmodel
 passlib
 jwt
+httpx

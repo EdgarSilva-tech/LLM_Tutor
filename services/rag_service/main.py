@@ -1,23 +1,28 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from services.rag_service.model import question_answer
-from infra.vectordb import Lesson_Embeddings, postgres_url
 from sqlmodel import Session, select, create_engine
 from rag_settings import rag_settings
 from langchain_openai.embeddings import OpenAIEmbeddings
 from services.rag_service.cache import redis_client
 from services.rag_service.data_models import (
-    QueryRequest, QueryResponse, EmbeddingRequest, EmbeddingResponse
+    QueryRequest, QueryResponse, EmbeddingRequest,
+    EmbeddingResponse, User
 )
 import json
-
+from services.rag_service.auth_client import get_current_active_user
+from typing import Annotated
+from services.rag_service.vectordb import Lesson_Embeddings, POSTGRES_URL
 
 app = FastAPI(title="RAG Service")
 embeddings = OpenAIEmbeddings(model=rag_settings.model)
-engine = create_engine(postgres_url)
+engine = create_engine(POSTGRES_URL)
 
 
 @app.post("/rag-service/query")
-def query(request: QueryRequest) -> QueryResponse:
+def query(request: QueryRequest,
+          current_user: Annotated[User, Depends(get_current_active_user)]
+          ) -> QueryResponse:
+
     try:
         print(f"request.question: {request.question}")
         question_emb = redis_client.get(request.question)
@@ -59,10 +64,11 @@ def query(request: QueryRequest) -> QueryResponse:
 
 
 @app.post("/embed", response_model=EmbeddingResponse)
-async def generate_embedding(request: EmbeddingRequest):
-    """
-    Gera embedding para um texto
-    """
+async def generate_embedding(request: EmbeddingRequest,
+                             current_user:
+                             Annotated[User, Depends(get_current_active_user)]
+                             ):
+
     try:
         embedding = redis_client.get(request.text)
 
@@ -72,7 +78,10 @@ async def generate_embedding(request: EmbeddingRequest):
         else:
             embedding = embeddings.embed_query(request.text)
             print(f"embedding: {embedding}")
-            redis_client.set(request.text, json.dumps(embedding))
+            redis_client.set(
+                f"{current_user.username}_{request.text}",
+                json.dumps(embedding)
+                )
 
         return EmbeddingResponse(embedding=embedding)
     except Exception as e:
@@ -83,10 +92,11 @@ async def generate_embedding(request: EmbeddingRequest):
 
 
 @app.get("/search")
-async def search_similar(text: str, top_k: int = 5):
-    """
-    Busca textos similares
-    """
+async def search_similar(text: str,
+                         current_user:
+                         Annotated[User, Depends(get_current_active_user)],
+                         top_k: int = 5):
+
     try:
         text_embedding = redis_client.get(text)
 
@@ -95,7 +105,8 @@ async def search_similar(text: str, top_k: int = 5):
             print(f"text_embedding: {text_embedding}")
         else:
             text_embedding = embeddings.embed_query(text)
-            redis_client.set(text, json.dumps(text_embedding))
+            redis_client.set(f"{current_user.username}_{text}",
+                             json.dumps(text_embedding))
 
         with Session(engine) as session:
             results = session.exec(

@@ -6,11 +6,11 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r ./services/auth_service/requirements.txt
+COPY ./services/auth_service/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy only the specific service directory
-COPY services/auth-service/ .
+COPY services/auth_service/ .
 
 EXPOSE 8001
 
