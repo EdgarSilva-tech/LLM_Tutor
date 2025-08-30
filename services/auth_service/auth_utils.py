@@ -6,8 +6,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlmodel import Session, create_engine, select
-from services.auth_service.auth_settings import auth_settings
-from services.auth_service.data_models import (
+from auth_settings import auth_settings
+from data_models import (
     TokenData, User, UserInDB, User_Auth
 )
 
@@ -22,7 +22,7 @@ ALGORITHM = auth_settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 POSTGRES_URL = (
-    f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
+    f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
     )
 engine = create_engine(POSTGRES_URL, echo=True)
 

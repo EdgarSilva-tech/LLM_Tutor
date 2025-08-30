@@ -3,58 +3,93 @@
 services:
   nginx:
     image: nginx:alpine
+    container_name: llm_tutor-nginx-1
+    restart: unless-stopped
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
-      - ./nginx/api_gateway.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/api_gateway.conf:/etc/nginx/conf.d/api_gateway.conf:ro
+    command: /bin/sh -c "rm /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     depends_on:
-      - auth-service
-      - rag-service
-      - evaluation-service
-      - quiz-service
+      - auth_service
+      - rag_service
+      - evaluation_service
+      - quizz_service
     networks:
       - llm-tutor-network
 
-  auth-service:
+  postgres:
+    image: postgres:17.4-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Myway2025!!!
+      - POSTGRES_DB=llm_tutor_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+    ports:
+      - "5432:5432"  # Para debug/acesso externo se necessário
+    networks:
+      - llm-tutor-network
+    restart: unless-stopped
+
+  auth_service:
     build:
       context: .
       dockerfile: services/auth_service/Dockerfile
     # No need to expose ports externally - only nginx needs access
     expose:
       - "8001"
+    env_file:
+      - services/auth_service/.env
     environment:
       - PORT=8001
+    depends_on:
+      - postgres
     networks:
       - llm-tutor-network
 
-  rag-service:
+  rag_service:
     build:
       context: .
       dockerfile: services/rag_service/Dockerfile
     expose:
       - "8002"
+    env_file:
+      - services/rag_service/.env
     environment:
       - PORT=8002
+    depends_on:
+      - postgres
+
     networks:
       - llm-tutor-network
 
-  evaluation-service:
+  evaluation_service:
     build:
       context: .
       dockerfile: services/evaluation_service/Dockerfile
     expose:
       - "8003"
+    env_file:
+      - services/evaluation_service/.env
     environment:
       - PORT=8003
+    depends_on:
+      - postgres
+
     networks:
       - llm-tutor-network
 
-  quiz-service:
+  quizz_service:
     build:
       context: .
       dockerfile: services/quizz_gen_service/Dockerfile
     expose:
       - "8004"
+    env_file:
+      - services/quizz_gen_service/.env
     environment:
       - PORT=8004
     networks:
@@ -63,3 +98,6 @@ services:
 networks:
   llm-tutor-network:
     driver: bridge
+
+volumes:
+  postgres_data:

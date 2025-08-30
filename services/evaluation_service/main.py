@@ -1,25 +1,30 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import Annotated
 from datetime import datetime
-from services.evaluation_service.eval_settings import eval_settings
+from eval_settings import eval_settings
 from sqlmodel import create_engine, Session, SQLModel
-from services.evaluation_service.data_models import (
+from data_models import (
     Evaluation, EvaluationRequest, User
     )
-from services.evaluation_service.model import eval_answer
+from model import eval_answer
 import hashlib
 import json
-from services.evaluation_service.cache import redis_client
-from services.evaluation_service.auth_client import get_current_active_user
+from cache import redis_client
+from auth_client import get_current_active_user
 
 
 app = FastAPI(title="Evaluation Service")
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "Evaluation Service"}
 PG_PASSWORD = eval_settings.PG_PASSWORD
 DB_NAME = eval_settings.DB_NAME
 PORT = eval_settings.DB_PORT
 
 POSTGRES_URL = (
-    f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
+    f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
     )
 
 engine = create_engine(POSTGRES_URL, echo=True)

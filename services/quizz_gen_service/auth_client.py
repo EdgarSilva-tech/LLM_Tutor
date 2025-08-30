@@ -2,7 +2,7 @@
 import httpx
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from services.quizz_gen_service.data_models import User
+from data_models import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

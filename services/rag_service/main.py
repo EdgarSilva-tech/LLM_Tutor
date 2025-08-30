@@ -1,19 +1,24 @@
 from fastapi import FastAPI, HTTPException, Depends
-from services.rag_service.model import question_answer
+from model import question_answer
 from sqlmodel import Session, select, create_engine
 from rag_settings import rag_settings
 from langchain_openai.embeddings import OpenAIEmbeddings
-from services.rag_service.cache import redis_client
-from services.rag_service.data_models import (
+from cache import redis_client
+from data_models import (
     QueryRequest, QueryResponse, EmbeddingRequest,
     EmbeddingResponse, User
 )
 import json
-from services.rag_service.auth_client import get_current_active_user
+from auth_client import get_current_active_user
 from typing import Annotated
-from services.rag_service.vectordb import Lesson_Embeddings, POSTGRES_URL
+from vectordb import Lesson_Embeddings, POSTGRES_URL
 
 app = FastAPI(title="RAG Service")
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "RAG Service"}
 embeddings = OpenAIEmbeddings(model=rag_settings.model)
 engine = create_engine(POSTGRES_URL)
 

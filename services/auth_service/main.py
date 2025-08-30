@@ -2,14 +2,23 @@ from datetime import timedelta
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from services.auth_service.user_db import add_user
-from services.auth_service.data_models import Token, User
-from services.auth_service.auth_utils import (
+from user_db import add_user, create_db_and_tables
+from data_models import Token, User, SignupUser
+from auth_utils import (
     authenticate_user, create_access_token,
     get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Authentication Service")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Creating tables..")
+    create_db_and_tables()
+    yield
+
+
+app = FastAPI(title="Authentication Service", lifespan=lifespan)
 
 
 @app.post("/token")
@@ -44,11 +53,19 @@ async def read_own_items(
     return [{"item_id": "Foo", "owner": current_user.username}]
 
 
-@app.post("/signup")
-async def signup_user(username: str, email: str,
-                      full_name: str, password: str):
+@app.post("/signup", response_model=User)
+async def signup_user(user: SignupUser):
     try:
-        add_user(username, email, full_name, password)
-        return f"{username}'s account has been created successfully"
+        # TODO: Add check if user already exists
+        new_user = add_user(
+            username=user.username,
+            email=user.email,
+            full_name=user.full_name,
+            password=user.password
+        )
+        return new_user
     except Exception as e:
-        return f"Error: {e}"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not create user: {e}"
+        )

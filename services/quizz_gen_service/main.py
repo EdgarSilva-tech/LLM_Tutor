@@ -1,14 +1,18 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import Annotated
-from services.quizz_gen_service.cache import redis_client
-from services.quizz_gen_service.model import quizz_generator
-from services.quizz_gen_service.data_models import QuizzRequest, User
+from cache import redis_client
+from model import quizz_generator
+from data_models import QuizzRequest, User
 import hashlib
 import json
-from services.quizz_gen_service.auth_client import get_current_active_user
+from auth_client import get_current_active_user
 
-app = FastAPI()
+app = FastAPI(title="Quiz Generation Service")
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "Quiz Generation Service"}
 
 @app.post("/generate-quizz")
 def generate_quizz(request: QuizzRequest,

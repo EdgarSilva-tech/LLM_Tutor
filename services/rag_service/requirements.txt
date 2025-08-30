@@ -14,3 +14,4 @@ langchain
 langchain-experimental
 python-dotenv
 redis
+sqlmodel

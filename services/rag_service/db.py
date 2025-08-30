@@ -1,8 +1,8 @@
 import os
 from datetime import datetime
 from sqlmodel import create_engine, Session, SQLModel
-from services.rag_service.rag_settings import rag_settings
-from services.rag_service.data_models import Khan_Academy_Lesson
+from rag_settings import rag_settings
+from data_models import Khan_Academy_Lesson
 
 PG_PASSWORD = rag_settings.PG_PASSWORD
 DB_NAME = rag_settings.DB_NAME
@@ -10,7 +10,7 @@ PORT = rag_settings.PORT
 
 
 POSTGRES_URL = (
-    f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
+    f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
     )
 
 engine = create_engine(POSTGRES_URL, echo=True)

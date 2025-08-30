@@ -1,4 +1,4 @@
-from services.quizz_gen_service.quizz_utils import get_llm, format_quizz_prompt
+from quizz_utils import get_llm, format_quizz_prompt
 
 
 def quizz_generator(topic: str, num_questions: int,

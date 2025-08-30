@@ -1,4 +1,4 @@
-from services.evaluation_service.eval_utils import (
+from eval_utils import (
     get_llm, format_evaluator_prompt
     )
 

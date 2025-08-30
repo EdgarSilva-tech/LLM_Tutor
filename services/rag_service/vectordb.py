@@ -4,19 +4,19 @@ import sqlalchemy as sa
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from sqlmodel import create_engine, Index, select, Session, SQLModel
-from services.rag_service.rag_settings import rag_settings
-from services.rag_service.data_models import (
+from rag_settings import rag_settings
+from data_models import (
     Lesson_Embeddings, Khan_Academy_Lesson
-    )
+)
 
 PASSWORD = rag_settings.PG_PASSWORD
 MODEL = rag_settings.model
-PORT = rag_settings.port
-DB_NAME = rag_settings.dbname
+PORT = rag_settings.PORT
+DB_NAME = rag_settings.DB_NAME
 
 embeddings = OpenAIEmbeddings(model=MODEL)
 text_splitter = SemanticChunker(embeddings)
-POSTGRES_URL = f"postgresql://postgres:{PASSWORD}@localhost:{PORT}/{DB_NAME}"
+POSTGRES_URL = f"postgresql://postgres:{PASSWORD}@postgres:{PORT}/{DB_NAME}"
 
 
 def clean_transcript(text: str) -> str:

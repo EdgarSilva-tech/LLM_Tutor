@@ -1,7 +1,7 @@
 from sqlmodel import create_engine, Session, SQLModel, select
-from services.auth_service.auth_settings import auth_settings
+from auth_settings import auth_settings
 from passlib.context import CryptContext
-from services.auth_service.data_models import User_Auth
+from data_models import User_Auth
 
 
 PG_PASSWORD = auth_settings.PG_PASSWORD
@@ -11,7 +11,7 @@ PORT = auth_settings.DB_PORT
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 POSTGRES_URL = (
-    f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
+    f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
     )
 
 

@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class AuthSettings(BaseSettings):
     # Database settings
-    model_config = SettingsConfigDict(env_file="./services/auth_service/.env",
+    model_config = SettingsConfigDict(env_file=".env",
                                       extra="ignore")
     PG_PASSWORD: str
     DB_NAME: str
