@@ -20,7 +20,7 @@ services:
       - llm-tutor-network
 
   postgres:
-    image: postgres:17.4-alpine
+    image: pgvector/pgvector:pg17
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=Myway2025!!!
@@ -29,7 +29,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
     ports:
-      - "5432:5432"  # Para debug/acesso externo se necessário
+      - "5433:5432"  # Para debug/acesso externo se necessário
     networks:
       - llm-tutor-network
     restart: unless-stopped
@@ -45,6 +45,8 @@ services:
       - services/auth_service/.env
     environment:
       - PORT=8001
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     depends_on:
       - postgres
     networks:
@@ -60,6 +62,8 @@ services:
       - services/rag_service/.env
     environment:
       - PORT=8002
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     depends_on:
       - postgres
 
@@ -76,6 +80,8 @@ services:
       - services/evaluation_service/.env
     environment:
       - PORT=8003
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     depends_on:
       - postgres
 

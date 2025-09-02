@@ -1,5 +1,7 @@
 import opik
 from langchain_openai import ChatOpenAI
+from quizz_settings import quizz_settings
+from fastapi import HTTPException, status
 
 QUIZZ_GENERATOR_PROMPT = opik.Prompt(name="Quizz_Generator_Promt", prompt="""
 You are a world-class mathematics professor tasked with generating a math quizz.
@@ -60,7 +62,13 @@ Now generate the quiz:
 def get_llm(
         model_name: str = "gpt-4o-mini", temperature: float = 0.7
         ) -> ChatOpenAI:
-    llm = ChatOpenAI(model=model_name, temperature=temperature)
+    api_key = quizz_settings.OPENAI_API_KEY
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OPENAI_API_KEY is not configured in the environment."
+        )
+    llm = ChatOpenAI(model=model_name, temperature=temperature, api_key=api_key)
     return llm
 
 

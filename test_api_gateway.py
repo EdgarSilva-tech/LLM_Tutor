@@ -10,9 +10,9 @@ import sys
 # Configurações
 BASE_URL = "http://localhost:8080"
 TEST_USER = {
-    "username": "script_test_user",
-    "email": "script_test@example.com", 
-    "full_name": "Script Test User",
+    "username": "Edgar_Silva",
+    "email": "edgardasilva10@hotmail.com",
+    "full_name": "Edgar Costa Neves da Silva",
     "password": "test123"
 }
 
@@ -124,7 +124,7 @@ def main():
     test_protected_endpoint("/evaluation/eval-service/evaluate_answer", token, "Evaluation Service", method="POST", data=eval_data)
     
     # Quiz Service Test
-    quiz_data = {"topic": "calculus", "num_questions": 2}
+    quiz_data = {"topic": "calculus", "num_questions": 2, "difficulty": "medium", "style": "multiple choice"}
     test_protected_endpoint("/quiz/generate-quiz", token, "Quiz Service", method="POST", data=quiz_data)
 
     print("\n🎉 TESTES CONCLUÍDOS!")

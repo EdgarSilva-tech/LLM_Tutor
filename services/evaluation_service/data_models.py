@@ -6,6 +6,11 @@ from datetime import datetime
 from typing import List
 
 
+class SingleEvaluationRequest(BaseModel):
+    question: str
+    answer: str
+
+
 class EvaluationRequest(BaseModel):
     student_id: str
     quizz_questions: List[str]

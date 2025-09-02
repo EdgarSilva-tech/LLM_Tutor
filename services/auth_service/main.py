@@ -43,7 +43,12 @@ async def login_for_access_token(
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    return current_user
+    return {
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "disabled": current_user.disabled
+    }
 
 
 @app.get("/users/me/items/")

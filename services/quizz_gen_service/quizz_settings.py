@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: str
     AUTH_SECRET: str
     ALGORITHM: str = "HS256"
+    OPENAI_API_KEY: str
 
 
 quizz_settings = Settings()

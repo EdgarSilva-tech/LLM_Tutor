@@ -14,7 +14,7 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "Quiz Generation Service"}
 
-@app.post("/generate-quizz")
+@app.post("/generate-quiz")
 def generate_quizz(request: QuizzRequest,
                    current_user:
                    Annotated[User, Depends(get_current_active_user)]

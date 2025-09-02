@@ -1,34 +1,32 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import Annotated
 from datetime import datetime
-from eval_settings import eval_settings
-from sqlmodel import create_engine, Session, SQLModel
+from sqlmodel import Session
 from data_models import (
-    Evaluation, EvaluationRequest, User
+    Evaluation, EvaluationRequest, User, SingleEvaluationRequest
     )
 from model import eval_answer
 import hashlib
 import json
 from cache import redis_client
 from auth_client import get_current_active_user
+from contextlib import asynccontextmanager
+from db import create_db_and_tables, engine
 
 
-app = FastAPI(title="Evaluation Service")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Creating Evaluation tables...")
+    create_db_and_tables()
+    yield
+
+app = FastAPI(title="Evaluation Service", lifespan=lifespan)
+
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "Evaluation Service"}
-PG_PASSWORD = eval_settings.PG_PASSWORD
-DB_NAME = eval_settings.DB_NAME
-PORT = eval_settings.DB_PORT
-
-POSTGRES_URL = (
-    f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
-    )
-
-engine = create_engine(POSTGRES_URL, echo=True)
-SQLModel.metadata.create_all(engine)
 
 
 def store_evals(question: str, answer: str, correct_answer: str,
@@ -94,9 +92,9 @@ def evaluation(request: EvaluationRequest,
 
 
 @app.post("/eval-service/evaluate_answer")
-def evaluate_answer(question: str, answer: str):
+def evaluate_answer(request: SingleEvaluationRequest):
     try:
-        response = eval_answer(question, answer)
+        response = eval_answer(request.question, request.answer)
         return json.loads(response.content)
 
     except Exception as e:
@@ -127,13 +125,6 @@ def get_feedback(current_user:
         return values
     else:
         return "No keys found for the pattern."
-
-
-# Health check endpoint
-@app.get("/eval-service/health")
-async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "service": "evaluation-service"}
 
 
 # Protected endpoint to test authentication

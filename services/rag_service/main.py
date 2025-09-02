@@ -1,8 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from model import question_answer
-from sqlmodel import Session, select, create_engine
-from rag_settings import rag_settings
-from langchain_openai.embeddings import OpenAIEmbeddings
+from sqlmodel import Session, select
 from cache import redis_client
 from data_models import (
     QueryRequest, QueryResponse, EmbeddingRequest,
@@ -11,19 +9,26 @@ from data_models import (
 import json
 from auth_client import get_current_active_user
 from typing import Annotated
-from vectordb import Lesson_Embeddings, POSTGRES_URL
+from db import create_db_and_tables, engine, Lesson_Embeddings, embeddings
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="RAG Service")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Creating RAG tables...")
+    create_db_and_tables()
+    yield
+
+
+app = FastAPI(title="RAG Service", lifespan=lifespan)
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "RAG Service"}
-embeddings = OpenAIEmbeddings(model=rag_settings.model)
-engine = create_engine(POSTGRES_URL)
 
 
-@app.post("/rag-service/query")
+@app.post("/question-answer")
 def query(request: QueryRequest,
           current_user: Annotated[User, Depends(get_current_active_user)]
           ) -> QueryResponse:

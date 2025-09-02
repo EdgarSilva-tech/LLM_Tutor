@@ -6,7 +6,7 @@ from data_models import User_Auth
 
 PG_PASSWORD = auth_settings.PG_PASSWORD
 DB_NAME = auth_settings.DB_NAME
-PORT = auth_settings.DB_PORT
+PORT = 5432 # Hardcoded standard Postgres port
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

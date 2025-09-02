@@ -12,7 +12,7 @@ async def get_current_user_from_auth_service(token: str) -> User:
         async with httpx.AsyncClient() as client:
             headers = {"Authorization": f"Bearer {token}"}
             response = await client.get(
-                "http://auth-service:8001/users/me/",
+                "http://auth_service:8001/users/me/",
                 headers=headers
             )
 
