@@ -14,3 +14,4 @@ opik
 httpx
 pydantic
 pydantic-settings
+python-json-logger

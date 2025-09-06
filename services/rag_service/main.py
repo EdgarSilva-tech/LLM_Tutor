@@ -4,23 +4,31 @@ from sqlmodel import Session, select
 from cache import redis_client
 from data_models import (
     QueryRequest, QueryResponse, EmbeddingRequest,
-    EmbeddingResponse, User
+    EmbeddingResponse, User, Lesson_Embeddings,
 )
 import json
 from auth_client import get_current_active_user
 from typing import Annotated
-from db import create_db_and_tables, engine, Lesson_Embeddings, embeddings
+from db import create_db_and_tables, engine
+from ingest import add_classes_and_embeddings, embeddings
 from contextlib import asynccontextmanager
+from logging_config import get_logger
+
+# Initialize the logger for this module
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Creating RAG tables...")
+    logger.info("Creating RAG tables...")
     create_db_and_tables()
+    add_classes_and_embeddings()
+    logger.info("RAG tables created. Service is ready.")
     yield
 
 
 app = FastAPI(title="RAG Service", lifespan=lifespan)
+
 
 @app.get("/health")
 async def health_check():
@@ -34,33 +42,33 @@ def query(request: QueryRequest,
           ) -> QueryResponse:
 
     try:
-        print(f"request.question: {request.question}")
+        logger.info(f"request.question: {request.question}")
         question_emb = redis_client.get(request.question)
-        print(f"question_emb: {question_emb}")
+        logger.info(f"question_emb: {question_emb}")
 
         if question_emb:
             question_emb = json.loads(question_emb)
-            print(f"question_emb: {question_emb}")
+            logger.info(f"question_emb: {question_emb}")
         else:
-            print("No redis")
+            logger.info("No redis")
             question_emb = embeddings.embed_query(request.question)
-            print("Embeddings generated")
-            print(f"embeddings: {question_emb}")
+            logger.info("Embeddings generated")
+            logger.info(f"embeddings: {question_emb}")
             redis_client.set(request.question, json.dumps(question_emb))
-            print("Redis set")
+            logger.info("Redis set")
 
         with Session(engine) as session:
-            print("Session")
+            logger.info("Session")
             context = session.exec(
                 select(Lesson_Embeddings)
                 .order_by(
                     Lesson_Embeddings.embeddings.cosine_distance(question_emb)
                     ).limit(request.top_k)
             )
-            print(f"Context: {context}")
+            logger.info(f"Context: {context}")
 
             content = [text.content for text in context]
-            print(f"Content: {content}")
+            logger.info(f"Content: {content}")
 
         response = question_answer(request.question, content)
 
@@ -84,14 +92,15 @@ async def generate_embedding(request: EmbeddingRequest,
 
         if embedding:
             embedding = json.loads(embedding)
-            print(f"embedding: {embedding}")
+            logger.info(f"embedding found: {embedding}")
         else:
             embedding = embeddings.embed_query(request.text)
-            print(f"embedding: {embedding}")
+            logger.info(f"New embedding generated: {embedding}")
             redis_client.set(
                 f"{current_user.username}_{request.text}",
                 json.dumps(embedding)
                 )
+            logger.info(f"Embedding cached: {embedding}")
 
         return EmbeddingResponse(embedding=embedding)
     except Exception as e:
@@ -112,11 +121,13 @@ async def search_similar(text: str,
 
         if text_embedding:
             text_embedding = json.loads(text_embedding)
-            print(f"text_embedding: {text_embedding}")
+            logger.info(f"text_embedding: {text_embedding}")
         else:
             text_embedding = embeddings.embed_query(text)
+            logger.info(f"New embedding generated: {text_embedding}")
             redis_client.set(f"{current_user.username}_{text}",
                              json.dumps(text_embedding))
+            logger.info(f"Embedding cached: {text_embedding}")
 
         with Session(engine) as session:
             results = session.exec(
@@ -125,6 +136,7 @@ async def search_similar(text: str,
                           .embeddings
                           .cosine_distance(text_embedding)).limit(top_k)
             )
+            logger.info(f"Search results: {results}")
 
             return {
                 "query": text,
@@ -139,4 +151,5 @@ async def search_similar(text: str,
             }
 
     except Exception as e:
+        logger.error(f"Search error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")

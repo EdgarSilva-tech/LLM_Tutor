@@ -6,13 +6,19 @@ from data_models import QuizzRequest, User
 import hashlib
 import json
 from auth_client import get_current_active_user
+from logging_config import get_logger
+
+# Initialize the logger for this module
+logger = get_logger(__name__)
 
 app = FastAPI(title="Quiz Generation Service")
+
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "Quiz Generation Service"}
+
 
 @app.post("/generate-quiz")
 def generate_quizz(request: QuizzRequest,
@@ -25,15 +31,17 @@ def generate_quizz(request: QuizzRequest,
             request.topic, request.num_questions,
             request.difficulty, request.style
         )
-
+        logger.info(f"Quizz generated: {quizz.content}")
         quizz_str = json.dumps({"questions": [quizz.content]}, sort_keys=True)
         quizz_hash = hashlib.sha256(quizz_str.encode()).hexdigest()
         cache_key = f"quizz_request:{current_user.username}:{quizz_hash}"
         redis_client.set(cache_key, quizz.content)
+        logger.info(f"Quizz cached: {quizz.content}, key: {cache_key}")
 
         return {"quizz_questions": quizz.content}
 
     except Exception as e:
+        logger.error(f"Quizz generation failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Quizz generation failed: {str(e)}"
@@ -60,11 +68,14 @@ def get_questions(current_user:
         # Retrieve all the values for the found keys
         if matching_keys:
             values = redis_client.mget(matching_keys)
+            logger.info(f"Values: {values}")
             return values
         else:
+            logger.info("No keys found for the pattern.")
             return "No keys found for the pattern."
 
     except Exception as e:
+        logger.error(f"Failed to get quizz questions: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get quizz questions: {str(e)}"

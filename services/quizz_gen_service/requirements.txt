@@ -10,3 +10,4 @@ sqlmodel
 passlib
 jwt
 httpx
+python-json-logger

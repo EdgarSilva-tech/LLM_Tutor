@@ -6,15 +6,21 @@ from user_db import add_user, create_db_and_tables
 from data_models import Token, User, SignupUser
 from auth_utils import (
     authenticate_user, create_access_token,
-    get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES
+    get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES,
+    get_user
 )
 from contextlib import asynccontextmanager
+from logging_config import get_logger
+
+# Initialize the logger for this module
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Creating tables..")
+    logger.info("Creating tables..")
     create_db_and_tables()
+    logger.info("Tables created. Service is ready.")
     yield
 
 
@@ -32,6 +38,8 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    logger.info(f"User authenticated: {user.username}")
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
@@ -60,17 +68,31 @@ async def read_own_items(
 
 @app.post("/signup", response_model=User)
 async def signup_user(user: SignupUser):
+    db_user = get_user(user.username)
+    if db_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered"
+        )
     try:
-        # TODO: Add check if user already exists
         new_user = add_user(
             username=user.username,
             email=user.email,
             full_name=user.full_name,
             password=user.password
         )
-        return new_user
+        logger.info(f"User created: {new_user.username}")
+        # Manually create the response to match the User model
+        # and avoid returning the hashed_password.
+        return User(
+            username=new_user.username,
+            email=new_user.email,
+            full_name=new_user.full_name,
+            disabled=new_user.disabled
+        )
     except Exception as e:
+        logger.error(f"Could not create user: {e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Could not create user: {e}"
         )
