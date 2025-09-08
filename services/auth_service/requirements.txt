@@ -9,3 +9,5 @@ python-jose[cryptography]
 python-multipart
 pydantic-settings
 python-json-logger
+pytest
+pytest-mock
