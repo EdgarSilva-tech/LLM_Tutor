@@ -1,7 +1,7 @@
 from sqlmodel import create_engine, Session, SQLModel, select
 from auth_settings import auth_settings
 from passlib.context import CryptContext
-from data_models import User_Auth
+from data_models import User_Auth, auth_metadata
 
 
 PG_PASSWORD = auth_settings.PG_PASSWORD
@@ -19,7 +19,7 @@ engine = create_engine(POSTGRES_URL, echo=True)
 
 
 def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+    auth_metadata.create_all(engine)
 
 
 def add_user(username: str, email: str, full_name: str, password: str):

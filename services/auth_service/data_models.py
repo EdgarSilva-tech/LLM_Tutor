@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, MetaData
 import uuid
 from uuid import UUID
 
@@ -30,8 +30,14 @@ class SignupUser(BaseModel):
     full_name: str
     password: str
 
+# 1. Create a dedicated MetaData object for the auth service.
+# This acts as a private registry for this service's tables.
+auth_metadata = MetaData()
 
 class User_Auth(SQLModel, table=True):
+    # 2. Tell this model to use our private registry instead of the global one.
+    metadata = auth_metadata
+
     user_id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     username: str
     email: str | None = None

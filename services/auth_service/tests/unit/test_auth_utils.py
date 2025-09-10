@@ -115,8 +115,14 @@ async def test_get_current_user_success(mock_jwt_decode, mock_get_user):
     """Test successfully getting a user from a valid token."""
     mock_payload = {"sub": "testuser"}
     mock_jwt_decode.return_value = mock_payload
-
-    mock_user = UserInDB(username="testuser", email="test@example.com", full_name="Test User")
+    
+    # FIX: Add the required 'hashed_password' field to the UserInDB instance.
+    mock_user = UserInDB(
+        username="testuser",
+        email="test@example.com",
+        full_name="Test User",
+        hashed_password="a-dummy-hashed-password"
+    )
     mock_get_user.return_value = mock_user
 
     token = "valid.token.here"
