@@ -16,3 +16,8 @@ python-dotenv
 redis
 sqlmodel
 python-json-logger
+pytest
+pytest-mock
+opik
+langchain_openai
+pytest-asyncio

@@ -1,10 +1,8 @@
-h
-#!/usr/bin/env python3
 """
 Script rápido para testar endpoints específicos
 """
 import requests
-import json
+
 
 def test_endpoint(method, url, data=None, headers=None):
     """Testa um endpoint específico"""

@@ -1,0 +1,45 @@
+name: Python Services CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip' # Cache dependencies to speed up subsequent runs
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest pytest-asyncio
+          # Install dependencies for each service
+          pip install -r services/auth_service/requirements.txt
+          pip install -r services/rag_service/requirements.txt
+          pip install -r services/evaluation_service/requirements.txt
+          pip install -r services/quizz_gen_service/requirements.txt
+
+      - name: Lint with ruff
+        run: |
+          # Stop the build if there are any linting errors
+          ruff check . --output-format=github
+          # Check formatting
+          ruff format . --check
+
+      - name: Run unit tests with pytest
+        run: |
+          pytest

@@ -11,3 +11,6 @@ passlib
 jwt
 httpx
 python-json-logger
+pytest
+pytest-mock
+pytest-asyncio
