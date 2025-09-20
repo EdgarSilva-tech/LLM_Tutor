@@ -1,5 +1,4 @@
 from unittest.mock import patch, MagicMock
-import pytest
 from model import question_answer
 from rag_utils import format_question_prompt, get_llm
 from langchain_core.messages.ai import AIMessage

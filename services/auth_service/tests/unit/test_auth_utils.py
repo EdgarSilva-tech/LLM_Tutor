@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from datetime import timedelta
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -15,7 +15,7 @@ from services.auth_service.auth_utils import (
     AUTH_SECRET,
     ALGORITHM,
 )
-from services.auth_service.data_models import UserInDB, TokenData
+from services.auth_service.data_models import UserInDB
 
 # --- Tests for Password Functions ---
 
@@ -29,7 +29,9 @@ def test_get_password_hash():
 
 
 def test_verify_password():
-    """Test that password verification works for correct and incorrect passwords."""
+    """
+    Test that password verification works for correct and incorrect passwords.
+    """
     password = "testpassword123"
     hashed_password = get_password_hash(password)
     assert verify_password(password, hashed_password) is True
@@ -115,7 +117,7 @@ async def test_get_current_user_success(mock_jwt_decode, mock_get_user):
     """Test successfully getting a user from a valid token."""
     mock_payload = {"sub": "testuser"}
     mock_jwt_decode.return_value = mock_payload
-    
+
     # FIX: Add the required 'hashed_password' field to the UserInDB instance.
     mock_user = UserInDB(
         username="testuser",
@@ -129,7 +131,9 @@ async def test_get_current_user_success(mock_jwt_decode, mock_get_user):
     user = await get_current_user(token)
 
     assert user.username == "testuser"
-    mock_jwt_decode.assert_called_once_with(token, AUTH_SECRET, algorithms=[ALGORITHM])
+    mock_jwt_decode.assert_called_once_with(
+        token, AUTH_SECRET, algorithms=[ALGORITHM]
+        )
     mock_get_user.assert_called_once_with(username="testuser")
 
 
@@ -149,7 +153,7 @@ async def test_get_current_user_invalid_token(mock_jwt_decode):
 @patch('jwt.decode')
 async def test_get_current_user_no_username(mock_jwt_decode):
     """Test handling of a token with no 'sub' (username) payload."""
-    mock_jwt_decode.return_value = {"other_claim": "value"} # No 'sub'
+    mock_jwt_decode.return_value = {"other_claim": "value"}  # No 'sub'
 
     with pytest.raises(HTTPException) as excinfo:
         await get_current_user("token.without.sub")

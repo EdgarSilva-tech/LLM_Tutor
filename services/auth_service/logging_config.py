@@ -10,7 +10,8 @@ def get_logger(name: str):
     # Get the existing logger instance
     logger = logging.getLogger(name)
 
-    # Check if the logger already has handlers to avoid adding them multiple times
+    # Check if the logger already has handlers
+    # to avoid adding them multiple times
     if not logger.handlers:
         logger.setLevel(logging.INFO)
         logHandler = logging.StreamHandler(sys.stdout)
@@ -23,7 +24,8 @@ def get_logger(name: str):
 
         logHandler.setFormatter(formatter)
         logger.addHandler(logHandler)
-        # Prevent logs from propagating to the root logger in case it's configured elsewhere
+        # Prevent logs from propagating to the root
+        # logger in case it's configured elsewhere
         logger.propagate = False
 
     return logger

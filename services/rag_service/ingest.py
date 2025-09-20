@@ -52,9 +52,8 @@ def add_classes_and_embeddings():
             print("All lessons already have embeddings. Skipping.")
             return
 
-        print(f"Creating embeddings for {len(lessons_without_embeddings)} new lessons...")
+        print("Creating embeddings for new lessons...")
         for row in lessons_without_embeddings:
-            filename = row.content_path.split("test_")[-1].replace(".txt", "")
             with open(row.content_path) as lesson_file:
                 clean_text = clean_transcript(lesson_file.read())
 

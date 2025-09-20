@@ -61,13 +61,15 @@ Nice! You're being asked to find the **area of a circle**, and you're given the 
 
 ✅ Final Answer: **25π**, or approximately **78.54 square units**
 
-Does that make sense? Would you like a quick refresher on where this formula comes from?
+Does that make sense? Would you like a
+quick refresher on where this formula comes from?
 
 ---
 
 ### 📘 Example 3
 
-**Student Question**: What’s the average velocity of a particle between t = 0 and t = 6, if the position changes from 2 to 14?
+**Student Question**: What’s the average velocity
+of a particle between t = 0 and t = 6, if the position changes from 2 to 14?
 
 **Tutor Response**:
 Great! To find **average velocity**, we use the formula:
@@ -83,7 +85,8 @@ Great! To find **average velocity**, we use the formula:
 
 ✅ Final Answer: **2**
 
-Would you like an analogy for this? Think of it like driving a car: if you traveled 12 miles in 6 hours, your average speed is 2 miles/hour.
+Would you like an analogy for this? Think of it like driving a car: 
+if you traveled 12 miles in 6 hours, your average speed is 2 miles/hour.
 
 ---
 

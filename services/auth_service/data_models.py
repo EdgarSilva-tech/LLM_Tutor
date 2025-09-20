@@ -30,9 +30,11 @@ class SignupUser(BaseModel):
     full_name: str
     password: str
 
+
 # 1. Create a dedicated MetaData object for the auth service.
 # This acts as a private registry for this service's tables.
 auth_metadata = MetaData()
+
 
 class User_Auth(SQLModel, table=True):
     # 2. Tell this model to use our private registry instead of the global one.

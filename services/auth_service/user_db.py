@@ -1,4 +1,4 @@
-from sqlmodel import create_engine, Session, SQLModel, select
+from sqlmodel import create_engine, Session, select
 from auth_settings import auth_settings
 from passlib.context import CryptContext
 from data_models import User_Auth, auth_metadata
@@ -6,7 +6,7 @@ from data_models import User_Auth, auth_metadata
 
 PG_PASSWORD = auth_settings.PG_PASSWORD
 DB_NAME = auth_settings.DB_NAME
-PORT = 5432 # Hardcoded standard Postgres port
+PORT = 5432
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

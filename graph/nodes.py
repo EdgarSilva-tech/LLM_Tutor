@@ -68,7 +68,8 @@ def router(state: State):
 
 def plan(state: State):
     if len(state["messages"]) >= 5:
-        plan = json.loads(planner(state["task"], state["messages"][-5]).content)
+        plan = json.loads(
+            planner(state["task"], state["messages"][-5]).content)
         print(f"Plan: {plan}")
 
         return plan
@@ -83,7 +84,9 @@ def plan(state: State):
 def eval(state: State):
     if state["quizz_questions"]:
         state["feedback"] = []
-        question_list = "".join(state["quizz_questions"]).replace("  ", "").split("\n")
+        question_list = "".join(
+            state["quizz_questions"]
+            ).replace("  ", "").split("\n")
         for question in question_list:
             state["student_response"] = interrupt(f"{question.strip()}: ")
             state["correct_answer"] = evaluate_answer(
@@ -106,19 +109,25 @@ def summarize_conversation(state: State):
 
     if summary:
         summary_message = (
-            f"This is summary of the conversation to date between LLM Tutor and the user: {summary}\n\n"
+            f"""This is summary of the conversation to date
+             between LLM Tutor and the user: {summary}\n\n"""
             "Extend the summary by taking into account the new messages above:"
         )
     else:
         summary_message = (
-            "Create a summary of the conversation above between LLM Tutor and the user. "
-            "The summary must be a short description of the conversation so far, "
-            "but that captures all the relevant information shared between LLM Tutor and the user "
-            "such as topics of evaluations, questions asked, student responses and feedback"
+            """Create a summary of the conversation above
+            between LLM Tutor and the user. """
+            """The summary must be a short description
+            of the conversation so far, """
+            """but that captures all the relevant information
+            shared between LLM Tutor and the user """
+            """such as topics of evaluations, questions asked,
+            student responses and feedback"""
         )
 
     messages = state["messages"] + [HumanMessage(content=summary_message)]
     response = model.invoke(messages)
 
-    delete_messages = [RemoveMessage(id=m.id) for m in state["messages"][: -settings.messages_after_summary]]
+    messages_to_remove = state["messages"][: -settings.messages_after_summary]
+    delete_messages = [RemoveMessage(id=m.id) for m in messages_to_remove]
     return {"summary": response.content, "messages": delete_messages}
