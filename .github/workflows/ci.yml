@@ -9,6 +9,17 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      REDIS_ENDPOINT: ${{ secrets.REDIS_ENDPOINT }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      REDIS_USERNAME: ${{ secrets.REDIS_USERNAME }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      USERNAME: ${{ secrets.USERNAME }}
+      HOST: ${{ secrets.HOST }}
+      OPIK_API_KEY: ${{ secrets.OPIK_API_KEY }}
     strategy:
       matrix:
         python-version: ["3.13"]

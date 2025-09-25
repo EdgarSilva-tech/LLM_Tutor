@@ -3,7 +3,6 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlmodel import Session, create_engine, select
 from auth_settings import auth_settings
@@ -83,7 +82,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
-    except InvalidTokenError:
+    except Exception:
+        # Compat: different PyJWT versions raise different exception classes
         raise credentials_exception
     user = get_user(username=token_data.username)
     if user is None:

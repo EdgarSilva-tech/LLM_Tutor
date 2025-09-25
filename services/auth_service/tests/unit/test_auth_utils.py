@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import patch
 from datetime import timedelta
 import jwt
-from jwt.exceptions import InvalidTokenError
 from fastapi import HTTPException
 
 # Import functions from the auth_utils module using absolute paths
@@ -142,7 +141,7 @@ async def test_get_current_user_success(mock_jwt_decode, mock_get_user):
 @patch("jwt.decode")
 async def test_get_current_user_invalid_token(mock_jwt_decode):
     """Test handling of an invalid token."""
-    mock_jwt_decode.side_effect = InvalidTokenError
+    mock_jwt_decode.side_effect = Exception
 
     with pytest.raises(HTTPException) as excinfo:
         await get_current_user("invalid.token.here")
