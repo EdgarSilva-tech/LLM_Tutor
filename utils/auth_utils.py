@@ -20,9 +20,7 @@ AUTH_SECRET = settings.AUTH_SECRET
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-POSTGRES_URL = (
-    f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
-    )
+POSTGRES_URL = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
 engine = create_engine(POSTGRES_URL, echo=True)
 
 
@@ -43,10 +41,13 @@ def get_user(username: str):
 
         for row in results:
             if row.username is not None:
-                user_dict = {"username": row.username, "email": row.email,
-                             "full_name": row.full_name,
-                             "disabled": row.disabled,
-                             "hashed_password": row.hashed_password}
+                user_dict = {
+                    "username": row.username,
+                    "email": row.email,
+                    "full_name": row.full_name,
+                    "disabled": row.disabled,
+                    "hashed_password": row.hashed_password,
+                }
 
                 return UserInDB(**user_dict)
 

@@ -16,7 +16,7 @@ def test_format_question_prompt():
 
 
 # Test for get_llm
-@patch('rag_utils.ChatOpenAI')
+@patch("rag_utils.ChatOpenAI")
 def test_get_llm(MockChatOpenAI):
     # Configure the mock to behave like the real ChatOpenAI class
     mock_instance = MockChatOpenAI.return_value
@@ -32,8 +32,8 @@ def test_get_llm(MockChatOpenAI):
 
 
 # Test for question_answer
-@patch('model.get_llm')
-@patch('model.format_question_prompt')
+@patch("model.get_llm")
+@patch("model.format_question_prompt")
 def test_question_answer(mock_format_prompt, mock_get_llm):
     # Arrange
     mock_llm = MagicMock()
@@ -55,8 +55,8 @@ def test_question_answer(mock_format_prompt, mock_get_llm):
 
 
 # Test for question_answer with empty context
-@patch('model.get_llm')
-@patch('model.format_question_prompt')
+@patch("model.get_llm")
+@patch("model.format_question_prompt")
 def test_question_answer_empty_context(mock_format_prompt, mock_get_llm):
     # Arrange
     mock_llm = MagicMock()

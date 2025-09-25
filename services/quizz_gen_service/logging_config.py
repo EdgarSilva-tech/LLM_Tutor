@@ -18,7 +18,7 @@ def get_logger(name: str):
         # Define the format of the JSON logs.
         # You can add more fields from the LogRecord object if needed.
         formatter = jsonlogger.JsonFormatter(
-            '%(asctime)s %(name)s %(levelname)s %(message)s'
+            "%(asctime)s %(name)s %(levelname)s %(message)s"
         )
 
         logHandler.setFormatter(formatter)

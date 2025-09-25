@@ -3,7 +3,9 @@ from langchain_openai import ChatOpenAI
 from typing import List
 
 
-QUESTION_PROMPT = opik.Prompt(name="Question_Prompt", prompt="""
+QUESTION_PROMPT = opik.Prompt(
+    name="Question_Prompt",
+    prompt="""
 You are a world-class mathematics tutor helping a student understand a question.
 Your role is to explain the solution step by step in a way that is clear, friendly, and easy to follow.
 
@@ -89,12 +91,11 @@ Would you like an analogy for this? Think of it like driving a car: if you trave
 ---
 
 Now go ahead and respond to the student's question.
-""")
+""",
+)
 
 
-def get_llm(
-        model_name: str = "gpt-4o-mini", temperature: float = 0.7
-        ) -> ChatOpenAI:
+def get_llm(model_name: str = "gpt-4o-mini", temperature: float = 0.7) -> ChatOpenAI:
     llm = ChatOpenAI(model=model_name, temperature=temperature)
     return llm
 

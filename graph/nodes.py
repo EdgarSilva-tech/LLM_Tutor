@@ -16,7 +16,7 @@ from utils.models import (
     planner,
     question_answer,
     route,
-    get_llm
+    get_llm,
 )
 from functools import lru_cache
 
@@ -26,9 +26,7 @@ PG_PASSWORD = settings.PG_PASSWORD
 DB_NAME = settings.dbname
 PORT = settings.port
 
-postgres_url = (
-    f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
-    )
+postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
 
 
 def answer(state: State):
@@ -52,8 +50,7 @@ def answer(state: State):
 
 def quizz(state: State):
     quizz = generate_quizz(
-        state["topic"], state["num_questions"],
-        state["difficulty"], state["style"]
+        state["topic"], state["num_questions"], state["difficulty"], state["style"]
     )
 
     return {"quizz_questions": [quizz.content]}
@@ -68,8 +65,7 @@ def router(state: State):
 
 def plan(state: State):
     if len(state["messages"]) >= 5:
-        plan = json.loads(
-            planner(state["task"], state["messages"][-5]).content)
+        plan = json.loads(planner(state["task"], state["messages"][-5]).content)
         print(f"Plan: {plan}")
 
         return plan
@@ -84,9 +80,7 @@ def plan(state: State):
 def eval(state: State):
     if state["quizz_questions"]:
         state["feedback"] = []
-        question_list = "".join(
-            state["quizz_questions"]
-            ).replace("  ", "").split("\n")
+        question_list = "".join(state["quizz_questions"]).replace("  ", "").split("\n")
         for question in question_list:
             state["student_response"] = interrupt(f"{question.strip()}: ")
             state["correct_answer"] = evaluate_answer(
@@ -94,11 +88,13 @@ def eval(state: State):
             ).content
             print(f"State: {state}")
             # state["student_responses"].append(state["student_response"])
-            state["feedback"].append({
-                        "question": question,
-                        "student_answer": state["student_response"],
-                        "correct_answer": state["correct_answer"],
-                    })
+            state["feedback"].append(
+                {
+                    "question": question,
+                    "student_answer": state["student_response"],
+                    "correct_answer": state["correct_answer"],
+                }
+            )
 
         return {"feedback": state["feedback"]}
 

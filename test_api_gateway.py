@@ -3,6 +3,7 @@
 Script de teste para verificar se o API Gateway e
 todos os serviços estão funcionando
 """
+
 import requests
 import time
 import sys
@@ -13,7 +14,7 @@ TEST_USER = {
     "username": "Edgar_Silva",
     "email": "edgardasilva10@hotmail.com",
     "full_name": "Edgar Costa Neves da Silva",
-    "password": "test123"
+    "password": "test123",
 }
 
 
@@ -32,8 +33,10 @@ def test_auth_signup():
     """Testa o cadastro de usuário"""
     try:
         response = requests.post(f"{BASE_URL}/auth/signup", json=TEST_USER, timeout=10)
-        
-        if response.status_code == 200 or response.status_code == 400: # 400 if user already exists
+
+        if (
+            response.status_code == 200 or response.status_code == 400
+        ):  # 400 if user already exists
             print(f"✅ Signup: Status {response.status_code}")
             return True
         else:
@@ -50,7 +53,7 @@ def test_auth_login():
         # Fazer login
         login_data = {
             "username": TEST_USER["username"],
-            "password": TEST_USER["password"]
+            "password": TEST_USER["password"],
         }
 
         response = requests.post(f"{BASE_URL}/auth/token", data=login_data, timeout=10)
@@ -72,17 +75,25 @@ def test_protected_endpoint(endpoint, token, service_name, method="GET", data=No
     """Testa um endpoint protegido com JWT"""
     try:
         headers = {"Authorization": f"Bearer {token}"}
-        
+
         if method.upper() == "POST":
-            response = requests.post(f"{BASE_URL}{endpoint}", headers=headers, json=data, timeout=15)
+            response = requests.post(
+                f"{BASE_URL}{endpoint}", headers=headers, json=data, timeout=15
+            )
         else:
-            response = requests.get(f"{BASE_URL}{endpoint}", headers=headers, timeout=10)
+            response = requests.get(
+                f"{BASE_URL}{endpoint}", headers=headers, timeout=10
+            )
 
         if response.status_code == 200:
-            print(f"✅ {service_name}: Endpoint '{endpoint}' funcionando (Status {response.status_code})")
+            print(
+                f"✅ {service_name}: Endpoint '{endpoint}' funcionando (Status {response.status_code})"
+            )
             return True
         else:
-            print(f"❌ {service_name}: Endpoint '{endpoint}' falhou (Status {response.status_code}) - {response.text[:100]}")
+            print(
+                f"❌ {service_name}: Endpoint '{endpoint}' falhou (Status {response.status_code}) - {response.text[:100]}"
+            )
             return False
     except requests.exceptions.RequestException as e:
         print(f"❌ {service_name}: Erro - {e}")
@@ -114,18 +125,33 @@ def main():
     # Teste 3: Endpoints protegidos
     print("\n📋 3. TESTANDO ENDPOINTS PROTEGIDOS")
     test_protected_endpoint("/auth/users/me/", token, "Auth Service")
-    
+
     # RAG Service Test
     rag_data = {"question": "What is the derivative of 2x^2?"}
-    test_protected_endpoint("/rag/question-answer", token, "RAG Service", method="POST", data=rag_data)
+    test_protected_endpoint(
+        "/rag/question-answer", token, "RAG Service", method="POST", data=rag_data
+    )
 
     # Evaluation Service Test
     eval_data = {"question": "What is the derivative of 2x^2?", "answer": "4x"}
-    test_protected_endpoint("/evaluation/eval-service/evaluate_answer", token, "Evaluation Service", method="POST", data=eval_data)
-    
+    test_protected_endpoint(
+        "/evaluation/eval-service/evaluate_answer",
+        token,
+        "Evaluation Service",
+        method="POST",
+        data=eval_data,
+    )
+
     # Quiz Service Test
-    quiz_data = {"topic": "calculus", "num_questions": 2, "difficulty": "medium", "style": "multiple choice"}
-    test_protected_endpoint("/quiz/generate-quiz", token, "Quiz Service", method="POST", data=quiz_data)
+    quiz_data = {
+        "topic": "calculus",
+        "num_questions": 2,
+        "difficulty": "medium",
+        "style": "multiple choice",
+    }
+    test_protected_endpoint(
+        "/quiz/generate-quiz", token, "Quiz Service", method="POST", data=quiz_data
+    )
 
     print("\n🎉 TESTES CONCLUÍDOS!")
 

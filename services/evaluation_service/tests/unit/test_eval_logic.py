@@ -1,7 +1,5 @@
 from unittest.mock import patch, MagicMock
-from services.evaluation_service.eval_utils import (
-    format_evaluator_prompt, get_llm
-    )
+from services.evaluation_service.eval_utils import format_evaluator_prompt, get_llm
 from services.evaluation_service.model import eval_answer
 from langchain_core.messages.ai import AIMessage
 
@@ -34,10 +32,11 @@ def test_format_evaluator_prompt_empty_inputs():
     assert "Question: " in prompt
     assert "Student Response: " in prompt
 
+
 # --- Test for LLM Instantiation ---
 
 
-@patch('services.evaluation_service.eval_utils.ChatOpenAI')
+@patch("services.evaluation_service.eval_utils.ChatOpenAI")
 def test_get_llm(MockChatOpenAI):
     """
     Tests if the get_llm function initializes the ChatOpenAI client
@@ -50,18 +49,17 @@ def test_get_llm(MockChatOpenAI):
     llm = get_llm(model_name="test-gpt-model", temperature=0.5)
 
     # Assert if ChatOpenAI class was called once with the expected arguments
-    MockChatOpenAI.assert_called_once_with(
-        model="test-gpt-model", temperature=0.5
-        )
+    MockChatOpenAI.assert_called_once_with(model="test-gpt-model", temperature=0.5)
 
     # Assert that the function returned the created instance
     assert llm is mock_instance
 
+
 # --- Tests for the Main Evaluation Logic ---
 
 
-@patch('services.evaluation_service.model.format_evaluator_prompt')
-@patch('services.evaluation_service.model.get_llm')
+@patch("services.evaluation_service.model.format_evaluator_prompt")
+@patch("services.evaluation_service.model.get_llm")
 def test_eval_answer_success(mock_get_llm, mock_format_prompt):
     """
     Tests the successful execution of the eval_answer function.
@@ -85,15 +83,13 @@ def test_eval_answer_success(mock_get_llm, mock_format_prompt):
     # Check that our mocks were called correctly
     mock_get_llm.assert_called_once()
     mock_format_prompt.assert_called_once_with(question, answer)
-    mock_llm_instance.invoke.assert_called_once_with(
-        "This is a formatted prompt"
-        )
+    mock_llm_instance.invoke.assert_called_once_with("This is a formatted prompt")
 
     # Check that the final result is the one from the LLM
     assert result.content == '{"score": 1.0}'
 
 
-@patch('services.evaluation_service.model.get_llm')
+@patch("services.evaluation_service.model.get_llm")
 def test_eval_answer_exception_handling(mock_get_llm):
     """
     Tests that the try-except block in eval_answer

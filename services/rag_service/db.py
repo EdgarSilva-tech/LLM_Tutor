@@ -10,9 +10,7 @@ PORT = 5432  # Hardcoded standard Postgres port
 MODEL = rag_settings.model
 OPENAI_API_KEY = rag_settings.OPENAI_API_KEY
 
-POSTGRES_URL = (
-    f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
-    )
+POSTGRES_URL = f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
 
 engine = create_engine(POSTGRES_URL, echo=True)
 embeddings = OpenAIEmbeddings(model=MODEL, api_key=OPENAI_API_KEY)

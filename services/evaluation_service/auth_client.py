@@ -13,8 +13,7 @@ async def get_current_user_from_auth_service(token: str) -> User:
             headers = {"Authorization": f"Bearer {token}"}
             # Call your auth service - adjust URL as needed
             response = await client.get(
-                "http://auth_service:8001/users/me/",
-                headers=headers
+                "http://auth_service:8001/users/me/", headers=headers
             )
 
             if response.status_code == 200:
@@ -29,13 +28,13 @@ async def get_current_user_from_auth_service(token: str) -> User:
             else:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Auth service error"
+                    detail="Auth service error",
                 )
 
     except httpx.RequestError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Auth service unavailable"
+            detail="Auth service unavailable",
         )
 
 

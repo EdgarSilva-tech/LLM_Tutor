@@ -17,7 +17,7 @@ class RedisConfig:
             password=self.password,
             ssl=False,
             port=self.port,
-            decode_responses=True
+            decode_responses=True,
         )
 
 

@@ -6,7 +6,9 @@ import os
 load_dotenv()
 OPIK_API_KEY = os.getenv("OPIK_API_KEY")
 
-EVALUATOR_PROMPT = opik.Prompt(name="Evaluator_Prompt", prompt="""
+EVALUATOR_PROMPT = opik.Prompt(
+    name="Evaluator_Prompt",
+    prompt="""
 You are an expert mathematics teacher. Your task is to evaluate a student's answer to a math question.
 
 IMPORTANT: You must respond with ONLY a valid JSON object. No additional text, explanations, or formatting.
@@ -79,17 +81,14 @@ Now evaluate the student's answer below using the same format:
 - Student Response: {student_response}
 
 Please give your answer to the question and compare it witn the when evaluating and explain the reason behind the grade
-""")
+""",
+)
 
 
-def get_llm(
-        model_name: str = "gpt-4o-mini", temperature: float = 0.7
-        ) -> ChatOpenAI:
+def get_llm(model_name: str = "gpt-4o-mini", temperature: float = 0.7) -> ChatOpenAI:
     llm = ChatOpenAI(model=model_name, temperature=temperature)
     return llm
 
 
 def format_evaluator_prompt(question: str, answer: str) -> str:
-    return EVALUATOR_PROMPT.prompt.format(
-        question=question, student_response=answer
-        )
+    return EVALUATOR_PROMPT.prompt.format(question=question, student_response=answer)

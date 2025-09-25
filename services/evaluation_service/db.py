@@ -5,9 +5,7 @@ PG_PASSWORD = eval_settings.PG_PASSWORD
 DB_NAME = eval_settings.DB_NAME
 PORT = 5432  # Hardcoded standard Postgres port
 
-POSTGRES_URL = (
-    f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
-    )
+POSTGRES_URL = f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
 
 engine = create_engine(POSTGRES_URL, echo=True)
 

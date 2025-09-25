@@ -3,8 +3,12 @@ from model import question_answer
 from sqlmodel import Session, select
 from cache import redis_client
 from data_models import (
-    QueryRequest, QueryResponse, EmbeddingRequest,
-    EmbeddingResponse, User, Lesson_Embeddings,
+    QueryRequest,
+    QueryResponse,
+    EmbeddingRequest,
+    EmbeddingResponse,
+    User,
+    Lesson_Embeddings,
 )
 import json
 from auth_client import get_current_active_user
@@ -37,10 +41,10 @@ async def health_check():
 
 
 @app.post("/question-answer")
-def query(request: QueryRequest,
-          current_user: Annotated[User, Depends(get_current_active_user)]
-          ) -> QueryResponse:
-
+def query(
+    request: QueryRequest,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> QueryResponse:
     try:
         logger.info(f"request.question: {request.question}")
         question_emb = redis_client.get(request.question)
@@ -61,9 +65,8 @@ def query(request: QueryRequest,
             logger.info("Session")
             context = session.exec(
                 select(Lesson_Embeddings)
-                .order_by(
-                    Lesson_Embeddings.embeddings.cosine_distance(question_emb)
-                    ).limit(request.top_k)
+                .order_by(Lesson_Embeddings.embeddings.cosine_distance(question_emb))
+                .limit(request.top_k)
             )
             logger.info(f"Context: {context}")
 
@@ -73,20 +76,19 @@ def query(request: QueryRequest,
         response = question_answer(request.question, content)
 
         return QueryResponse(
-                answer=response.content,
-                context=content,
-                sources=[f"chunk_{i}" for i in range(len(content))]
-            )
+            answer=response.content,
+            context=content,
+            sources=[f"chunk_{i}" for i in range(len(content))],
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"RAG error: {str(e)}")
 
 
 @app.post("/embed", response_model=EmbeddingResponse)
-async def generate_embedding(request: EmbeddingRequest,
-                             current_user:
-                             Annotated[User, Depends(get_current_active_user)]
-                             ):
-
+async def generate_embedding(
+    request: EmbeddingRequest,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
     try:
         embedding = redis_client.get(request.text)
 
@@ -97,25 +99,23 @@ async def generate_embedding(request: EmbeddingRequest,
             embedding = embeddings.embed_query(request.text)
             logger.info(f"New embedding generated: {embedding}")
             redis_client.set(
-                f"{current_user.username}_{request.text}",
-                json.dumps(embedding)
-                )
+                f"{current_user.username}_{request.text}", json.dumps(embedding)
+            )
             logger.info(f"Embedding cached: {embedding}")
 
         return EmbeddingResponse(embedding=embedding)
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error while generating embeddings: {str(e)}"
-            )
+            status_code=500, detail=f"Error while generating embeddings: {str(e)}"
+        )
 
 
 @app.get("/search")
-async def search_similar(text: str,
-                         current_user:
-                         Annotated[User, Depends(get_current_active_user)],
-                         top_k: int = 5):
-
+async def search_similar(
+    text: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    top_k: int = 5,
+):
     try:
         text_embedding = redis_client.get(text)
 
@@ -125,16 +125,16 @@ async def search_similar(text: str,
         else:
             text_embedding = embeddings.embed_query(text)
             logger.info(f"New embedding generated: {text_embedding}")
-            redis_client.set(f"{current_user.username}_{text}",
-                             json.dumps(text_embedding))
+            redis_client.set(
+                f"{current_user.username}_{text}", json.dumps(text_embedding)
+            )
             logger.info(f"Embedding cached: {text_embedding}")
 
         with Session(engine) as session:
             results = session.exec(
                 select(Lesson_Embeddings)
-                .order_by(Lesson_Embeddings
-                          .embeddings
-                          .cosine_distance(text_embedding)).limit(top_k)
+                .order_by(Lesson_Embeddings.embeddings.cosine_distance(text_embedding))
+                .limit(top_k)
             )
             logger.info(f"Search results: {results}")
 
@@ -144,10 +144,10 @@ async def search_similar(text: str,
                     {
                         "content": result.content,
                         "chunk_index": result.chunk_index,
-                        "lesson_id": str(result.lesson_id)
+                        "lesson_id": str(result.lesson_id),
                     }
                     for result in results
-                ]
+                ],
             }
 
     except Exception as e:

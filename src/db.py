@@ -18,9 +18,7 @@ class Khan_Academy_Lesson(SQLModel, table=True):
     date: datetime
 
 
-postgres_url = (
-    f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
-    )
+postgres_url = f"postgresql://postgres:{PG_PASSWORD}@localhost:{PORT}/{DB_NAME}"
 
 engine = create_engine(postgres_url, echo=True)
 

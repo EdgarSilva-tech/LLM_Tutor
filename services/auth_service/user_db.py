@@ -10,9 +10,7 @@ PORT = 5432
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-POSTGRES_URL = (
-    f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
-    )
+POSTGRES_URL = f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
 
 
 engine = create_engine(POSTGRES_URL, echo=True)
@@ -23,7 +21,6 @@ def create_db_and_tables():
 
 
 def add_user(username: str, email: str, full_name: str, password: str):
-
     with Session(engine) as session:
         statement = select(User_Auth).where(User_Auth.username == username)
         results = session.exec(statement)
@@ -37,7 +34,7 @@ def add_user(username: str, email: str, full_name: str, password: str):
             email=email,
             full_name=full_name,
             disabled=False,
-            hashed_password=pwd_context.hash(password)
+            hashed_password=pwd_context.hash(password),
         )
 
         session.add(new_user)

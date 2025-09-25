@@ -21,15 +21,13 @@ async def health_check():
 
 
 @app.post("/generate-quiz")
-def generate_quizz(request: QuizzRequest,
-                   current_user:
-                   Annotated[User, Depends(get_current_active_user)]
-                   ):
-
+def generate_quizz(
+    request: QuizzRequest,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
     try:
         quizz = quizz_generator(
-            request.topic, request.num_questions,
-            request.difficulty, request.style
+            request.topic, request.num_questions, request.difficulty, request.style
         )
         logger.info(f"Quizz generated: {quizz.content}")
         quizz_str = json.dumps({"questions": [quizz.content]}, sort_keys=True)
@@ -44,25 +42,23 @@ def generate_quizz(request: QuizzRequest,
         logger.error(f"Quizz generation failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Quizz generation failed: {str(e)}"
+            detail=f"Quizz generation failed: {str(e)}",
         )
 
 
 @app.get("/get-quizz-questions")
-def get_questions(current_user:
-                  Annotated[User, Depends(get_current_active_user)]
-                  ):
+def get_questions(current_user: Annotated[User, Depends(get_current_active_user)]):
     try:
         matching_keys = []
-        cursor = '0'  # Start with cursor 0
+        cursor = "0"  # Start with cursor 0
 
         # Scan until the cursor returned by Redis is 0
         while cursor != 0:
             cursor, keys = redis_client.scan(
                 cursor=cursor,
                 match=f"quizz_request:{current_user.username}:*",
-                count=100
-                )
+                count=100,
+            )
             matching_keys.extend(keys)
 
         # Retrieve all the values for the found keys
@@ -78,5 +74,5 @@ def get_questions(current_user:
         logger.error(f"Failed to get quizz questions: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get quizz questions: {str(e)}"
+            detail=f"Failed to get quizz questions: {str(e)}",
         )

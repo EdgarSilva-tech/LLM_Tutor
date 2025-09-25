@@ -27,11 +27,12 @@ def test_format_quizz_prompt():
     # Assert that a key instruction from the base prompt is present
     assert "You are a world-class mathematics professor" in prompt
 
+
 # --- Tests for LLM Instantiation ---
 
 
-@patch('services.quizz_gen_service.quizz_utils.quizz_settings')
-@patch('services.quizz_gen_service.quizz_utils.ChatOpenAI')
+@patch("services.quizz_gen_service.quizz_utils.quizz_settings")
+@patch("services.quizz_gen_service.quizz_utils.ChatOpenAI")
 def test_get_llm_success(MockChatOpenAI, mock_quizz_settings):
     """
     Tests if get_llm successfully initializes ChatOpenAI
@@ -47,14 +48,12 @@ def test_get_llm_success(MockChatOpenAI, mock_quizz_settings):
     # Assert
     mock_quizz_settings.configure_mock(OPENAI_API_KEY="fake-api-key")
     MockChatOpenAI.assert_called_once_with(
-        model="test-model",
-        temperature=0.5,
-        api_key="fake-api-key"
+        model="test-model", temperature=0.5, api_key="fake-api-key"
     )
     assert llm is mock_llm_instance
 
 
-@patch('services.quizz_gen_service.quizz_utils.quizz_settings')
+@patch("services.quizz_gen_service.quizz_utils.quizz_settings")
 def test_get_llm_no_api_key(mock_quizz_settings):
     """
     Tests if get_llm raises an HTTPException when the API key is missing.

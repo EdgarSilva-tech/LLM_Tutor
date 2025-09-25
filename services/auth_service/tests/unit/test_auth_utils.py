@@ -37,6 +37,7 @@ def test_verify_password():
     assert verify_password(password, hashed_password) is True
     assert verify_password("wrongpassword", hashed_password) is False
 
+
 # --- Test for JWT Token Creation ---
 
 
@@ -60,10 +61,11 @@ def test_create_access_token_with_delta():
     assert "exp" in decoded_payload
     # Further checks could be done on the expiration time if needed
 
+
 # --- Tests for User Authentication Logic ---
 
 
-@patch('services.auth_service.auth_utils.get_user')
+@patch("services.auth_service.auth_utils.get_user")
 def test_authenticate_user_success(mock_get_user):
     """Test successful user authentication."""
     mock_user = UserInDB(
@@ -81,7 +83,7 @@ def test_authenticate_user_success(mock_get_user):
     mock_get_user.assert_called_once_with("testuser")
 
 
-@patch('services.auth_service.auth_utils.get_user')
+@patch("services.auth_service.auth_utils.get_user")
 def test_authenticate_user_wrong_password(mock_get_user):
     """Test authentication failure with the wrong password."""
     mock_user = UserInDB(
@@ -98,7 +100,7 @@ def test_authenticate_user_wrong_password(mock_get_user):
     mock_get_user.assert_called_once_with("testuser")
 
 
-@patch('services.auth_service.auth_utils.get_user')
+@patch("services.auth_service.auth_utils.get_user")
 def test_authenticate_user_not_found(mock_get_user):
     """Test authentication failure when the user does not exist."""
     mock_get_user.return_value = None
@@ -107,12 +109,13 @@ def test_authenticate_user_not_found(mock_get_user):
     assert result is False
     mock_get_user.assert_called_once_with("nonexistentuser")
 
+
 # --- Tests for Getting Current User from Token ---
 
 
 @pytest.mark.asyncio
-@patch('services.auth_service.auth_utils.get_user')
-@patch('jwt.decode')
+@patch("services.auth_service.auth_utils.get_user")
+@patch("jwt.decode")
 async def test_get_current_user_success(mock_jwt_decode, mock_get_user):
     """Test successfully getting a user from a valid token."""
     mock_payload = {"sub": "testuser"}
@@ -123,7 +126,7 @@ async def test_get_current_user_success(mock_jwt_decode, mock_get_user):
         username="testuser",
         email="test@example.com",
         full_name="Test User",
-        hashed_password="a-dummy-hashed-password"
+        hashed_password="a-dummy-hashed-password",
     )
     mock_get_user.return_value = mock_user
 
@@ -131,14 +134,12 @@ async def test_get_current_user_success(mock_jwt_decode, mock_get_user):
     user = await get_current_user(token)
 
     assert user.username == "testuser"
-    mock_jwt_decode.assert_called_once_with(
-        token, AUTH_SECRET, algorithms=[ALGORITHM]
-        )
+    mock_jwt_decode.assert_called_once_with(token, AUTH_SECRET, algorithms=[ALGORITHM])
     mock_get_user.assert_called_once_with(username="testuser")
 
 
 @pytest.mark.asyncio
-@patch('jwt.decode')
+@patch("jwt.decode")
 async def test_get_current_user_invalid_token(mock_jwt_decode):
     """Test handling of an invalid token."""
     mock_jwt_decode.side_effect = InvalidTokenError
@@ -150,7 +151,7 @@ async def test_get_current_user_invalid_token(mock_jwt_decode):
 
 
 @pytest.mark.asyncio
-@patch('jwt.decode')
+@patch("jwt.decode")
 async def test_get_current_user_no_username(mock_jwt_decode):
     """Test handling of a token with no 'sub' (username) payload."""
     mock_jwt_decode.return_value = {"other_claim": "value"}  # No 'sub'
@@ -162,8 +163,8 @@ async def test_get_current_user_no_username(mock_jwt_decode):
 
 
 @pytest.mark.asyncio
-@patch('services.auth_service.auth_utils.get_user')
-@patch('jwt.decode')
+@patch("services.auth_service.auth_utils.get_user")
+@patch("jwt.decode")
 async def test_get_current_user_user_not_found(mock_jwt_decode, mock_get_user):
     """Test handling when the user from the token is not found in the DB."""
     mock_jwt_decode.return_value = {"sub": "nonexistentuser"}

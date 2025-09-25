@@ -1,6 +1,7 @@
 """
 Script rápido para testar endpoints específicos
 """
+
 import requests
 
 
@@ -10,13 +11,10 @@ def test_endpoint(method, url, data=None, headers=None):
         if method.upper() == "GET":
             response = requests.get(url, headers=headers, timeout=10)
         elif method.upper() == "POST":
-            if (isinstance(data, dict)
-                    and "Content-Type" not in (headers or {})):
+            if isinstance(data, dict) and "Content-Type" not in (headers or {}):
                 response = requests.post(url, params=data, timeout=10)
             else:
-                response = requests.post(
-                    url, data=data, headers=headers, timeout=10
-                    )
+                response = requests.post(url, data=data, headers=headers, timeout=10)
 
         print(f"📍 {method.upper()} {url}")
         print(f"Status: {response.status_code}")
@@ -30,7 +28,6 @@ def test_endpoint(method, url, data=None, headers=None):
 
 
 if __name__ == "__main__":
-
     print("🧪 TESTE RÁPIDO DE ENDPOINTS\n")
 
     # Teste 1: NGINX health
@@ -41,17 +38,12 @@ if __name__ == "__main__":
         "username": "quicktest",
         "email": "quick@test.com",
         "full_name": "Quick Test",
-        "password": "test123"
+        "password": "test123",
     }
-    response = test_endpoint(
-        "POST", "http://localhost/auth/signup", signup_data
-        )
+    response = test_endpoint("POST", "http://localhost/auth/signup", signup_data)
 
     # Teste 3: Login
-    login_data = {
-        "username": "quicktest",
-        "password": "test123"
-    }
+    login_data = {"username": "quicktest", "password": "test123"}
     response = test_endpoint("POST", "http://localhost/auth/token", login_data)
 
     if response and response.status_code == 200:
@@ -62,9 +54,7 @@ if __name__ == "__main__":
 
             # Teste 4: Endpoint protegido
             headers = {"Authorization": f"Bearer {token}"}
-            test_endpoint(
-                "GET", "http://localhost/auth/users/me/", headers=headers
-                )
+            test_endpoint("GET", "http://localhost/auth/users/me/", headers=headers)
 
         except Exception as e:
             print(f"❌ Erro ao processar token: {e}")

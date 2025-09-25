@@ -5,9 +5,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from user_db import add_user, create_db_and_tables
 from data_models import Token, User, SignupUser
 from auth_utils import (
-    authenticate_user, create_access_token,
-    get_current_active_user, ACCESS_TOKEN_EXPIRE_MINUTES,
-    get_user
+    authenticate_user,
+    create_access_token,
+    get_current_active_user,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    get_user,
 )
 from contextlib import asynccontextmanager
 from logging_config import get_logger
@@ -55,7 +57,7 @@ async def read_users_me(
         "username": current_user.username,
         "email": current_user.email,
         "full_name": current_user.full_name,
-        "disabled": current_user.disabled
+        "disabled": current_user.disabled,
     }
 
 
@@ -72,14 +74,14 @@ async def signup_user(user: SignupUser):
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered"
+            detail="Username already registered",
         )
     try:
         new_user = add_user(
             username=user.username,
             email=user.email,
             full_name=user.full_name,
-            password=user.password
+            password=user.password,
         )
         logger.info(f"User created: {new_user.username}")
         # Manually create the response to match the User model
@@ -88,11 +90,11 @@ async def signup_user(user: SignupUser):
             username=new_user.username,
             email=new_user.email,
             full_name=new_user.full_name,
-            disabled=new_user.disabled
+            disabled=new_user.disabled,
         )
     except Exception as e:
         logger.error(f"Could not create user: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Could not create user: {e}"
+            detail=f"Could not create user: {e}",
         )

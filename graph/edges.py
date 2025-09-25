@@ -15,9 +15,7 @@ def task_selector(state: State) -> Literal["Q&A", "planner"]:
         return "planner"
 
 
-def to_summarize_or_to_not_summarize(
-        state: State) -> Literal["summarize", "__end__"]:
-
+def to_summarize_or_to_not_summarize(state: State) -> Literal["summarize", "__end__"]:
     """
     Determines whether to summarize the conversation or end it.
     """

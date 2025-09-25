@@ -32,8 +32,7 @@ def add_classes_and_embeddings():
                 date = datetime.now()
 
                 class_contents = Khan_Academy_Lesson(
-                    content_path=content_path, module=module,
-                    topic=topic, date=date
+                    content_path=content_path, module=module, topic=topic, date=date
                 )
                 session.add(class_contents)
             session.commit()
