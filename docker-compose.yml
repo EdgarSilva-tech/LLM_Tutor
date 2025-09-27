@@ -10,7 +10,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/api_gateway.conf:/etc/nginx/conf.d/api_gateway.conf:ro
-    command: /bin/sh -c "rm /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+    command: /bin/sh -c "rm -f /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     depends_on:
       - auth_service
       - rag_service
@@ -23,7 +23,7 @@ services:
     image: pgvector/pgvector:pg17
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=Myway2025!!!
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
       - POSTGRES_DB=llm_tutor_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -64,6 +64,13 @@ services:
       - PORT=8002
       - POSTGRES_PASSWORD=${PG_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+      - OPIK_API_KEY=${OPIK_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - USERNAME=${USERNAME}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - REDIS_ENDPOINT=${REDIS_ENDPOINT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - postgres
 
@@ -82,6 +89,11 @@ services:
       - PORT=8003
       - POSTGRES_PASSWORD=${PG_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+      - OPIK_API_KEY=${OPIK_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_ENDPOINT=${REDIS_ENDPOINT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - postgres
 
@@ -98,6 +110,11 @@ services:
       - services/quizz_gen_service/.env
     environment:
       - PORT=8004
+      - OPIK_API_KEY=${OPIK_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_ENDPOINT=${REDIS_ENDPOINT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - AUTH_SECRET=${AUTH_SECRET}
     networks:
       - llm-tutor-network
 
