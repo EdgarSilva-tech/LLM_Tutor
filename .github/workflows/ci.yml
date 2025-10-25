@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      AUTH_SECRET: ${{ secrets.SECRET_KEY }}
       REDIS_ENDPOINT: ${{ secrets.REDIS_ENDPOINT }}
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      REDIS_USERNAME: ${{ secrets.REDIS_USERNAME }}
+      REDIS_USERNAME: ${{ secrets.USERNAME }}
       PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
       DB_NAME: ${{ secrets.DB_NAME }}
       USERNAME: ${{ secrets.USERNAME }}

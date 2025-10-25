@@ -2,9 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from typing import Annotated
 from datetime import datetime
 from sqlmodel import Session
-from data_models import (
-    Evaluation, EvaluationRequest, User, SingleEvaluationRequest
-    )
+from data_models import Evaluation, EvaluationRequest, User, SingleEvaluationRequest
 from model import eval_answer
 import hashlib
 import json

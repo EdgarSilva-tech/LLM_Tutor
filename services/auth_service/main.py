@@ -11,21 +11,22 @@ from auth_utils import (
     create_access_token,
     get_current_active_user,
     ACCESS_TOKEN_EXPIRE_MINUTES,
-    get_user
+    get_user,
 )
 from contextlib import asynccontextmanager
 from logging_config import get_logger
+
 # except Exception:  # pragma: no cover
-    # from services.auth_service.data_models import Token, User, SignupUser
-    # from services.auth_service.auth_utils import (
-    #     authenticate_user,
-    #     create_access_token,
-    #     get_current_active_user,
-    #     ACCESS_TOKEN_EXPIRE_MINUTES,
-    #     get_user,
-    # )
-    # from contextlib import asynccontextmanager
-    # from services.auth_service.logging_config import get_logger
+# from services.auth_service.data_models import Token, User, SignupUser
+# from services.auth_service.auth_utils import (
+#     authenticate_user,
+#     create_access_token,
+#     get_current_active_user,
+#     ACCESS_TOKEN_EXPIRE_MINUTES,
+#     get_user,
+# )
+# from contextlib import asynccontextmanager
+# from services.auth_service.logging_config import get_logger
 # Initialize the logger for this module
 logger = get_logger(__name__)
 
