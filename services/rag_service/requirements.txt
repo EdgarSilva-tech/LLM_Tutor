@@ -2,8 +2,6 @@ pgvector
 psycopg2-binary
 opik
 langchain-openai
-langchain-core
-langchain-community
 langchain-text-splitters
 psycopg
 fastapi[standard]
@@ -11,7 +9,7 @@ pydantic
 pydantic-settings
 httpx
 langchain
-langchain-experimental
+langchain-experimental==0.3.4
 python-dotenv
 redis
 sqlmodel
@@ -19,5 +17,4 @@ python-json-logger
 pytest
 pytest-mock
 opik
-langchain_openai
 pytest-asyncio

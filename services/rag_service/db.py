@@ -1,8 +1,8 @@
 import sqlalchemy as sa
-from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from sqlmodel import create_engine, Session, SQLModel
 from rag_settings import rag_settings
+from langchain_experimental.text_splitter import SemanticChunker
 
 PG_PASSWORD = rag_settings.PG_PASSWORD
 DB_NAME = "Khan_Academy"  # Hardcoded for consistency
@@ -27,5 +27,5 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
-if __name__ == "__main__":
-    create_db_and_tables()
+# if __name__ == "__main__":
+#     create_db_and_tables()

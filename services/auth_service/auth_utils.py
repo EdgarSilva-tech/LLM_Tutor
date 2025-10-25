@@ -5,10 +5,21 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from sqlmodel import Session, create_engine, select
-from auth_settings import auth_settings
-from data_models import TokenData, User, UserInDB, User_Auth
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Import compatibility for both local pytest and container/module execution
+try:
+    from services.auth_service.auth_settings import auth_settings
+    from services.auth_service.data_models import (  # type: ignore
+        TokenData,
+        User,
+        UserInDB,
+        User_Auth,
+    )
+except Exception:  # pragma: no cover
+    from auth_settings import auth_settings
+    from data_models import TokenData, User, UserInDB, User_Auth
+
+pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 PG_PASSWORD = auth_settings.PG_PASSWORD
@@ -56,6 +67,24 @@ def authenticate_user(username: str, password: str):
         return False
     if not verify_password(password, user.hashed_password):
         return False
+    # Rehash automático, se necessário (migração para bcrypt_sha256)
+    try:
+        if pwd_context.needs_update(user.hashed_password):
+            new_hash = get_password_hash(password)
+            try:
+                # Import local para evitar ciclos
+                try:
+                    from services.auth_service.user_db import update_user_password  # type: ignore
+                except Exception:  # pragma: no cover
+                    from user_db import update_user_password  # type: ignore
+                update_user_password(
+                    username=user.username, new_hashed_password=new_hash
+                )
+                user.hashed_password = new_hash
+            except Exception:
+                pass
+    except Exception:
+        pass
     return user
 
 

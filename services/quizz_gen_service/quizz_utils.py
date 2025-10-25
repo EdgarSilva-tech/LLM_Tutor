@@ -1,7 +1,19 @@
 import opik
 from langchain_openai import ChatOpenAI
-from quizz_settings import quizz_settings
+
+# Compat imports para pytest/CI e execuçāo em contentores
+try:
+    from services.quizz_gen_service.quizz_settings import quizz_settings  # type: ignore
+except Exception:  # pragma: no cover
+    from quizz_settings import quizz_settings
 from fastapi import HTTPException, status
+
+
+OPIK_API_KEY = quizz_settings.OPIK_API_KEY
+if OPIK_API_KEY:
+    opik.api_key = OPIK_API_KEY
+else:
+    raise ValueError("OPIK_API_KEY is not set")
 
 QUIZZ_GENERATOR_PROMPT = opik.Prompt(
     name="Quizz_Generator_Promt",

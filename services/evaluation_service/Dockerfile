@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies, including postgresql-client for psql
 RUN apt-get update && apt-get install -y \
-    gcc \
+    gcc g++ make \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 

@@ -17,7 +17,8 @@ from services.auth_service.auth_utils import (
 from services.auth_service.data_models import UserInDB
 
 # --- Tests for Password Functions ---
-
+print(AUTH_SECRET)
+print(ALGORITHM)
 
 def test_get_password_hash():
     """Test that a password gets hashed correctly."""

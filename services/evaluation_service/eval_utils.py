@@ -1,10 +1,18 @@
 import opik
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
-import os
+
+try:
+    from services.evaluation_service.eval_settings import eval_settings
+except Exception:
+    from eval_settings import eval_settings
 
 load_dotenv()
-OPIK_API_KEY = os.getenv("OPIK_API_KEY")
+OPIK_API_KEY = eval_settings.OPIK_API_KEY
+if OPIK_API_KEY:
+    opik.api_key = OPIK_API_KEY
+else:
+    raise ValueError("OPIK_API_KEY is not set")
 
 EVALUATOR_PROMPT = opik.Prompt(
     name="Evaluator_Prompt",

@@ -2,6 +2,16 @@ import opik
 from langchain_openai import ChatOpenAI
 from typing import List
 
+try:
+    from services.rag_service.rag_settings import rag_settings
+except Exception:
+    from rag_settings import rag_settings
+
+OPIK_API_KEY = rag_settings.OPIK_API_KEY
+if OPIK_API_KEY:
+    opik.api_key = OPIK_API_KEY
+else:
+    raise ValueError("OPIK_API_KEY is not set")
 
 QUESTION_PROMPT = opik.Prompt(
     name="Question_Prompt",
