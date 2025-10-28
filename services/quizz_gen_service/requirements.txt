@@ -2,6 +2,7 @@ opik
 pydantic
 pydantic-settings
 langchain-openai
+langchain
 fastapi
 uvicorn
 python-dotenv

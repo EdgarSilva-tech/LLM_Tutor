@@ -14,6 +14,7 @@ if OPIK_API_KEY:
 else:
     raise ValueError("OPIK_API_KEY is not set")
 
+
 EVALUATOR_PROMPT = opik.Prompt(
     name="Evaluator_Prompt",
     prompt="""
