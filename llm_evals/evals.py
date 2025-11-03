@@ -39,7 +39,8 @@ def eval_task(x):
 
         content = [text.content for text in context]
     return {
-        "output": question_answer(x['question'], content)
+        "output": question_answer(x['question'], content),
+        "context": content
     }
 
 
