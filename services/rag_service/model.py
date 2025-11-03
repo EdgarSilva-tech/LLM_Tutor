@@ -1,12 +1,17 @@
 # Compatibilidade de import para pytest/CI e runtime em contentores
 try:
-    from services.rag_service.rag_utils import get_llm, format_question_prompt
+    from services.rag_service.rag_utils import format_question_prompt, get_llm
 except Exception:  # pragma: no cover
-    from rag_utils import get_llm, format_question_prompt
+    from rag_utils import format_question_prompt, get_llm
 from typing import List
+
 from opik.integrations.langchain import OpikTracer
 
-opik_tracer = OpikTracer(project_name="LLM_Tutor")
+opik_tracer = OpikTracer(
+    tags=["langchain", "rag"],
+    metadata={"use-case": "question and answer", "version": "1.0"},
+    project_name="LLM_Tutor",
+)
 
 
 def question_answer(question: str, context: List[str]) -> str:

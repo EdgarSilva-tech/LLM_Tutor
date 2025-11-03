@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     host: str
     port: int = 5432
     OPENAI_API_KEY: str
+    OPIK_API_KEY: str
     model: str = "text-embedding-3-small"
     messages_after_summary: int = 5
     summary_trigger: int = 20

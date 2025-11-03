@@ -7,7 +7,7 @@ from data_models import User_Auth, auth_metadata
 
 PG_PASSWORD = auth_settings.PG_PASSWORD
 DB_NAME = auth_settings.DB_NAME
-PORT = 5432
+PORT = auth_settings.DB_PORT
 
 pwd_context = CryptContext(schemes=["bcrypt_sha256", "bcrypt"], deprecated="auto")
 
