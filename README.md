@@ -1,151 +1,230 @@
-📌 PROJECT: LLM Tutor — Multi-Agent AI Teaching System
+📘 LLM Tutor — Multi-Agent AI Teaching System
 
-⭐ Overview
+LLM Tutor is a modular, production-grade AI system designed to teach Calculus using Retrieval-Augmented Generation (RAG), automatic quiz generation, and LLM-based evaluation of student answers.
 
-LLM Tutor is a modular, production-style AI system built with multiple cooperating LLM-powered services:
-
-RAG Service for answering calculus questions using retrieval over curated AP exam solutions.
-
-Quiz Generation Service that creates pedagogically aligned quizzes based on learning objectives.
-
-Evaluation / Grading Service that scores student responses with rubric-based LLM grading.
-
-Auth Service with proper JWT authentication to manage secure access.
-
-
-The system demonstrates end-to-end AI engineering skills including:
-service-oriented architecture, RAG design, LLM prompting, curriculum-based quiz generation, automated evaluation with Opik, and scalable FastAPI deployments.
+It is built as a multi-service architecture with strong emphasis on quality, evaluation, and observability.
 
 
 ---
 
-🏗️ Architecture Diagram
+🚀 Features
 
-┌───────────────────────┐
-                    │        Auth Service    │
-                    │  JWT issuance & verify │
-                    └───────────┬────────────┘
-                                │
-                ┌───────────────┼────────────────┐
-                │                               │
-       ┌────────▼─────────┐             ┌────────▼─────────┐
-       │    RAG Service   │             │ Quiz Gen Service  │
-       │ Retrieve + LLM   │             │   LO-based items  │
-       │ Calculus corpus  │             │ JSON-structured   │
-       └─────────┬────────┘             └─────────┬────────┘
-                 │                                  │
-                 ▼                                  ▼
-       ┌──────────────────────┐          ┌──────────────────────┐
-       │ Evaluation Service   │  <────── │  Student Responses   │
-       │ LLM grading, rubric  │          │   Feedback & scores  │
-       └──────────────────────┘          └──────────────────────┘
+1. RAG-powered Calculus Q&A Service
 
-                   ┌───────────────┐
-                   │     Opik      │
-                   │ Traces, eval, │
-                   │  metrics      │
-                   └───────────────┘
+Retrieves curated AP Calculus FRQ explanations
+
+Normalizes user questions
+
+Generates grounded solutions with citations
+
+Uses deterministic preprocessing + chunking + embeddings
 
 
----
+2. Quiz Generation Service
 
-🔍 Key Features
+Generates quizzes from structured specifications:
 
-1. Retrieval-Augmented Generation (RAG)
+Topic
 
-Chunked AP Calculus FRQ solution dataset
+Difficulty
 
-Normalization & question parsing
+Style (computational / conceptual / mixed)
 
-Latency-controlled retrieval
-
-LLM answer generation with source grounding
+Number of questions
 
 
-2. Quiz Generation
+Produces valid JSON with:
 
-Topic, difficulty, style and LO structured inputs
+Stem
 
-Generates:
+Options
 
-MCQ
+Correct answer
 
-Short-answer
-
-Conceptual questions
+Metadata and tags
 
 
-Guaranteed JSON structure
 
-Ensures variability & alignment with learning objectives
+3. Grading & Evaluation Service
 
+Uses LLM to:
 
-3. AI Grader
+Grade student answers
 
-Takes question + rubric + student answer
+Provide feedback and improvement steps
 
-Uses LLM to produce:
+Detect misconceptions
 
-Score
-
-Explanation
-
-Feedback
+Align feedback with rubrics
 
 
-Detects misconceptions and missing steps
+Supports both free-form answers and short-answer formats
 
 
-4. Evaluation with Opik
+4. Auth Service
 
-Includes full evaluation pipeline using custom datasets:
+Full JWT authentication
 
-Calculus QA dataset (derivatives, integrals, limits, series, FTC…)
+Protects all agents
 
-Quiz specification dataset (LO + constraints → expected outcomes)
+Centralized user identity layer
 
-Grader/Feedback dataset
 
-Runs metrics such as:
+5. Opik Integration
+
+Full trace logging
+
+Dataset-based evaluation
+
+Custom metrics
+
+Quality gates for development and production:
 
 Correctness
 
 Faithfulness
 
-Key validity
-
 Schema compliance
-
-Difficulty/style adherence
 
 LO alignment
 
-Feedback helpfulness
+Difficulty/style adherence
 
-Hallucination
+Hallucination detection
 
 
-Dataset-driven quality gates for CI
 
+
+---
+
+🏗️ Architecture
+
+LLM_Tutor
+├── services
+│   ├── auth_service
+│   ├── rag_service
+│   ├── quiz_gen_service
+│   └── evaluation_service
+├── eval/
+│   ├── datasets/
+│   ├── evaluators/
+│   ├── runners/
+│   ├── shared/
+│   └── reports/
+└── docker-compose.yml
+
+Each service is a FastAPI microservice with its own dependencies, prompts, and evaluation hooks.
 
 
 ---
 
 🔧 Tech Stack
 
-FastAPI microservices
+FastAPI (microservices)
 
-OpenAI LLM APIs
+Python / Async
 
-Opik for tracing, evaluation & metrics
+OpenAI API
 
-Pydantic model validation
+Opik for evaluation & observability
 
-Docker containerization
+Docker
 
-Python (async / sync)
+Pydantic
 
-SQLite / local FS for light state management
+Vector search (custom or FAISS/Pinecone)
 
-GitHub Actions (planned) for CI-based evaluation
+JWT Authentication
 
+
+
+---
+
+📊 Evaluation
+
+LLM Tutor includes a complete evaluation pipeline based on Opik:
+
+Included datasets
+
+Calculus QA dataset
+
+Quiz specifications dataset
+
+Grader/Feedback dataset
+
+
+Metrics
+
+Correctness
+
+Faithfulness
+
+Schema compliance
+
+Key validity
+
+LO alignment
+
+Difficulty/style adherence
+
+Hallucination detection
+
+Feedback quality
+
+Diversity of questions
+
+
+Goal
+
+Guarantee consistent quality in:
+
+RAG answers
+
+Quiz generation
+
+Feedback and grading
+
+
+
+---
+
+🧪 Running the Services
+
+docker-compose up --build
+
+or run individually:
+
+cd services/rag_service
+uvicorn main:app --reload --host 0.0.0.0 --port 8001
+
+
+---
+
+🧭 Roadmap
+
+[ ] CI/CD pipeline running Opik eval splits
+
+[ ] Student proficiency modeling
+
+[ ] Semantic distractor generation
+
+[ ] Multi-modal support (OCR equations)
+
+[ ] Fine-tuned instructor model for more stable grading
+
+[ ] Web UI for students
+
+
+
+---
+
+📄 License
+
+MIT
+
+
+---
+
+✨ Author
+
+Edgar Silva
