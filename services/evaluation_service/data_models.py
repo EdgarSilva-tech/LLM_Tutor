@@ -4,6 +4,7 @@ import uuid
 from uuid import UUID
 from datetime import datetime
 from typing import List
+from pydantic import Field as PydField
 
 
 class SingleEvaluationRequest(BaseModel):
@@ -38,3 +39,13 @@ class User(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class EvaluationJobMessage(BaseModel):
+    job_id: str
+    username: str
+    student_id: str
+    quizz_questions: List[str]
+    student_answers: List[str]
+    created_at: str = PydField(description="ISO8601 datetime string")
+    trace_id: str | None = None

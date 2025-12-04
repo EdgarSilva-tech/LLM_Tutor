@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     messages_after_summary: int = 5
     summary_trigger: int = 20
     REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 12258
+    REDIS_PORT: int = 11683
     REDIS_DB: int = 0
     REDIS_USERNAME: str = "default"
     REDIS_ENDPOINT: str

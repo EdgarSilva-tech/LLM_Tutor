@@ -18,3 +18,8 @@ class User(BaseModel):
     email: str | None = None
     full_name: str | None = None
     disabled: bool | None = None
+
+
+class SubmitAnswers(BaseModel):
+    quiz_id: str
+    answers: list[str]

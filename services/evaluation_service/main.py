@@ -1,16 +1,21 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import Annotated
 from datetime import datetime
-from sqlmodel import Session
-from data_models import Evaluation, EvaluationRequest, User, SingleEvaluationRequest
+from data_models import EvaluationRequest, User, SingleEvaluationRequest
 from model import eval_answer
 import hashlib
 import json
 from cache import redis_client
 from auth_client import get_current_active_user
 from contextlib import asynccontextmanager
-from db import create_db_and_tables, engine
+import contextlib
+import asyncio
+from mq_consumer import start_consumer_task
+from eval_settings import eval_settings
+import aio_pika
+from db import create_db_and_tables
 from logging_config import get_logger
+from persistence import store_evals
 
 # Initialize the logger for this module
 logger = get_logger(__name__)
@@ -21,7 +26,17 @@ async def lifespan(app: FastAPI):
     logger.info("Creating Evaluation tables...")
     create_db_and_tables()
     logger.info("Evaluation tables created. Service is ready.")
-    yield
+    consumer_task = start_consumer_task()
+    try:
+        yield
+    finally:
+        # Graceful stop
+        stop_event = getattr(consumer_task, "stop_event", None)
+        if stop_event is not None:
+            stop_event.set()
+        consumer_task.cancel()
+        with contextlib.suppress(Exception):  # type: ignore[name-defined]
+            asyncio.get_event_loop().run_until_complete(consumer_task)
 
 
 app = FastAPI(title="Evaluation Service", lifespan=lifespan)
@@ -30,36 +45,15 @@ app = FastAPI(title="Evaluation Service", lifespan=lifespan)
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "service": "Evaluation Service"}
-
-
-def store_evals(
-    question: str,
-    answer: str,
-    correct_answer: str,
-    score: float,
-    feedback: str,
-    username: str,
-):
-    with Session(engine) as session:
-        try:
-            eval = Evaluation(
-                username=username.username,
-                question=question,
-                answer=answer,
-                correct_answer=correct_answer,
-                score=score,
-                feedback=feedback,
-                date=datetime.now(),
-            )
-
-            session.add(eval)
-            logger.info(f"Evaluation saved: {eval}")
-            session.commit()
-            return "Evaluation saved"
-
-        except Exception as e:
-            return f"Error saving evaluation: {e}"
+    rabbit = "disabled"
+    try:
+        if eval_settings.RABBITMQ_URL:
+            conn = await aio_pika.connect_robust(eval_settings.RABBITMQ_URL)
+            await conn.close()
+            rabbit = "ok"
+    except Exception:
+        rabbit = "error"
+    return {"status": "healthy", "service": "Evaluation Service", "rabbitmq": rabbit}
 
 
 @app.post("/eval-service")
@@ -80,12 +74,12 @@ def evaluation(
                 logger.info(f"correct_answer: {correct_answer}")
                 # request.student_responses.append(request.student_response)
                 store_evals(
+                    current_user.username,
                     question,
                     answer,
                     correct_answer["correct_answer"],
                     correct_answer["score"],
                     correct_answer["feedback"],
-                    current_user,
                 )
 
                 feedback.append(
@@ -150,6 +144,17 @@ def get_feedback(current_user: Annotated[User, Depends(get_current_active_user)]
     else:
         return "No keys found for the pattern."
 
+
+@app.get("/eval-service/jobs/{job_id}")
+def get_job_status(job_id: str, current_user: Annotated[User, Depends(get_current_active_user)]):
+    key = f"Eval:{current_user.username}:{job_id}"
+    val = redis_client.get(key)
+    if not val:
+        return {"status": "processing"}
+    try:
+        return {"status": "done", "feedback": json.loads(val)}
+    except Exception:
+        return {"status": "done", "feedback": val}
 
 # Protected endpoint to test authentication
 @app.get("/eval-service/me")

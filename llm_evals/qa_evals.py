@@ -4,6 +4,8 @@ from opik.evaluation.metrics import (
     Hallucination,
     Moderation,
     Usefulness,
+    ContextPrecision,
+    ContextRecall
 )
 from opik.evaluation import evaluate
 from settings import settings
@@ -23,7 +25,8 @@ engine = create_engine(POSTGRES_URL, echo=True)
 embeddings = OpenAIEmbeddings(model=settings.model)
 
 client = Opik(api_key=settings.OPIK_API_KEY)
-metrics = [Hallucination(), AnswerRelevance(), Moderation(), Usefulness()]
+metrics = [Hallucination(), AnswerRelevance(), Moderation(),
+           Usefulness(), ContextPrecision(), ContextRecall()]
 dataset = client.get_or_create_dataset(name="LLM_Tutor_RAG")
 
 

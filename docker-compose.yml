@@ -1,6 +1,23 @@
 # docker-compose.yml
 
 services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: llm_tutor-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - llm-tutor-network
   nginx:
     image: nginx:alpine
     container_name: llm_tutor-nginx-1
@@ -71,6 +88,10 @@ services:
       - AUTH_SECRET=${AUTH_SECRET}
       - REDIS_ENDPOINT=${REDIS_ENDPOINT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE}
+      - RABBITMQ_ROUTING_KEY=${RABBITMQ_ROUTING_KEY}
+      - RABBITMQ_PREFETCH=${RABBITMQ_PREFETCH}
     depends_on:
       - postgres
 
@@ -94,8 +115,15 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - REDIS_ENDPOINT=${REDIS_ENDPOINT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE}
+      - RABBITMQ_ROUTING_KEY=${RABBITMQ_ROUTING_KEY}
+      - RABBITMQ_PREFETCH=${RABBITMQ_PREFETCH}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
     networks:
       - llm-tutor-network
@@ -115,6 +143,13 @@ services:
       - REDIS_ENDPOINT=${REDIS_ENDPOINT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - AUTH_SECRET=${AUTH_SECRET}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE}
+      - RABBITMQ_ROUTING_KEY=${RABBITMQ_ROUTING_KEY}
+      - RABBITMQ_PREFETCH=${RABBITMQ_PREFETCH}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       - llm-tutor-network
 

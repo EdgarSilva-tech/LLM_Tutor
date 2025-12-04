@@ -7,6 +7,7 @@ try:
 except Exception:  # pragma: no cover
     from quizz_utils import format_quizz_prompt, get_llm
 from opik.integrations.langchain import OpikTracer
+import ast
 
 opik_tracer = OpikTracer(
     tags=["langchain", "quizz"],
@@ -18,4 +19,6 @@ opik_tracer = OpikTracer(
 def quizz_generator(topic: str, num_questions: int, difficulty: str, style: str) -> str:
     llm = get_llm()
     prompt = format_quizz_prompt(topic, num_questions, difficulty, style)
-    return llm.invoke(prompt, config={"callbacks": [opik_tracer]})
+    quizz = llm.invoke(prompt, config={"callbacks": [opik_tracer]}).content
+    quizz_list = ast.literal_eval(quizz)
+    return quizz_list

@@ -19,3 +19,4 @@ python-json-logger
 pytest
 pytest-mock
 pytest-asyncio
+aio-pika
