@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import Annotated
-from datetime import datetime
 from data_models import EvaluationRequest, User, SingleEvaluationRequest
 from model import eval_answer
 import hashlib
@@ -53,7 +52,10 @@ async def health_check():
             rabbit = "ok"
     except Exception:
         rabbit = "error"
-    return {"status": "healthy", "service": "Evaluation Service", "rabbitmq": rabbit}
+    return {"status": "healthy",
+            "service": "Evaluation Service",
+            "rabbitmq": rabbit,
+            }
 
 
 @app.post("/eval-service")
@@ -70,7 +72,9 @@ def evaluation(
             logger.info(f"answer_list: {answer_list}")
 
             for question, answer in zip(question_list, answer_list):
-                correct_answer = json.loads(eval_answer(question, answer).content)
+                correct_answer = json.loads(
+                    eval_answer(question, answer).content
+                    )
                 logger.info(f"correct_answer: {correct_answer}")
                 # request.student_responses.append(request.student_response)
                 store_evals(
@@ -124,7 +128,9 @@ def evaluate_answer(request: SingleEvaluationRequest):
 
 
 @app.get("/eval-service/get-feedback")
-def get_feedback(current_user: Annotated[User, Depends(get_current_active_user)]):
+def get_feedback(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
     matching_keys = []
     cursor = "0"  # Start with cursor 0
 
@@ -146,7 +152,10 @@ def get_feedback(current_user: Annotated[User, Depends(get_current_active_user)]
 
 
 @app.get("/eval-service/jobs/{job_id}")
-def get_job_status(job_id: str, current_user: Annotated[User, Depends(get_current_active_user)]):
+def get_job_status(
+    job_id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
     key = f"Eval:{current_user.username}:{job_id}"
     val = redis_client.get(key)
     if not val:
@@ -156,8 +165,13 @@ def get_job_status(job_id: str, current_user: Annotated[User, Depends(get_curren
     except Exception:
         return {"status": "done", "feedback": val}
 
+
 # Protected endpoint to test authentication
 @app.get("/eval-service/me")
-async def get_my_info(current_user: Annotated[User, Depends(get_current_active_user)]):
+async def get_my_info(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
     """Get current user info (for testing auth integration)"""
-    return {"message": f"Hello {current_user.username}!", "user_info": current_user}
+    return {"message": f"Hello {current_user.username}!",
+            "user_info": current_user,
+            }

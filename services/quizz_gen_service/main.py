@@ -7,7 +7,6 @@ import hashlib
 import json
 from auth_client import get_current_active_user
 from logging_config import get_logger
-from pydantic import BaseModel
 import uuid
 from datetime import datetime
 from mq import publish_evaluation_request_sync

@@ -44,7 +44,7 @@ evals = evaluate(
     dataset=dataset,
     task=eval_task,
     scoring_metrics=metrics,
-   # prompt=[QUESTION_PROMPT],
+    # prompt=[QUESTION_PROMPT],
     project_name="LLM_Tutor",
     scoring_key_mapping={"input": "learning_objective"}
 )

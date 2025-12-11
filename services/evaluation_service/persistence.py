@@ -33,4 +33,3 @@ def store_evals(
         except Exception as e:
             logger.exception("Error saving evaluation: %s", e)
             return f"Error saving evaluation: {e}"
-

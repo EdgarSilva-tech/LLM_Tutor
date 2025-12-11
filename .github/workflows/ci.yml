@@ -2,55 +2,109 @@ name: Python Services CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  lint-and-test:
+  lint-test-integration:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd="redis-cli ping || exit 1"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+
+      rabbitmq:
+        image: rabbitmq:3.13-management
+        ports: ["5672:5672", "15672:15672"]
+        options: >-
+          --health-cmd="rabbitmq-diagnostics -q ping"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       AUTH_SECRET: ${{ secrets.SECRET_KEY }}
-      REDIS_ENDPOINT: ${{ secrets.REDIS_ENDPOINT }}
+      REDIS_ENDPOINT: 127.0.0.1
+      REDIS_PORT: 6379
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      REDIS_USERNAME: ${{ secrets.USERNAME }}
+      REDIS_USERNAME: default
       PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
       DB_NAME: ${{ secrets.DB_NAME }}
-      USERNAME: ${{ secrets.USERNAME }}
-      HOST: ${{ secrets.HOST }}
+      USERNAME: ci
+      HOST: localhost
       OPIK_API_KEY: ${{ secrets.OPIK_API_KEY }}
+      RABBITMQ_URL: amqp://guest:guest@127.0.0.1:5672/%2F
+      # Opcional: evitar chamadas reais a LLM em CI (trate no código se usar)
+      LLM_OFFLINE: "1"
+
     strategy:
       matrix:
         python-version: ["3.13"]
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip' # Cache dependencies to speed up subsequent runs
+          cache: pip
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff pytest pytest-asyncio
-          # Install dependencies for each service
+          pip install ruff pytest pytest-asyncio pytest-cov mypy bandit pip-audit
           pip install -r services/auth_service/requirements.txt
           pip install -r services/rag_service/requirements.txt
           pip install -r services/evaluation_service/requirements.txt
           pip install -r services/quizz_gen_service/requirements.txt
 
-      - name: Lint with ruff
+      - name: Lint
         run: |
-          # Stop the build if there are any linting errors
           ruff check . --output-format=github
-          # Check formatting
           ruff format . --check
 
-      - name: Run unit tests with pytest
+      - name: Type check
+        run: mypy .
+
+      - name: Security (Bandit)
+        run: bandit -q -r services || true
+
+      - name: Python deps audit
+        run: pip-audit || true
+
+      - name: Tests (unit + integração) com cobertura
         run: |
-          pytest
+          pytest -q --maxfail=1 --disable-warnings --cov=services --cov-report=xml
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false

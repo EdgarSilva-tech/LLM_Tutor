@@ -5,14 +5,18 @@ from typing import Any, Dict, List
 from logging_config import get_logger
 from data_models import EvaluationJobMessage
 from model import eval_answer
-from persistence import store_evals  # reuse DB persistence without circular import
+from persistence import store_evals
 from cache import redis_client
 from eval_settings import eval_settings
 
 logger = get_logger(__name__)
 
-EXCHANGE_NAME = eval_settings.model_dump().get("RABBITMQ_EXCHANGE", "app.events")
-ROUTING_KEY = eval_settings.model_dump().get("RABBITMQ_ROUTING_KEY", "quiz.generate.request")
+EXCHANGE_NAME = eval_settings.model_dump().get(
+    "RABBITMQ_EXCHANGE", "app.events"
+)
+ROUTING_KEY = eval_settings.model_dump().get(
+    "RABBITMQ_ROUTING_KEY", "quiz.generate.request"
+)
 PREFETCH = int(eval_settings.model_dump().get("RABBITMQ_PREFETCH", 16))
 RABBIT_URL = eval_settings.model_dump().get("RABBITMQ_URL")
 
@@ -28,7 +32,9 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
         logger.info(f"Consuming job_id={msg.job_id} for user={msg.username}")
 
         feedback: List[Dict[str, Any]] = []
-        for question, answer in zip(msg.quizz_questions, msg.student_answers or []):
+        for question, answer in zip(
+            msg.quizz_questions, msg.student_answers or []
+        ):
             result = json.loads(eval_answer(question, answer).content)
             store_evals(
                 msg.username,
@@ -56,14 +62,20 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
 
 async def _declare_topology(channel: aio_pika.abc.AbstractChannel) -> None:
     # DLX/ DLQ
-    dlx = await channel.declare_exchange(DLX_NAME, aio_pika.ExchangeType.TOPIC, durable=True)
+    dlx = await channel.declare_exchange(
+        DLX_NAME, aio_pika.ExchangeType.TOPIC, durable=True
+    )
     dlq = await channel.declare_queue(DLQ_NAME, durable=True)
     await dlq.bind(dlx, routing_key="#")
 
     # Main exchange/queue with DLX
-    exchange = await channel.declare_exchange(EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True)
+    exchange = await channel.declare_exchange(
+        EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
+    )
     args = {"x-dead-letter-exchange": DLX_NAME}
-    queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
+    queue = await channel.declare_queue(
+        QUEUE_NAME, durable=True, arguments=args
+    )
     await queue.bind(exchange, routing_key=ROUTING_KEY)
 
 
