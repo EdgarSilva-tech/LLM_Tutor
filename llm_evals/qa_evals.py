@@ -5,7 +5,7 @@ from opik.evaluation.metrics import (
     Moderation,
     Usefulness,
     ContextPrecision,
-    ContextRecall
+    ContextRecall,
 )
 from opik.evaluation import evaluate
 from settings import settings
@@ -24,13 +24,19 @@ engine = create_engine(POSTGRES_URL, echo=True)
 embeddings = OpenAIEmbeddings(model=settings.model)
 
 client = Opik(api_key=settings.OPIK_API_KEY)
-metrics = [Hallucination(), AnswerRelevance(), Moderation(),
-           Usefulness(), ContextPrecision(), ContextRecall()]
+metrics = [
+    Hallucination(),
+    AnswerRelevance(),
+    Moderation(),
+    Usefulness(),
+    ContextPrecision(),
+    ContextRecall(),
+]
 dataset = client.get_or_create_dataset(name="LLM_Tutor_RAG")
 
 
 def eval_task(x):
-    question = embeddings.embed_query(x['question'])
+    question = embeddings.embed_query(x["question"])
 
     with Session(engine) as session:
         context = session.exec(
@@ -40,10 +46,7 @@ def eval_task(x):
         )
 
         content = [text.content for text in context]
-    return {
-        "output": question_answer(x['question'], content),
-        "context": content
-    }
+    return {"output": question_answer(x["question"], content), "context": content}
 
 
 evals = evaluate(
@@ -51,5 +54,5 @@ evals = evaluate(
     task=eval_task,
     scoring_metrics=metrics,
     project_name="LLM_Tutor",
-    scoring_key_mapping={"input": "question"}
+    scoring_key_mapping={"input": "question"},
 )

@@ -25,6 +25,7 @@ async def health_check():
     try:
         if quizz_settings.RABBITMQ_URL:
             import aio_pika  # local import to avoid startup hard dep
+
             conn = await aio_pika.connect_robust(quizz_settings.RABBITMQ_URL)
             await conn.close()
             rabbit = "ok"
@@ -54,14 +55,10 @@ def generate_quizz(
             {"questions": quizz},
             sort_keys=True,
         )
-        quizz_hash = hashlib.sha256(
-            quizz_str.encode()
-        ).hexdigest()
+        quizz_hash = hashlib.sha256(quizz_str.encode()).hexdigest()
         cache_key = f"quizz_request:{current_user.username}:{quizz_hash}"
         redis_client.set(cache_key, quizz_str)
-        logger.info(
-            f"Quizz cached: {quizz_str}, key: {cache_key}"
-        )
+        logger.info(f"Quizz cached: {quizz_str}, key: {cache_key}")
 
         return {"quizz_questions": quizz}
 

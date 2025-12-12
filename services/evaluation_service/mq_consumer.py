@@ -11,9 +11,7 @@ from eval_settings import eval_settings
 
 logger = get_logger(__name__)
 
-EXCHANGE_NAME = eval_settings.model_dump().get(
-    "RABBITMQ_EXCHANGE", "app.events"
-)
+EXCHANGE_NAME = eval_settings.model_dump().get("RABBITMQ_EXCHANGE", "app.events")
 ROUTING_KEY = eval_settings.model_dump().get(
     "RABBITMQ_ROUTING_KEY", "quiz.generate.request"
 )
@@ -32,9 +30,7 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
         logger.info(f"Consuming job_id={msg.job_id} for user={msg.username}")
 
         feedback: List[Dict[str, Any]] = []
-        for question, answer in zip(
-            msg.quizz_questions, msg.student_answers or []
-        ):
+        for question, answer in zip(msg.quizz_questions, msg.student_answers or []):
             result = json.loads(eval_answer(question, answer).content)
             store_evals(
                 msg.username,
@@ -73,9 +69,7 @@ async def _declare_topology(channel: aio_pika.abc.AbstractChannel) -> None:
         EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
     )
     args = {"x-dead-letter-exchange": DLX_NAME}
-    queue = await channel.declare_queue(
-        QUEUE_NAME, durable=True, arguments=args
-    )
+    queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
     await queue.bind(exchange, routing_key=ROUTING_KEY)
 
 
