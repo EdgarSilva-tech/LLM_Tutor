@@ -78,7 +78,8 @@ jobs:
           pip install -r services/rag_service/requirements.txt
           pip install -r services/evaluation_service/requirements.txt
           pip install -r services/quizz_gen_service/requirements.txt
-
+          pip install types-requests types-passlib types-beautifulsoup4
+          mypy --install-types --non-interactive || true
       - name: Lint
         run: |
           ruff check . --output-format=github
