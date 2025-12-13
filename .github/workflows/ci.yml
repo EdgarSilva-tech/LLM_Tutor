@@ -86,7 +86,7 @@ jobs:
           ruff format . --check
 
       - name: Type check
-        run: mypy .
+        run: mypy --config-file mypy.ini
 
       - name: Security (Bandit)
         run: bandit -q -r services || true
