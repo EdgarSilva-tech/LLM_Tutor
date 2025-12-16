@@ -10,14 +10,13 @@ from sqlmodel import Session, create_engine, select
 try:
     from services.auth_service.auth_settings import auth_settings
     from services.auth_service.data_models import (
-        TokenData,
         User,
         UserInDB,
         User_Auth,
     )
 except Exception:
     from auth_settings import auth_settings
-    from data_models import TokenData, User, UserInDB, User_Auth
+    from data_models import User, UserInDB, User_Auth
 
 pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
