@@ -15,10 +15,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY wait-for-postgres.sh .
 RUN chmod +x wait-for-postgres.sh
 
-# Copy the rest of the service directory
-COPY services/evaluation_service/ .
+# Copy the service into a monorepo-like layout inside the container
+RUN mkdir -p /app/services/evaluation_service
+COPY services/evaluation_service/ /app/services/evaluation_service/
+
+# Enable absolute imports and current-service short imports
+ENV PYTHONPATH="/app:/app/services/evaluation_service"
 
 EXPOSE 8003
 
 # Use the wait script to start the service
-CMD ["./wait-for-postgres.sh", "postgres", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8003"] 
+CMD ["./wait-for-postgres.sh", "postgres", "uvicorn", "services.evaluation_service.main:app", "--host", "0.0.0.0", "--port", "8003"]
