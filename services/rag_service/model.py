@@ -6,6 +6,9 @@ except Exception:  # pragma: no cover
 from typing import List
 
 from opik.integrations.langchain import OpikTracer
+from langchain_core.messages import BaseMessage
+from typing import Union
+
 
 opik_tracer = OpikTracer(
     tags=["langchain", "rag"],
@@ -14,7 +17,7 @@ opik_tracer = OpikTracer(
 )
 
 
-def question_answer(question: str, context: List[str]) -> str:
+def question_answer(question: str, context: List[str]) -> Union[str, BaseMessage]:
     llm = get_llm()
     prompt = format_question_prompt(question, context)
     return llm.invoke(prompt, config={"callbacks": [opik_tracer]})

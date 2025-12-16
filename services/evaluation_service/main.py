@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
         if stop_event is not None:
             stop_event.set()
         consumer_task.cancel()
-        with contextlib.suppress(Exception):  # type: ignore[name-defined]
+        with contextlib.suppress(Exception):
             asyncio.get_event_loop().run_until_complete(consumer_task)
 
 
@@ -128,7 +128,7 @@ def evaluate_answer(request: SingleEvaluationRequest):
 
 @app.get("/eval-service/get-feedback")
 def get_feedback(current_user: Annotated[User, Depends(get_current_active_user)]):
-    matching_keys = []
+    matching_keys: list[str] = []
     cursor = "0"  # Start with cursor 0
 
     # Scan until the cursor returned by Redis is 0

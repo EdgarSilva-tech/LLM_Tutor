@@ -9,13 +9,13 @@ from sqlmodel import Session, create_engine, select
 # Import compatibility for both local pytest and container/module execution
 try:
     from services.auth_service.auth_settings import auth_settings
-    from services.auth_service.data_models import (  # type: ignore
+    from services.auth_service.data_models import (
         TokenData,
         User,
         UserInDB,
         User_Auth,
     )
-except Exception:  # pragma: no cover
+except Exception:
     from auth_settings import auth_settings
     from data_models import TokenData, User, UserInDB, User_Auth
 
@@ -50,15 +50,15 @@ def get_user(username: str):
 
         for row in results:
             if row.username is not None:
-                user_dict = {
-                    "username": row.username,
-                    "email": row.email,
-                    "full_name": row.full_name,
-                    "disabled": row.disabled,
-                    "hashed_password": row.hashed_password,
-                }
+                user_dict = UserInDB(
+                    username=row.username,
+                    email=row.email,
+                    full_name=row.full_name,
+                    disabled=row.disabled,
+                    hashed_password=row.hashed_password,
+                )
 
-                return UserInDB(**user_dict)
+                return user_dict
 
 
 def authenticate_user(username: str, password: str):
@@ -74,9 +74,9 @@ def authenticate_user(username: str, password: str):
             try:
                 # Import local para evitar ciclos
                 try:
-                    from services.auth_service.user_db import update_user_password  # type: ignore
-                except Exception:  # pragma: no cover
-                    from user_db import update_user_password  # type: ignore
+                    from services.auth_service.user_db import update_user_password
+                except Exception:
+                    from user_db import update_user_password
                 update_user_password(
                     username=user.username, new_hashed_password=new_hash
                 )
@@ -110,11 +110,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         username = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
     except Exception:
-        # Compat: different PyJWT versions raise different exception classes
         raise credentials_exception
-    user = get_user(username=token_data.username)
+    user = get_user(username=username)
     if user is None:
         raise credentials_exception
     return user

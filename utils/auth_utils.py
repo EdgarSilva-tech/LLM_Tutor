@@ -7,7 +7,7 @@ from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlmodel import Session, create_engine, select
 from settings import settings
-from utils.data_models import TokenData, User, UserInDB, User_Auth
+from utils.data_models import User, UserInDB, User_Auth
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -16,7 +16,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 PG_PASSWORD = settings.PG_PASSWORD
 DB_NAME = "Users"
 PORT = settings.port
-AUTH_SECRET = settings.AUTH_SECRET
+AUTH_SECRET = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -41,15 +41,15 @@ def get_user(username: str):
 
         for row in results:
             if row.username is not None:
-                user_dict = {
-                    "username": row.username,
-                    "email": row.email,
-                    "full_name": row.full_name,
-                    "disabled": row.disabled,
-                    "hashed_password": row.hashed_password,
-                }
+                user_dict = UserInDB(
+                    username=row.username,
+                    email=row.email,
+                    full_name=row.full_name,
+                    disabled=row.disabled,
+                    hashed_password=row.hashed_password,
+                )
 
-                return UserInDB(**user_dict)
+                return user_dict
 
 
 def authenticate_user(username: str, password: str):
@@ -83,10 +83,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         username = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user(username=token_data.username)
+    user = get_user(username=username)
     if user is None:
         raise credentials_exception
     return user
