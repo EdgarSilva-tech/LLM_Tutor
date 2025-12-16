@@ -17,7 +17,9 @@ opik_tracer = OpikTracer(
 )
 
 
-def quizz_generator(topic: str, num_questions: int, difficulty: str, style: str) -> List[str]:
+def quizz_generator(
+    topic: str, num_questions: int, difficulty: str, style: str
+) -> List[str]:
     llm = get_llm()
     prompt = format_quizz_prompt(topic, num_questions, difficulty, style)
     quizz = llm.invoke(prompt, config={"callbacks": [opik_tracer]})
@@ -37,5 +39,7 @@ def quizz_generator(topic: str, num_questions: int, difficulty: str, style: str)
     raise TypeError(f"Unexpected LLM result type: {type(val)}")
 
 
-test_quizz = quizz_generator(topic="math", num_questions=3, difficulty="medium", style="computational")
+test_quizz = quizz_generator(
+    topic="math", num_questions=3, difficulty="medium", style="computational"
+)
 print(test_quizz)
