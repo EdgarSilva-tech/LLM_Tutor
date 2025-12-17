@@ -3,7 +3,6 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlmodel import Session, create_engine, select
 from settings import settings
@@ -83,7 +82,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         username = payload.get("sub")
         if username is None:
             raise credentials_exception
-    except InvalidTokenError:
+    except Exception:
         raise credentials_exception
     user = get_user(username=username)
     if user is None:

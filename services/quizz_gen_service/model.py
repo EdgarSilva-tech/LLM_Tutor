@@ -23,7 +23,7 @@ def quizz_generator(
     llm = get_llm()
     prompt = format_quizz_prompt(topic, num_questions, difficulty, style)
     quizz = llm.invoke(prompt, config={"callbacks": [opik_tracer]})
-    val: Union[str, List[Any]] = getattr(quizz, "content", quizz)
+    val: Union[str, List[Any]] = getattr(quizz, "content", quizz.content)
     print(f"val: {val}")
     print(f"type(val): {type(val)}")
 

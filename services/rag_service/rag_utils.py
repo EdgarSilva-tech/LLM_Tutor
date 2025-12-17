@@ -9,7 +9,9 @@ except Exception:
 
 OPIK_API_KEY = rag_settings.OPIK_API_KEY
 if OPIK_API_KEY:
-    opik.api_key = OPIK_API_KEY
+    opik.configure(
+        api_key=OPIK_API_KEY,
+    )
 else:
     raise ValueError("OPIK_API_KEY is not set")
 
@@ -110,5 +112,5 @@ def get_llm(model_name: str = "gpt-4o-mini", temperature: float = 0.7) -> ChatOp
     return llm
 
 
-def format_question_prompt(question: str, context: List[float]) -> str:
+def format_question_prompt(question: str, context: List[str]) -> str:
     return QUESTION_PROMPT.prompt.format(question=question, context=context)

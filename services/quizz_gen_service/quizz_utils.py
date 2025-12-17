@@ -11,7 +11,9 @@ from fastapi import HTTPException, status
 
 OPIK_API_KEY = quizz_settings.OPIK_API_KEY
 if OPIK_API_KEY:
-    opik.api_key = OPIK_API_KEY
+    opik.configure(
+        api_key=OPIK_API_KEY,
+    )
 else:
     raise ValueError("OPIK_API_KEY is not set")
 
