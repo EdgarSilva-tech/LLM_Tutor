@@ -1,31 +1,39 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
-import jwt
+from typing import Annotated, TYPE_CHECKING
+import jwt as pyjwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from sqlmodel import Session, create_engine, select
 
 # Import compatibility for both local pytest and container/module execution
+if TYPE_CHECKING:
+    from services.auth_service.auth_settings import auth_settings as auth_cfg
+    from services.auth_service.data_models import User, UserInDB, User_Auth
+else:
+    try:
+        from services.auth_service.auth_settings import auth_settings as auth_cfg
+        from services.auth_service.data_models import User, UserInDB, User_Auth
+    except Exception:
+        from auth_settings import auth_settings as auth_cfg
+        from data_models import User, UserInDB, User_Auth
+
+# Import estável para update_user_password, evitando redefinições
 try:
-    from services.auth_service.auth_settings import auth_settings
-    from services.auth_service.data_models import (
-        User,
-        UserInDB,
-        User_Auth,
+    from services.auth_service.user_db import (
+        update_user_password as _update_user_password,
     )
 except Exception:
-    from auth_settings import auth_settings
-    from data_models import User, UserInDB, User_Auth
+    from user_db import update_user_password as _update_user_password
 
 pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-PG_PASSWORD = auth_settings.PG_PASSWORD
-DB_NAME = auth_settings.DB_NAME
-PORT = auth_settings.DB_PORT
-AUTH_SECRET = auth_settings.SECRET_KEY
-ALGORITHM = auth_settings.ALGORITHM
+PG_PASSWORD = auth_cfg.PG_PASSWORD
+DB_NAME = auth_cfg.DB_NAME
+PORT = auth_cfg.DB_PORT
+AUTH_SECRET = auth_cfg.SECRET_KEY
+ALGORITHM = auth_cfg.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 POSTGRES_URL = f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
@@ -71,12 +79,7 @@ def authenticate_user(username: str, password: str):
         if pwd_context.needs_update(user.hashed_password):
             new_hash = get_password_hash(password)
             try:
-                # Import local para evitar ciclos
-                try:
-                    from services.auth_service.user_db import update_user_password
-                except Exception:
-                    from user_db import update_user_password
-                update_user_password(
+                _update_user_password(
                     username=user.username, new_hashed_password=new_hash
                 )
                 user.hashed_password = new_hash
@@ -94,7 +97,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, AUTH_SECRET, algorithm=ALGORITHM)
+    encoded_jwt = pyjwt.encode(to_encode, AUTH_SECRET, algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -105,7 +108,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, AUTH_SECRET, algorithms=[ALGORITHM])
+        payload = pyjwt.decode(token, AUTH_SECRET, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
             raise credentials_exception

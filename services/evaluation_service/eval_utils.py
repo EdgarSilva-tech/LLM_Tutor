@@ -1,23 +1,24 @@
 import opik
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
+from typing import TYPE_CHECKING
 
-try:
-    from services.evaluation_service.eval_settings import eval_settings
-except Exception:
-    from eval_settings import eval_settings
+if TYPE_CHECKING:
+    from services.evaluation_service.eval_settings import eval_settings as eval_cfg  # type: ignore
+else:
+    try:
+        from services.evaluation_service.eval_settings import eval_settings as eval_cfg  # type: ignore
+    except Exception:
+        from eval_settings import eval_settings as eval_cfg
 
 load_dotenv()
-OPIK_API_KEY = eval_settings.OPIK_API_KEY
+OPIK_API_KEY = eval_cfg.OPIK_API_KEY
 if OPIK_API_KEY:
     opik.configure(
         api_key=OPIK_API_KEY,
     )
 else:
     raise ValueError("OPIK_API_KEY is not set")
-
-print(f"OPIK_API_KEY: {OPIK_API_KEY}")
-print(f"type(OPIK_API_KEY): {opik.api_key}")
 
 
 EVALUATOR_PROMPT = opik.Prompt(

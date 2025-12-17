@@ -1,9 +1,10 @@
 # Compatibilidade de import para pytest/CI e runtime em contentores
-try:
-    from services.rag_service.rag_utils import format_question_prompt, get_llm
-except Exception:  # pragma: no cover
-    from rag_utils import format_question_prompt, get_llm
-from typing import List
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from services.rag_service import rag_utils as rag_mod  # type: ignore
+else:
+    import rag_utils as rag_mod
 
 from opik.integrations.langchain import OpikTracer
 from langchain_core.messages import BaseMessage
@@ -18,6 +19,7 @@ opik_tracer = OpikTracer(
 
 
 def question_answer(question: str, context: List[str]) -> Union[str, BaseMessage]:
-    llm = get_llm()
-    prompt = format_question_prompt(question, context)
-    return llm.invoke(prompt, config={"callbacks": [opik_tracer]})
+    llm = rag_mod.get_llm()
+    prompt = rag_mod.format_question_prompt(question, context)
+    result = llm.invoke(prompt, config={"callbacks": [opik_tracer]})
+    return getattr(result, "content", result.content)

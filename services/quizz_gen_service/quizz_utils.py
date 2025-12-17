@@ -1,15 +1,22 @@
 import opik
 from langchain_openai import ChatOpenAI
 
+from typing import TYPE_CHECKING
+
 # Compat imports para pytest/CI e execuçāo em contentores
-try:
-    from services.quizz_gen_service.quizz_settings import quizz_settings  # type: ignore
-except Exception:  # pragma: no cover
-    from quizz_settings import quizz_settings
+if TYPE_CHECKING:
+    from services.quizz_gen_service.quizz_settings import quizz_settings as quizz_cfg
+else:
+    try:
+        from services.quizz_gen_service.quizz_settings import (
+            quizz_settings as quizz_cfg,
+        )
+    except Exception:  # pragma: no cover
+        from quizz_settings import quizz_settings as quizz_cfg
 from fastapi import HTTPException, status
 
 
-OPIK_API_KEY = quizz_settings.OPIK_API_KEY
+OPIK_API_KEY = quizz_cfg.OPIK_API_KEY
 if OPIK_API_KEY:
     opik.configure(
         api_key=OPIK_API_KEY,
@@ -78,7 +85,7 @@ Now generate the quiz:
 
 
 def get_llm(model_name: str = "gpt-4o-mini", temperature: float = 0.7) -> ChatOpenAI:
-    api_key = quizz_settings.OPENAI_API_KEY
+    api_key = quizz_cfg.OPENAI_API_KEY
     if not api_key:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -1,11 +1,10 @@
 # Compatibilidade de import para pytest/CI e runtime em contentores
-try:
-    from services.quizz_gen_service.quizz_utils import (
-        format_quizz_prompt,
-        get_llm,
-    )
-except Exception:
-    from quizz_utils import format_quizz_prompt, get_llm
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from services.quizz_gen_service import quizz_utils as qmod
+else:
+    import quizz_utils as qmod
 from opik.integrations.langchain import OpikTracer
 import ast
 from typing import Union, List, Any
@@ -20,8 +19,8 @@ opik_tracer = OpikTracer(
 def quizz_generator(
     topic: str, num_questions: int, difficulty: str, style: str
 ) -> List[str]:
-    llm = get_llm()
-    prompt = format_quizz_prompt(topic, num_questions, difficulty, style)
+    llm = qmod.get_llm()
+    prompt = qmod.format_quizz_prompt(topic, num_questions, difficulty, style)
     quizz = llm.invoke(prompt, config={"callbacks": [opik_tracer]})
     val: Union[str, List[Any]] = getattr(quizz, "content", quizz.content)
     print(f"val: {val}")

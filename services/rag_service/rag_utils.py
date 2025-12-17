@@ -1,13 +1,16 @@
 import opik
 from langchain_openai import ChatOpenAI
-from typing import List
+from typing import List, TYPE_CHECKING
 
-try:
-    from services.rag_service.rag_settings import rag_settings
-except Exception:
-    from rag_settings import rag_settings
+if TYPE_CHECKING:
+    from services.rag_service.rag_settings import rag_settings as rag_cfg
+else:
+    try:
+        from services.rag_service.rag_settings import rag_settings as rag_cfg
+    except Exception:
+        from rag_settings import rag_settings as rag_cfg
 
-OPIK_API_KEY = rag_settings.OPIK_API_KEY
+OPIK_API_KEY = rag_cfg.OPIK_API_KEY
 if OPIK_API_KEY:
     opik.configure(
         api_key=OPIK_API_KEY,

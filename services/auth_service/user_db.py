@@ -1,13 +1,23 @@
 from sqlmodel import create_engine, Session, select
-from auth_settings import auth_settings
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from services.auth_service.auth_settings import auth_settings as auth_cfg  # type: ignore
+    from services.auth_service.data_models import User_Auth, auth_metadata  # type: ignore
+else:
+    try:
+        from services.auth_service.auth_settings import auth_settings as auth_cfg  # type: ignore
+        from services.auth_service.data_models import User_Auth, auth_metadata  # type: ignore
+    except Exception:
+        from auth_settings import auth_settings as auth_cfg
+        from data_models import User_Auth, auth_metadata
 from passlib.context import CryptContext
 from passlib.hash import bcrypt_sha256
-from data_models import User_Auth, auth_metadata
 
 
-PG_PASSWORD = auth_settings.PG_PASSWORD
-DB_NAME = auth_settings.DB_NAME
-PORT = auth_settings.DB_PORT
+PG_PASSWORD = auth_cfg.PG_PASSWORD
+DB_NAME = auth_cfg.DB_NAME
+PORT = auth_cfg.DB_PORT
 
 pwd_context = CryptContext(schemes=["bcrypt_sha256", "bcrypt"], deprecated="auto")
 
