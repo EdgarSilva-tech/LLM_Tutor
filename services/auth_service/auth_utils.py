@@ -10,21 +10,21 @@ from sqlmodel import Session, create_engine, select
 if TYPE_CHECKING:
     from services.auth_service.auth_settings import auth_settings as auth_cfg
     from services.auth_service.data_models import User, UserInDB, User_Auth
+    from services.auth_service.user_db import (
+        update_user_password as _update_user_password,
+    )
 else:
     try:
         from services.auth_service.auth_settings import auth_settings as auth_cfg
         from services.auth_service.data_models import User, UserInDB, User_Auth
+        from services.auth_service.user_db import (
+            update_user_password as _update_user_password,
+        )
     except Exception:
         from auth_settings import auth_settings as auth_cfg
         from data_models import User, UserInDB, User_Auth
+        from user_db import update_user_password as _update_user_password
 
-# Import estável para update_user_password, evitando redefinições
-try:
-    from services.auth_service.user_db import (
-        update_user_password as _update_user_password,
-    )
-except Exception:
-    from user_db import update_user_password as _update_user_password
 
 pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

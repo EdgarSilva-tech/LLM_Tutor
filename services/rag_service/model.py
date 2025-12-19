@@ -2,7 +2,7 @@
 from typing import List, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from services.rag_service import rag_utils as rag_mod  # type: ignore
+    from services.rag_service import rag_utils as rag_mod
 else:
     import rag_utils as rag_mod
 
@@ -22,4 +22,5 @@ def question_answer(question: str, context: List[str]) -> Union[str, BaseMessage
     llm = rag_mod.get_llm()
     prompt = rag_mod.format_question_prompt(question, context)
     result = llm.invoke(prompt, config={"callbacks": [opik_tracer]})
-    return getattr(result, "content", result.content)
+    content = getattr(result, "content", "")
+    return str(content)

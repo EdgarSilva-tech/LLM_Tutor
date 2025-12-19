@@ -5,9 +5,9 @@ from typing import Annotated, TYPE_CHECKING
 from contextlib import asynccontextmanager
 
 if TYPE_CHECKING:
-    from services.rag_service.model import question_answer  # type: ignore
-    from services.rag_service.cache import redis_client  # type: ignore
-    from services.rag_service.data_models import (  # type: ignore
+    from services.rag_service.model import question_answer
+    from services.rag_service.cache import redis_client
+    from services.rag_service.data_models import (
         QueryRequest,
         QueryResponse,
         EmbeddingRequest,
@@ -15,10 +15,10 @@ if TYPE_CHECKING:
         User,
         Lesson_Embeddings,
     )
-    from services.rag_service.auth_client import get_current_active_user  # type: ignore
-    from services.rag_service.db import create_db_and_tables, engine  # type: ignore
-    from services.rag_service.ingest import add_classes_and_embeddings, embeddings  # type: ignore
-    from services.rag_service.logging_config import get_logger  # type: ignore
+    from services.rag_service.auth_client import get_current_active_user
+    from services.rag_service.db import create_db_and_tables, engine
+    from services.rag_service.ingest import add_classes_and_embeddings, embeddings
+    from services.rag_service.logging_config import get_logger
 else:
     from model import question_answer
     from cache import redis_client
