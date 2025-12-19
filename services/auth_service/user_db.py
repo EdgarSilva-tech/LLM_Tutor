@@ -2,12 +2,12 @@ from sqlmodel import create_engine, Session, select
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from services.auth_service.auth_settings import auth_settings as auth_cfg  # type: ignore
-    from services.auth_service.data_models import User_Auth, auth_metadata  # type: ignore
+    from services.auth_service.auth_settings import auth_settings as auth_cfg
+    from services.auth_service.data_models import User_Auth, auth_metadata
 else:
     try:
-        from services.auth_service.auth_settings import auth_settings as auth_cfg  # type: ignore
-        from services.auth_service.data_models import User_Auth, auth_metadata  # type: ignore
+        from services.auth_service.auth_settings import auth_settings as auth_cfg
+        from services.auth_service.data_models import User_Auth, auth_metadata
     except Exception:
         from auth_settings import auth_settings as auth_cfg
         from data_models import User_Auth, auth_metadata

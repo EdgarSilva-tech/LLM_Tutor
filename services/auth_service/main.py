@@ -5,15 +5,15 @@ from typing import Annotated
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from services.auth_service.auth_utils import (  # type: ignore
+    from services.auth_service.auth_utils import (
         ACCESS_TOKEN_EXPIRE_MINUTES,
         authenticate_user,
         create_access_token,
         get_current_active_user,
         get_user,
     )
-    from services.auth_service.data_models import SignupUser, Token, User  # type: ignore
-    from services.auth_service.user_db import add_user, create_db_and_tables  # type: ignore
+    from services.auth_service.data_models import SignupUser, Token, User
+    from services.auth_service.user_db import add_user, create_db_and_tables
 else:
     from auth_utils import (
         ACCESS_TOKEN_EXPIRE_MINUTES,

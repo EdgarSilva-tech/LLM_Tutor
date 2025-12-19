@@ -4,10 +4,10 @@ from dotenv import load_dotenv
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from services.evaluation_service.eval_settings import eval_settings as eval_cfg  # type: ignore
+    from services.evaluation_service.eval_settings import eval_settings as eval_cfg
 else:
     try:
-        from services.evaluation_service.eval_settings import eval_settings as eval_cfg  # type: ignore
+        from services.evaluation_service.eval_settings import eval_settings as eval_cfg
     except Exception:
         from eval_settings import eval_settings as eval_cfg
 
