@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, TYPE_CHECKING
-from jwt import encode as jwt_encode, decode as jwt_decode
+from typing import Annotated, TYPE_CHECKING, Any, Callable, cast
+import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
@@ -38,6 +38,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 POSTGRES_URL = f"postgresql://postgres:{PG_PASSWORD}@postgres:{PORT}/{DB_NAME}"
 engine = create_engine(POSTGRES_URL, echo=True)
+
+# Evitar erro de mypy (attr-defined) com PyJWT, mantendo nomes estáveis
+jwt_encode = cast("Callable[..., str]", getattr(jwt, "encode"))
+jwt_decode = cast("Callable[..., Any]", getattr(jwt, "decode"))
 
 
 def verify_password(plain_password, hashed_password):
