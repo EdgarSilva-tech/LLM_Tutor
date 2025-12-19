@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
-import jwt as pyjwt
+from jwt import encode as jwt_encode, decode as jwt_decode
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
@@ -67,7 +67,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = pyjwt.encode(to_encode, AUTH_SECRET, algorithm=ALGORITHM)
+    encoded_jwt = jwt_encode(to_encode, AUTH_SECRET, algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -78,7 +78,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = pyjwt.decode(token, AUTH_SECRET, algorithms=[ALGORITHM])
+        payload = jwt_decode(token, AUTH_SECRET, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
             raise credentials_exception

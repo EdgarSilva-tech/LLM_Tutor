@@ -64,11 +64,20 @@ def query(
 ) -> QueryResponse:
     try:
         logger.info(f"request.question: {request.question}")
-        question_emb = redis_client.get(request.question)
-        logger.info(f"question_emb: {question_emb}")
+        # Normalizar valor do Redis para str antes de json.loads
+        from typing import Optional, Union, cast
 
-        if question_emb:
-            question_emb = json.loads(question_emb)
+        raw_q = cast(
+            "Optional[Union[str, bytes, bytearray]]", redis_client.get(request.question)
+        )
+        question_emb = None
+        if raw_q is not None:
+            q_text = (
+                raw_q.decode("utf-8")
+                if isinstance(raw_q, (bytes, bytearray))
+                else raw_q
+            )
+            question_emb = json.loads(q_text)
             logger.info(f"question_emb: {question_emb}")
         else:
             logger.info("No redis")
@@ -91,9 +100,10 @@ def query(
             logger.info(f"Content: {content}")
 
         response = question_answer(request.question, content)
+        answer_str = getattr(response, "content", str(response))
 
         return QueryResponse(
-            answer=response,
+            answer=answer_str,
             context=content,
             sources=[f"chunk_{i}" for i in range(len(content))],
         )
@@ -107,10 +117,17 @@ async def generate_embedding(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
-        embedding = redis_client.get(request.text)
+        from typing import Optional, Union, cast
 
-        if embedding:
-            embedding = json.loads(embedding)
+        raw = cast(
+            "Optional[Union[str, bytes, bytearray]]", redis_client.get(request.text)
+        )
+
+        if raw is not None:
+            text_val = (
+                raw.decode("utf-8") if isinstance(raw, (bytes, bytearray)) else raw
+            )
+            embedding = json.loads(text_val)
             logger.info(f"embedding found: {embedding}")
         else:
             embedding = embeddings.embed_query(request.text)
@@ -134,10 +151,15 @@ async def search_similar(
     top_k: int = 5,
 ):
     try:
-        text_embedding = redis_client.get(text)
+        from typing import Optional, Union, cast
 
-        if text_embedding:
-            text_embedding = json.loads(text_embedding)
+        raw = cast("Optional[Union[str, bytes, bytearray]]", redis_client.get(text))
+
+        if raw is not None:
+            text_val = (
+                raw.decode("utf-8") if isinstance(raw, (bytes, bytearray)) else raw
+            )
+            text_embedding = json.loads(text_val)
             logger.info(f"text_embedding: {text_embedding}")
         else:
             text_embedding = embeddings.embed_query(text)
