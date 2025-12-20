@@ -51,7 +51,9 @@ def test_question_answer(mock_format_prompt, mock_get_llm):
     # Assert
     mock_get_llm.assert_called_once()
     mock_format_prompt.assert_called_once_with(question, context)
-    mock_llm.invoke.assert_called_once_with("Formatted prompt", config={"callbacks": [ANY]})
+    mock_llm.invoke.assert_called_once_with(
+        "Formatted prompt", config={"callbacks": [ANY]}
+    )
     assert result == "The answer is 4."
 
 
@@ -74,5 +76,7 @@ def test_question_answer_empty_context(mock_format_prompt, mock_get_llm):
     # Assert
     mock_get_llm.assert_called_once()
     mock_format_prompt.assert_called_once_with(question, context)
-    mock_llm.invoke.assert_called_once_with("Formatted prompt with no context", config={"callbacks": [ANY]})
+    mock_llm.invoke.assert_called_once_with(
+        "Formatted prompt with no context", config={"callbacks": [ANY]}
+    )
     assert result == "I need more context."

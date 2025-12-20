@@ -1,9 +1,13 @@
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from services.evaluation_service.eval_utils import format_evaluator_prompt, get_llm
 else:
     try:
-        from services.evaluation_service.eval_utils import format_evaluator_prompt, get_llm
+        from services.evaluation_service.eval_utils import (
+            format_evaluator_prompt,
+            get_llm,
+        )
     except Exception:
         from eval_utils import format_evaluator_prompt, get_llm
 from opik.integrations.langchain import OpikTracer

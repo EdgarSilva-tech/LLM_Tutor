@@ -83,7 +83,9 @@ def test_eval_answer_success(mock_get_llm, mock_format_prompt):
     # Check that our mocks were called correctly
     mock_get_llm.assert_called_once()
     mock_format_prompt.assert_called_once_with(question, answer)
-    mock_llm_instance.invoke.assert_called_once_with("This is a formatted prompt", config={"callbacks": [ANY]})
+    mock_llm_instance.invoke.assert_called_once_with(
+        "This is a formatted prompt", config={"callbacks": [ANY]}
+    )
 
     # Check that the final result is the one from the LLM
     assert result.content == '{"score": 1.0}'
