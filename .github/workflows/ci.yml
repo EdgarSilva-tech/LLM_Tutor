@@ -81,6 +81,11 @@ jobs:
           pip install types-requests types-passlib types-beautifulsoup4
           mypy --install-types --non-interactive || true
 
+      - name: Remove conflicting jwt and ensure PyJWT
+        run: |
+          pip uninstall -y jwt || true
+          pip install --upgrade --force-reinstall pyjwt
+
       - name: Inspect jwt module
         run: |
           python - <<'PY'
