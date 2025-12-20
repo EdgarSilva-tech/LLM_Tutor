@@ -42,7 +42,7 @@ jobs:
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      AUTH_SECRET: ${{ secrets.SECRET_KEY }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
       REDIS_ENDPOINT: 127.0.0.1
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
