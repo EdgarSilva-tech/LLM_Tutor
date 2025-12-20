@@ -43,14 +43,15 @@ jobs:
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      REDIS_ENDPOINT: 127.0.0.1
-      REDIS_PORT: 6379
+      REDIS_ENDPOINT: ${{ secrets.REDIS_ENDPOINT }}
+      REDIS_PORT: 11683
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       REDIS_USERNAME: default
       PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
       DB_NAME: ${{ secrets.DB_NAME }}
-      USERNAME: ci
-      HOST: localhost
+      DB_PORT: 5432
+      USERNAME: postgres
+      HOST: postgres
       OPIK_API_KEY: ${{ secrets.OPIK_API_KEY }}
       RABBITMQ_URL: amqp://guest:guest@127.0.0.1:5672/%2F
       # Opcional: evitar chamadas reais a LLM em CI (trate no código se usar)
@@ -86,31 +87,6 @@ jobs:
           pip uninstall -y jwt || true
           pip install --upgrade --force-reinstall pyjwt
 
-      - name: Inspect jwt module
-        run: |
-          python - <<'PY'
-          import sys
-          try:
-              import jwt
-              print("jwt module file:", getattr(jwt, "__file__", None))
-              print("has encode:", hasattr(jwt, "encode"))
-              print("has decode:", hasattr(jwt, "decode"))
-          except Exception as e:
-              print("failed to import jwt:", e)
-          print("sys.path[0..3]:", sys.path[:3])
-          try:
-              import pkg_resources
-              print("installed jwt-related dists:")
-              for dist in sorted(pkg_resources.working_set, key=lambda d: d.project_name.lower()):
-                  name = dist.project_name.lower()
-                  if "jwt" in name:
-                      print(" -", dist.project_name, dist.version, "at", dist.location)
-          except Exception as e:
-              print("pkg_resources error:", e)
-          PY
-
-      - name: Freeze jwt packages
-        run: pip freeze | grep -i jwt || true
       - name: Lint
         run: |
           ruff check . --output-format=github
