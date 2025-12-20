@@ -31,7 +31,7 @@ def test_format_quizz_prompt():
 # --- Tests for LLM Instantiation ---
 
 
-@patch("services.quizz_gen_service.quizz_utils.quizz_settings")
+@patch("services.quizz_gen_service.quizz_utils.quizz_cfg")
 @patch("services.quizz_gen_service.quizz_utils.ChatOpenAI")
 def test_get_llm_success(MockChatOpenAI, mock_quizz_settings):
     """
@@ -53,7 +53,7 @@ def test_get_llm_success(MockChatOpenAI, mock_quizz_settings):
     assert llm is mock_llm_instance
 
 
-@patch("services.quizz_gen_service.quizz_utils.quizz_settings")
+@patch("services.quizz_gen_service.quizz_utils.quizz_cfg")
 def test_get_llm_no_api_key(mock_quizz_settings):
     """
     Tests if get_llm raises an HTTPException when the API key is missing.

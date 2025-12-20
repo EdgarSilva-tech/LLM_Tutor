@@ -2,7 +2,7 @@ from unittest.mock import patch, MagicMock
 from services.evaluation_service.eval_utils import format_evaluator_prompt, get_llm
 from services.evaluation_service.model import eval_answer
 from langchain_core.messages.ai import AIMessage
-
+from unittest.mock import ANY
 # --- Test for Prompt Formatting ---
 
 
@@ -83,7 +83,7 @@ def test_eval_answer_success(mock_get_llm, mock_format_prompt):
     # Check that our mocks were called correctly
     mock_get_llm.assert_called_once()
     mock_format_prompt.assert_called_once_with(question, answer)
-    mock_llm_instance.invoke.assert_called_once_with("This is a formatted prompt")
+    mock_llm_instance.invoke.assert_called_once_with("This is a formatted prompt", config={"callbacks": [ANY]})
 
     # Check that the final result is the one from the LLM
     assert result.content == '{"score": 1.0}'

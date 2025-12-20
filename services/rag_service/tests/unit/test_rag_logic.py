@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock
 from services.rag_service.model import question_answer
 from services.rag_service.rag_utils import format_question_prompt, get_llm
 from langchain_core.messages.ai import AIMessage
+from unittest.mock import ANY
 
 
 # Test for format_question_prompt
@@ -32,8 +33,8 @@ def test_get_llm(MockChatOpenAI):
 
 
 # Test for question_answer
-@patch("services.rag_service.model.get_llm")
-@patch("services.rag_service.model.format_question_prompt")
+@patch("services.rag_service.rag_utils.get_llm")
+@patch("services.rag_service.rag_utils.format_question_prompt")
 def test_question_answer(mock_format_prompt, mock_get_llm):
     # Arrange
     mock_llm = MagicMock()
@@ -50,13 +51,13 @@ def test_question_answer(mock_format_prompt, mock_get_llm):
     # Assert
     mock_get_llm.assert_called_once()
     mock_format_prompt.assert_called_once_with(question, context)
-    mock_llm.invoke.assert_called_once_with("Formatted prompt")
-    assert result.content == "The answer is 4."
+    mock_llm.invoke.assert_called_once_with("Formatted prompt", config={"callbacks": [ANY]})
+    assert result == "The answer is 4."
 
 
 # Test for question_answer with empty context
-@patch("services.rag_service.model.get_llm")
-@patch("services.rag_service.model.format_question_prompt")
+@patch("services.rag_service.rag_utils.get_llm")
+@patch("services.rag_service.rag_utils.format_question_prompt")
 def test_question_answer_empty_context(mock_format_prompt, mock_get_llm):
     # Arrange
     mock_llm = MagicMock()
@@ -73,5 +74,5 @@ def test_question_answer_empty_context(mock_format_prompt, mock_get_llm):
     # Assert
     mock_get_llm.assert_called_once()
     mock_format_prompt.assert_called_once_with(question, context)
-    mock_llm.invoke.assert_called_once_with("Formatted prompt with no context")
-    assert result.content == "I need more context."
+    mock_llm.invoke.assert_called_once_with("Formatted prompt with no context", config={"callbacks": [ANY]})
+    assert result == "I need more context."
