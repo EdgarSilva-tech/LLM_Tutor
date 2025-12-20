@@ -80,6 +80,32 @@ jobs:
           pip install -r services/quizz_gen_service/requirements.txt
           pip install types-requests types-passlib types-beautifulsoup4
           mypy --install-types --non-interactive || true
+
+      - name: Inspect jwt module
+        run: |
+          python - <<'PY'
+          import sys
+          try:
+              import jwt
+              print("jwt module file:", getattr(jwt, "__file__", None))
+              print("has encode:", hasattr(jwt, "encode"))
+              print("has decode:", hasattr(jwt, "decode"))
+          except Exception as e:
+              print("failed to import jwt:", e)
+          print("sys.path[0..3]:", sys.path[:3])
+          try:
+              import pkg_resources
+              print("installed jwt-related dists:")
+              for dist in sorted(pkg_resources.working_set, key=lambda d: d.project_name.lower()):
+                  name = dist.project_name.lower()
+                  if "jwt" in name:
+                      print(" -", dist.project_name, dist.version, "at", dist.location)
+          except Exception as e:
+              print("pkg_resources error:", e)
+          PY
+
+      - name: Freeze jwt packages
+        run: pip freeze | grep -i jwt || true
       - name: Lint
         run: |
           ruff check . --output-format=github
