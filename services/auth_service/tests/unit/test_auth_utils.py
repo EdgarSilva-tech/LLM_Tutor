@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch
 from datetime import timedelta
-import jwt
 from fastapi import HTTPException
 
 # Import functions from the auth_utils module using absolute paths
@@ -13,6 +12,7 @@ from services.auth_service.auth_utils import (
     get_current_user,
     AUTH_SECRET,
     ALGORITHM,
+    jwt_decode,
 )
 from services.auth_service.data_models import UserInDB
 
@@ -44,7 +44,7 @@ def test_create_access_token():
     """Test the creation of a JWT access token."""
     data = {"sub": "testuser"}
     token = create_access_token(data)
-    decoded_payload = jwt.decode(token, AUTH_SECRET, algorithms=[ALGORITHM])
+    decoded_payload = jwt_decode(token, AUTH_SECRET, algorithms=[ALGORITHM])
     assert decoded_payload["sub"] == "testuser"
     assert "exp" in decoded_payload
 
@@ -54,7 +54,7 @@ def test_create_access_token_with_delta():
     data = {"sub": "testuser"}
     expires_delta = timedelta(minutes=30)
     token = create_access_token(data, expires_delta=expires_delta)
-    decoded_payload = jwt.decode(token, AUTH_SECRET, algorithms=[ALGORITHM])
+    decoded_payload = jwt_decode(token, AUTH_SECRET, algorithms=[ALGORITHM])
     assert decoded_payload["sub"] == "testuser"
     # Check if 'exp' (expiration time) is roughly 30 minutes from now
     assert "exp" in decoded_payload
@@ -114,7 +114,7 @@ def test_authenticate_user_not_found(mock_get_user):
 
 @pytest.mark.asyncio
 @patch("services.auth_service.auth_utils.get_user")
-@patch("jwt.decode")
+@patch("services.auth_service.auth_utils.jwt_decode")
 async def test_get_current_user_success(mock_jwt_decode, mock_get_user):
     """Test successfully getting a user from a valid token."""
     mock_payload = {"sub": "testuser"}
@@ -138,7 +138,7 @@ async def test_get_current_user_success(mock_jwt_decode, mock_get_user):
 
 
 @pytest.mark.asyncio
-@patch("jwt.decode")
+@patch("services.auth_service.auth_utils.jwt_decode")
 async def test_get_current_user_invalid_token(mock_jwt_decode):
     """Test handling of an invalid token."""
     mock_jwt_decode.side_effect = Exception
@@ -163,7 +163,7 @@ async def test_get_current_user_no_username(mock_jwt_decode):
 
 @pytest.mark.asyncio
 @patch("services.auth_service.auth_utils.get_user")
-@patch("jwt.decode")
+@patch("services.auth_service.auth_utils.jwt_decode")
 async def test_get_current_user_user_not_found(mock_jwt_decode, mock_get_user):
     """Test handling when the user from the token is not found in the DB."""
     mock_jwt_decode.return_value = {"sub": "nonexistentuser"}

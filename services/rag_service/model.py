@@ -4,7 +4,10 @@ from typing import List, TYPE_CHECKING
 if TYPE_CHECKING:
     from services.rag_service import rag_utils as rag_mod
 else:
-    import rag_utils as rag_mod
+    try:
+        from services.rag_service import rag_utils as rag_mod
+    except Exception:
+        from rag_utils import rag_mod
 
 from opik.integrations.langchain import OpikTracer
 from langchain_core.messages import BaseMessage
