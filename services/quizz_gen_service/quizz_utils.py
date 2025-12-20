@@ -20,6 +20,7 @@ OPIK_API_KEY = quizz_cfg.OPIK_API_KEY
 if OPIK_API_KEY:
     opik.configure(
         api_key=OPIK_API_KEY,
+        workspace="edgarsilva"
     )
 else:
     raise ValueError("OPIK_API_KEY is not set")
