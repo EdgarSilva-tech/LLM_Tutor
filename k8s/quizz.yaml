@@ -4,7 +4,7 @@ metadata:
   name: quizz-service
   namespace: llm-tutor
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: quizz-service
