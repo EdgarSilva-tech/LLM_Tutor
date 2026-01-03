@@ -1,8 +1,7 @@
-from locust import HttpUser, task, between, events
+from locust import HttpUser, task, between
 import os
 import random
-import json
-from typing import Any, Dict, List
+from typing import List
 
 
 def get_env(name: str, default: str = "") -> str:
