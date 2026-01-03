@@ -19,6 +19,8 @@ RUN chmod +x wait-for-postgres.sh
 # Copy the service into a monorepo-like layout inside the container
 RUN mkdir -p /app/services/rag_service
 COPY services/rag_service/ /app/services/rag_service/
+# inclui os ficheiros de ingest na imagem
+COPY services/rag_service/data/ /app/services/rag_service/data/
 
 # Enable absolute imports and current-service short imports
 ENV PYTHONPATH="/app:/app/services/rag_service"

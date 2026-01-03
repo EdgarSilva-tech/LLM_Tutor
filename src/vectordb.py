@@ -10,7 +10,7 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from pgvector.sqlalchemy import Vector
 from sqlmodel import create_engine, Field, Index, select, Session, SQLModel
 from settings import settings
-from src.db import Khan_Academy_Lesson
+from db import Khan_Academy_Lesson
 
 PG_PASSWORD = settings.PG_PASSWORD
 MODEL = settings.model
@@ -99,5 +99,5 @@ def create_embeddings():
 
 
 if __name__ == "__main__":
-    create_db_and_tables()
+    #     create_db_and_tables()
     create_embeddings()

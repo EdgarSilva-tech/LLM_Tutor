@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quizz-service
+  namespace: llm-tutor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quizz-service
+  template:
+    metadata:
+      labels:
+        app: quizz-service
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: quizz
+          image: ghcr.io/edgarsilva-tech/llm_tutor/quizz_service:dev   # altere para a sua imagem (ex.: ghcr.io/<org>/quizz_service:v1.0.0)
+          ports:
+            - containerPort: 8004
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: PORT
+              value: "8004"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quizz-service
+  namespace: llm-tutor
+spec:
+  selector:
+    app: quizz-service
+  ports:
+    - port: 8004
+      targetPort: 8004
+
+

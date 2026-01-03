@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 import re
 from sqlmodel import Session, select, Index
@@ -7,9 +6,12 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from rag_settings import rag_settings
 from data_models import Khan_Academy_Lesson, Lesson_Embeddings
+from pathlib import Path
 
 embeddings = OpenAIEmbeddings(model=rag_settings.model)
 text_splitter = SemanticChunker(embeddings)
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
 
 
 def clean_transcript(text: str) -> str:
@@ -25,9 +27,18 @@ def add_classes_and_embeddings():
         # First, add lessons if they don't exist
         if session.exec(select(Khan_Academy_Lesson)).first() is None:
             print("Adding lessons to the database...")
-            for lesson in os.listdir("data"):
-                content_path = os.path.join("data", lesson)
-                module = lesson.split("test")[1].strip("_").strip(".txt")
+            for lesson in DATA_DIR.iterdir():
+                if not lesson.is_file():
+                    continue
+                name = lesson.name
+                # Guardar apenas o nome do ficheiro no caminho persistido
+                content_path = f"data/{name}"
+                # Extrair módulo de forma robusta
+                if "test" in name:
+                    after = name.split("test", 1)[1].lstrip("_")
+                    module = after[:-4] if after.lower().endswith(".txt") else after
+                else:
+                    module = Path(name).stem
                 topic = "Calculus"
                 date = datetime.now()
 
@@ -53,7 +64,12 @@ def add_classes_and_embeddings():
 
         print("Creating embeddings for new lessons...")
         for row in lessons_without_embeddings:
-            with open(row.content_path) as lesson_file:
+            # Normalizar caminho: usar sempre BASE_DIR/data + nome do ficheiro
+            file_name = Path(str(row.content_path).replace("\\", "/")).name
+            file_path = (DATA_DIR / file_name).resolve()
+            if not file_path.exists():
+                raise FileNotFoundError(f"Data file not found: {file_path}")
+            with open(file_path, "r", encoding="utf-8") as lesson_file:
                 clean_text = clean_transcript(lesson_file.read())
 
             chunks = text_splitter.create_documents([clean_text])

@@ -13,7 +13,7 @@ async def get_current_user_from_auth_service(token: str) -> User:
             headers = {"Authorization": f"Bearer {token}"}
             # Call your auth service - adjust URL as needed
             response = await client.get(
-                "http://auth_service:8001/users/me/", headers=headers
+                "http://auth-service:8001/users/me/", headers=headers
             )
 
             if response.status_code == 200:

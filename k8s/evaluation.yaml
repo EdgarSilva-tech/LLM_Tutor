@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evaluation-service
+  namespace: llm-tutor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: evaluation-service
+  template:
+    metadata:
+      labels:
+        app: evaluation-service
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: evaluation
+          image: ghcr.io/edgarsilva-tech/llm_tutor/evaluation_service:dev   # altere para a sua imagem (ex.: ghcr.io/<org>/evaluation_service:v1.0.0)
+          ports:
+            - containerPort: 8003
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: PORT
+              value: "8003"
+            - name: DB_NAME
+              value: "Evaluation"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: evaluation-service
+  namespace: llm-tutor
+spec:
+  selector:
+    app: evaluation-service
+  ports:
+    - port: 8003
+      targetPort: 8003
+
+

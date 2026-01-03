@@ -143,29 +143,28 @@ def generate_quizz_async(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
-        quizz = quizz_generator(
+        questions = quizz_generator(
             request.topic,
             request.num_questions,
             request.difficulty,
             request.style,
         )
-        questions = quizz
         job_id = str(uuid.uuid4())
-        payload = {
-            "job_id": job_id,
-            "username": current_user.username,
-            "student_id": current_user.username,
-            "quizz_questions": questions,
-            "student_answers": [],
-            "created_at": datetime.utcnow().isoformat(),
-        }
-        publish_evaluation_request_sync(payload)
+        quiz_id = job_id
+        key = f"Quiz:{current_user.username}:{quiz_id}"
+        # manter disponível por 1 hora até o utilizador submeter respostas
+        redis_client.setex(key, 3600, json.dumps(questions))
         logger.info(
-            "Published evaluation job job_id=%s user=%s",
-            job_id,
+            "Async quiz created user=%s quiz_id=%s",
             current_user.username,
+            quiz_id,
         )
-        return {"job_id": job_id}
+        # Não publicamos avaliação aqui porque não há respostas ainda
+        return {
+            "quiz_id": quiz_id,
+            "questions": questions,
+            "status": "ready_for_answers",
+        }
     except Exception as e:
         logger.error(f"Quizz async publish failed: {str(e)}")
         raise HTTPException(

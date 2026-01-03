@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    dbname: str = "LLM_Tutor"
+    dbname: str = "Khan_Academy"
     username: str
     PG_PASSWORD: str
     host: str
