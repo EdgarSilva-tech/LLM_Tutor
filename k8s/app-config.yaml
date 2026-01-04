@@ -6,8 +6,8 @@ metadata:
 data:
   DB_PORT: "5433"              # ajuste se necessário
   # Redis externo (não instalar no cluster)
-  REDIS_ENDPOINT: "redis-11683.c282.east-us-mz.azure.cloud.redislabs.com"  # sem porta
-  REDIS_PORT: "11683"                # ou a porta do provedor (ex.: 12258)
+  REDIS_ENDPOINT: "redis-10279.c56.east-us.azure.cloud.redislabs.com"  # sem porta
+  REDIS_PORT: "10279"                # ou a porta do provedor (ex.: 12258)
   # RabbitMQ externo
   RABBITMQ_URL: "amqp://appuser:apppass@host.minikube.internal:5672/%2F"
   RABBITMQ_EXCHANGE: "app.events"

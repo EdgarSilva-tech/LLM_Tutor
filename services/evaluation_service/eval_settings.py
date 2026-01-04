@@ -9,7 +9,7 @@ class EvalSettings(BaseSettings):
     DB_PORT: int
     OPENAI_API_KEY: str
     REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 11683
+    REDIS_PORT: int = 10279
     REDIS_DB: int = 0
     REDIS_USERNAME: str = "default"
     REDIS_ENDPOINT: str

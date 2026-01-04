@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 11683
+    REDIS_PORT: int = 10279
     REDIS_DB: int = 0
     REDIS_USERNAME: str = "default"
     REDIS_ENDPOINT: str
