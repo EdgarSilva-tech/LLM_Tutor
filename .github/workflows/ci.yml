@@ -44,7 +44,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       REDIS_ENDPOINT: ${{ secrets.REDIS_ENDPOINT }}
-      REDIS_PORT: 11683
+      REDIS_PORT: 10279
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       REDIS_USERNAME: default
       PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
