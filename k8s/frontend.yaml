@@ -17,7 +17,7 @@ spec:
         - name: regcred
       containers:
         - name: frontend
-          image: ghcr.io/edgarsilva-tech/llm_tutor/frontend:dev_v3
+          image: ghcr.io/edgarsilva-tech/llm_tutor/frontend:dev-20260103113407
           ports:
             - containerPort: 80
           resources:

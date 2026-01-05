@@ -25,4 +25,4 @@ ENV PYTHONPATH="/app:/app/services/auth_service"
 EXPOSE 8001
 
 # Use the wait script to start the service
-CMD ["./wait-for-postgres.sh", "postgres", "uvicorn", "services.auth_service.main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["./wait-for-postgres.sh", "postgres", "uvicorn", "services.auth_service.main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "2"]

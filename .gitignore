@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 k8s/app-secrets.yaml
+perf/reports
 # C extensions
 *.so
 

@@ -28,4 +28,4 @@ ENV PYTHONPATH="/app:/app/services/rag_service"
 EXPOSE 8002
 
 # Use the wait script to start the service
-CMD ["./wait-for-postgres.sh", "postgres", "uvicorn", "services.rag_service.main:app", "--host", "0.0.0.0", "--port", "8002"]
+CMD ["./wait-for-postgres.sh", "postgres", "uvicorn", "services.rag_service.main:app", "--host", "0.0.0.0", "--port", "8002", "--workers", "2"]
