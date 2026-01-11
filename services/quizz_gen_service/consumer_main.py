@@ -1,6 +1,6 @@
 import asyncio
 import signal
-from generator_consumer import run_consumer
+from .generator_consumer import run_consumer
 
 
 async def main() -> None:

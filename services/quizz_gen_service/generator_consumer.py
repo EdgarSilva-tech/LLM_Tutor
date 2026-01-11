@@ -6,6 +6,7 @@ from logging_config import get_logger
 from quizz_settings import quizz_settings
 from cache import redis_client
 from model import quizz_generator
+from aio_pika import abc as aio_abc
 
 logger = get_logger(__name__)
 
@@ -19,7 +20,7 @@ DLX_NAME = "app.dlx"
 DLQ_NAME = "quiz.create.dlq"
 
 
-async def _handle_message(message: aio_pika.IncomingMessage) -> None:
+async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
     async with message.process(requeue=False):
         payload: Dict[str, Any] = json.loads(message.body)
         username = payload.get("username")
@@ -48,7 +49,7 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
             )
 
 
-async def _declare_topology(channel: aio_pika.abc.AbstractChannel) -> None:
+async def _declare_topology(channel: aio_abc.AbstractChannel) -> None:
     # DLX/ DLQ
     dlx = await channel.declare_exchange(
         DLX_NAME, aio_pika.ExchangeType.TOPIC, durable=True
@@ -60,7 +61,7 @@ async def _declare_topology(channel: aio_pika.abc.AbstractChannel) -> None:
     exchange = await channel.declare_exchange(
         EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
     )
-    args = {"x-dead-letter-exchange": DLX_NAME}
+    args: aio_abc.FieldTable = {"x-dead-letter-exchange": DLX_NAME}
     queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
     await queue.bind(exchange, routing_key=ROUTING_KEY)
 

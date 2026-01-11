@@ -1,15 +1,16 @@
 import json
 import asyncio
 import aio_pika
+from aio_pika.abc import AbstractRobustConnection, AbstractChannel
 from typing import Any, Dict, Optional
 from quizz_settings import quizz_settings
 
 # Reutilização de ligação/canal + retry simples para reduzir falhas intermitentes
-_connection: Optional[aio_pika.RobustConnection] = None
-_channel: Optional[aio_pika.RobustChannel] = None
+_connection: Optional[AbstractRobustConnection] | None = None
+_channel: Optional[AbstractChannel] | None = None
 
 
-async def _get_channel() -> aio_pika.RobustChannel:
+async def _get_channel() -> AbstractChannel:
     global _connection, _channel
     if _connection is None or _connection.is_closed:
         _connection = await aio_pika.connect_robust(
@@ -19,6 +20,8 @@ async def _get_channel() -> aio_pika.RobustChannel:
         )
     if _channel is None or _channel.is_closed:
         _channel = await _connection.channel(publisher_confirms=True)
+
+    assert _channel is not None
     return _channel
 
 
