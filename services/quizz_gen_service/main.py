@@ -181,6 +181,7 @@ def generate_quizz_async(
     async def publish_quiz_generate(p):
         # usa versão assíncrona interna do publisher para evitar bloquear worker
         from .mq import _publish_with_retry, quizz_settings
+
         await _publish_with_retry(p, quizz_settings.RABBITMQ_ROUTING_KEY_GENERATE)
 
     # agenda publicação em background (não bloqueia response)
