@@ -1,0 +1,11 @@
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: rabbitmq-auth
+  namespace: llm-tutor
+spec:
+  env:
+    - parameter: host
+      name: RABBITMQ_URL
+
+

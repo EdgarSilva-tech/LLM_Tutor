@@ -1,7 +1,7 @@
 from locust import HttpUser, task, between
 import os
 import random
-from typing import List
+import time
 
 
 def get_env(name: str, default: str = "") -> str:
@@ -57,35 +57,40 @@ class ApiUser(HttpUser):
 
     @task(3)
     def quiz_generate_and_submit(self) -> None:
-        # 1) gerar quiz async (devolve quiz_id e questions)
         gen_payload = {
             "topic": random.choice(["calculus", "Linear Algebra", "Statistics"]),
             "num_questions": random.choice([3, 4, 5]),
             "difficulty": random.choice(["easy", "medium", "hard"]),
             "style": random.choice(["conceptual", "computational"]),
         }
-        resp = self.client.post(
-            "/quiz/generate-async",
-            json=gen_payload,
-        )
-        if resp.status_code != 200 and resp.status_code != 202:
+        r = self.client.post("/quiz/generate-async", json=gen_payload)
+        if r.status_code not in (200, 202):
             return
-        try:
-            data = resp.json()
-        except Exception:
-            return
-
+        data = r.json()
         quiz_id = data.get("quiz_id")
-        questions: List[str] = data.get("questions", [])
-        if not quiz_id or not isinstance(questions, list):
+        if not quiz_id:
             return
 
-        # 2) submeter respostas (mock answers com mesmo comprimento)
+        # Poll com backoff exponencial até “done” (máx 30s)
+        deadline = time.time() + 30
+        questions = None
+        backoff = 0.5
+        while time.time() < deadline:
+            jr = self.client.get(f"/quiz/jobs/{quiz_id}")
+            if jr.status_code == 200:
+                jd = jr.json()
+                # quando o consumer acabar, deve devolver questions
+                questions = jd.get("questions")
+                if isinstance(questions, list) and questions:
+                    break
+            time.sleep(backoff)
+            backoff = min(backoff * 1.7, 5.0)
+        if not questions:
+            return
+
         answers = ["answer" for _ in questions]
-        submit_payload = {"quiz_id": quiz_id, "answers": answers}
         self.client.post(
-            "/quiz/submit-answers",
-            json=submit_payload,
+            "/quiz/submit-answers", json={"quiz_id": quiz_id, "answers": answers}
         )
 
     @task(1)

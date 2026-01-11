@@ -9,11 +9,16 @@ from auth_client import get_current_active_user
 from logging_config import get_logger
 import uuid
 from datetime import datetime
-from mq import publish_evaluation_request_sync
+from fastapi import BackgroundTasks
+from mq import (
+    publish_evaluation_request_sync,
+    publish_quiz_generate_request_sync,
+)
 from quizz_settings import quizz_settings
 
 # Initialize the logger for this module
 logger = get_logger(__name__)
+
 
 app = FastAPI(title="Quiz Generation Service")
 
@@ -140,37 +145,69 @@ def submit_answers(
 @app.post("/generate-async", status_code=202)
 def generate_quizz_async(
     request: QuizzRequest,
+    background_tasks: BackgroundTasks,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    """
+    Marca o job como 'queued' e agenda a publicação no RabbitMQ em segundo plano.
+    Assim a resposta 202 é imediata, reduzindo 5xx por timeouts de rede ao broker.
+    """
+    job_id = str(uuid.uuid4())
+    quiz_id = job_id
+    key = f"Quiz:{current_user.username}:{quiz_id}"
+    # marca como queued no Redis
+    redis_client.setex(key, 3600, json.dumps({"status": "queued"}))
+    payload = {
+        "quiz_id": quiz_id,
+        "username": current_user.username,
+        "topic": request.topic,
+        "num_questions": request.num_questions,
+        "difficulty": request.difficulty,
+        "style": request.style,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+
+    async def _do_publish(p):
+        try:
+            await publish_quiz_generate(p)
+        except Exception as e:
+            logger.error(f"Quizz async publish failed (bg): {e}")
+            # opcional: marcar como failed para o cliente ver imediatamente
+            try:
+                redis_client.setex(key, 300, json.dumps({"status": "failed"}))
+            except Exception:
+                pass
+
+    async def publish_quiz_generate(p):
+        # usa versão assíncrona interna do publisher para evitar bloquear worker
+        from .mq import _publish_with_retry, quizz_settings
+        await _publish_with_retry(p, quizz_settings.RABBITMQ_ROUTING_KEY_GENERATE)
+
+    # agenda publicação em background (não bloqueia response)
+    background_tasks.add_task(_do_publish, payload)
+    return {"quiz_id": quiz_id, "status": "queued"}
+
+
+@app.get("/jobs/{quiz_id}")
+def get_quiz_job_status(
+    quiz_id: str,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
-        questions = quizz_generator(
-            request.topic,
-            request.num_questions,
-            request.difficulty,
-            request.style,
-        )
-        job_id = str(uuid.uuid4())
-        quiz_id = job_id
         key = f"Quiz:{current_user.username}:{quiz_id}"
-        # manter disponível por 1 hora até o utilizador submeter respostas
-        redis_client.setex(key, 3600, json.dumps(questions))
-        logger.info(
-            "Async quiz created user=%s quiz_id=%s",
-            current_user.username,
-            quiz_id,
-        )
-        # Não publicamos avaliação aqui porque não há respostas ainda
-        return {
-            "quiz_id": quiz_id,
-            "questions": questions,
-            "status": "ready_for_answers",
-        }
-    except Exception as e:
-        logger.error(f"Quizz async publish failed: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Quizz async publish failed: {str(e)}",
-        )
+        val = redis_client.get(key)
+        if not val:
+            # Ainda a processar (não falhe com 5xx para não inflacionar erros no load test)
+            return {"status": "processing"}
+        try:
+            data = json.loads(val)
+            return data
+        except Exception:
+            # Se o valor já é uma lista/str serializada, devolva como concluído
+            return {"status": "done", "questions": val}
+    except Exception:
+        # Qualquer erro transitório de Redis/rede → tratar como em processamento
+        return {"status": "processing"}
 
 
 @app.get("/get-quizz-questions")

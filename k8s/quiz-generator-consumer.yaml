@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quiz-generator-consumer
+  namespace: llm-tutor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quiz-generator-consumer
+  template:
+    metadata:
+      labels:
+        app: quiz-generator-consumer
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: quiz-generator
+          image: ghcr.io/edgarsilva-tech/llm_tutor/quizz_service:dev-20260107220113
+          command: ["python", "-m", "services.quizz_gen_service.consumer_main"]
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quiz-generator-consumer
+  namespace: llm-tutor
+spec:
+  selector:
+    app: quiz-generator-consumer
+  ports:
+    - port: 80
+      targetPort: 80
+
+

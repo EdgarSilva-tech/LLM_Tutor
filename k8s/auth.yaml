@@ -4,7 +4,13 @@ metadata:
   name: auth-service
   namespace: llm-tutor
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  minReadySeconds: 10
   selector:
     matchLabels:
       app: auth-service
@@ -13,13 +19,18 @@ spec:
       labels:
         app: auth-service
     spec:
+      terminationGracePeriodSeconds: 30
       imagePullSecrets:
         - name: regcred
       containers:
         - name: auth
-          image: ghcr.io/edgarsilva-tech/llm_tutor/auth_service:dev   # altere para a sua imagem (ex.: ghcr.io/<org>/auth_service:v1.0.0)
+          image: ghcr.io/edgarsilva-tech/llm_tutor/auth_service:dev-20260109234937   # altere para a sua imagem (ex.: ghcr.io/<org>/auth_service:v1.0.0)
           ports:
             - containerPort: 8001
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh","-c","sleep 5"]
           envFrom:
             - configMapRef:
                 name: app-config
@@ -34,19 +45,25 @@ spec:
             httpGet:
               path: /docs
               port: 8001
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
           livenessProbe:
             httpGet:
               path: /docs
               port: 8001
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 250m
+              memory: 256Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: "1"
+              memory: "1Gi"
 ---
 apiVersion: v1
 kind: Service

@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     RABBITMQ_URL: str
     RABBITMQ_EXCHANGE: str = "app.events"
     RABBITMQ_ROUTING_KEY: str = "quiz.generate.request"
+    # Roteamento dedicado para geração de quizzes (100% assíncrono)
+    RABBITMQ_ROUTING_KEY_GENERATE: str = "quiz.create.request"
     RABBITMQ_PREFETCH: int = 16
 
 

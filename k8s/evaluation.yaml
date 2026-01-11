@@ -17,7 +17,7 @@ spec:
         - name: regcred
       containers:
         - name: evaluation
-          image: ghcr.io/edgarsilva-tech/llm_tutor/evaluation_service:dev   # altere para a sua imagem (ex.: ghcr.io/<org>/evaluation_service:v1.0.0)
+          image: ghcr.io/edgarsilva-tech/llm_tutor/evaluation_service:dev-20260109234937   # altere para a sua imagem (ex.: ghcr.io/<org>/evaluation_service:v1.0.0)
           ports:
             - containerPort: 8003
           envFrom:
@@ -34,7 +34,7 @@ spec:
             httpGet:
               path: /health
               port: 8003
-            initialDelaySeconds: 20
+            initialDelaySeconds: 30
             timeoutSeconds: 3
             periodSeconds: 10
             failureThreshold: 5

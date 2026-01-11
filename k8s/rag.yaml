@@ -17,7 +17,7 @@ spec:
         - name: regcred
       containers:
         - name: rag
-          image: ghcr.io/edgarsilva-tech/llm_tutor/rag_service:dev-20260104055838   # altere para a sua imagem (ex.: ghcr.io/<org>/rag_service:v1.0.0)
+          image: ghcr.io/edgarsilva-tech/llm_tutor/rag_service:dev-20260109234937   # altere para a sua imagem (ex.: ghcr.io/<org>/rag_service:v1.0.0)
           ports:
             - containerPort: 8002
           envFrom:
@@ -34,12 +34,18 @@ spec:
             httpGet:
               path: /health
               port: 8002
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
           livenessProbe:
             httpGet:
               path: /health
               port: 8002
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 5
           resources:
             requests:
               cpu: 100m
