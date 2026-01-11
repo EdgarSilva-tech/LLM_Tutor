@@ -7,6 +7,7 @@ from quizz_settings import quizz_settings
 from cache import redis_client
 from model import quizz_generator
 from aio_pika import abc as aio_abc
+from aiormq.types import FieldTable
 
 logger = get_logger(__name__)
 
@@ -61,7 +62,7 @@ async def _declare_topology(channel: aio_abc.AbstractChannel) -> None:
     exchange = await channel.declare_exchange(
         EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
     )
-    args: aio_abc.FieldTable = {"x-dead-letter-exchange": DLX_NAME}
+    args: FieldTable = {"x-dead-letter-exchange": DLX_NAME}
     queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
     await queue.bind(exchange, routing_key=ROUTING_KEY)
 
