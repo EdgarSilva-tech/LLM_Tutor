@@ -1,0 +1,74 @@
+question,expected,topic,difficulty,skills
+What is the derivative of x?,1,Derivatives,easy,power rule
+Find d/dx of x^5.,5x^4,Derivatives,easy,power rule
+Compute d/dx of sqrt(x).,1/(2*sqrt(x)),Derivatives,medium,power rule;fractional exponents
+Compute d/dx of 1/x.,-1/x^2,Derivatives,easy,power rule
+Find d/dx of e^x.,e^x,Derivatives,easy,exponential
+Find d/dx of e^{2x}.,2e^{2x},Derivatives,medium,chain rule;exponential
+Find d/dx of ln(x).,1/x,Derivatives,easy,logarithmic
+Find d/dx of ln(x^2+1).,(2x)/(x^2+1),Derivatives,medium,chain rule;logarithmic
+Compute d/dx of sin(x).,cos(x),Derivatives,easy,trig
+Compute d/dx of cos(x).,-sin(x),Derivatives,easy,trig
+Compute d/dx of tan(x).,sec(x)^2,Derivatives,medium,trig
+Compute d/dx of sin(3x).,3cos(3x),Derivatives,medium,chain rule;trig
+Compute d/dx of x^3 sin(x).,3x^2 sin(x) + x^3 cos(x),Derivatives,medium,product rule
+Compute d/dx of (3x^2+1)^5.,5(3x^2+1)^4 * 6x,Derivatives,medium,chain rule
+Compute d/dx of (x^2+1)/(x-1).,((2x)(x-1) - (x^2+1)(1))/(x-1)^2,Derivatives,hard,quotient rule
+Find d/dx of x e^x.,e^x + x e^x,Derivatives,medium,product rule
+Find d/dx of e^{x^2}.,2x e^{x^2},Derivatives,medium,chain rule
+"Find d/dx of ln(sin x). (x in (0, π))",cot(x),Derivatives,hard,chain rule;logarithmic;trig
+"Given y = x^x (x>0), find dy/dx.",x^x(1+ln x),Derivatives,hard,logarithmic differentiation
+Compute ∫ x dx.,x^2/2 + C,Integrals,easy,power rule
+Compute ∫ x^3 dx.,x^4/4 + C,Integrals,easy,power rule
+Compute ∫ 1/x dx (x>0).,ln(x) + C,Integrals,easy,logarithmic
+Compute ∫ e^x dx.,e^x + C,Integrals,easy,exponential
+Compute ∫ e^{2x} dx.,(1/2)e^{2x} + C,Integrals,medium,u-substitution
+Compute ∫ sin(x) dx.,-cos(x) + C,Integrals,easy,trig
+Compute ∫ cos(x) dx.,sin(x) + C,Integrals,easy,trig
+Compute ∫ sec^2(x) dx.,tan(x) + C,Integrals,medium,trig
+Compute ∫ 1/(x^2+1) dx.,arctan(x) + C,Integrals,medium,trig
+Compute ∫ 2x/(x^2+1) dx.,ln(x^2+1) + C,Integrals,medium,u-substitution
+Compute ∫ x e^x dx.,x e^x - e^x + C,Integrals,hard,integration by parts
+Compute ∫ x cos(x) dx.,x sin(x) + cos(x) + C,Integrals,hard,integration by parts
+Compute ∫_0^1 2x dx.,1,Definite Integrals,easy,FTC
+Compute ∫_0^{π} sin(x) dx.,2,Definite Integrals,easy,FTC;trig
+Compute ∫_0^{1} e^{x} dx.,e - 1,Definite Integrals,medium,FTC;exponential
+Compute ∫_{-1}^{1} x^3 dx.,0,Definite Integrals,medium,odd/even functions
+Evaluate lim_{x→0} (sin x)/x.,1,Limits,easy,standard limit
+Evaluate lim_{x→0} (1 - cos x)/x^2.,1/2,Limits,medium,series;standard limit
+Evaluate lim_{x→0} (e^x - 1)/x.,1,Limits,easy,standard limit
+Evaluate lim_{x→∞} (1 + 1/x)^x.,e,Limits,medium,exponential limit
+Evaluate lim_{x→∞} x/e^x.,0,Limits,easy,growth rates
+Evaluate lim_{x→0} ln(1+x)/x.,1,Limits,medium,standard limit
+State the definition of continuity of f at a point a.,lim_{x→a} f(x) = f(a).,Continuity,conceptual,definition
+"If f is differentiable at a, what can be said about continuity at a?","If f is differentiable at a, then f is continuous at a.",Continuity,conceptual,theorem
+Give the limit definition of the derivative f'(a).,f'(a) = lim_{h→0} (f(a+h)-f(a))/h.,Derivatives,conceptual,definition
+State the Mean Value Theorem.,"If f is continuous on [a,b] and differentiable on (a,b), there exists c in (a,b) with f'(c) = (f(b)-f(a))/(b-a).",MVT,conceptual,theorem
+State Rolle's Theorem.,"If f is continuous on [a,b], differentiable on (a,b), and f(a)=f(b), then there exists c in (a,b) with f'(c)=0.",MVT,conceptual,theorem
+Does the harmonic series ∑_{n=1}^{∞} 1/n converge?,"No, it diverges.",Series,medium,p-series
+For what values of p does ∑_{n=1}^{∞} 1/n^p converge?,It converges for p>1 and diverges for p≤1.,Series,medium,p-series
+Give the sum of the geometric series ∑_{n=0}^{∞} ar^n for |r|<1.,a/(1-r).,Series,medium,geometric series
+Give the first three nonzero terms of the Maclaurin series for e^x.,1 + x + x^2/2 + ...,Series,easy,Taylor series
+Give the first three nonzero terms of the Maclaurin series for sin x.,x - x^3/3! + x^5/5! + ...,Series,easy,Taylor series
+Give the first three nonzero terms of the Maclaurin series for cos x.,1 - x^2/2 + x^4/4! + ...,Series,easy,Taylor series
+How do you find critical points of a differentiable function f?,Solve f'(x)=0 or where f' is undefined; then test candidates.,Optimization,conceptual,critical points
+State the second derivative test for local extrema.,If f''(c)>0 then local min; if f''(c)<0 then local max; if f''(c)=0 test is inconclusive.,Optimization,conceptual,second derivative test
+"Define a Riemann sum for f on [a,b].",A sum ∑ f(x_i^*) Δx over a partition a=x_0<…<x_n=b with sample points x_i^*.,Riemann sums,conceptual,definition
+State the Fundamental Theorem of Calculus (Part 1).,"If F(x)=∫_{a}^{x} f(t) dt and f is continuous, then F'(x)=f(x).",FTC,conceptual,theorem
+State the Fundamental Theorem of Calculus (Part 2).,"If f is continuous on [a,b] then ∫_{a}^{b} f(x) dx = F(b)-F(a) for any antiderivative F of f.",FTC,conceptual,theorem
+Solve dy/dx = ky with y(0)=y0.,y = y0 e^{kx}.,Differential Equations,medium,separable
+Solve dy/dx = 3y.,y = Ce^{3x}.,Differential Equations,easy,separable
+Solve dy/dx = 2x with y(0)=5.,y = x^2 + 5.,Differential Equations,easy,integration
+"In related rates problems, what is the general approach?","Relate variables with an equation, differentiate implicitly with respect to time, then substitute known rates/values.",Related Rates,conceptual,method
+Find d/dx of x^n (n is a constant).,n x^{n-1},Derivatives,medium,power rule;parameter n
+Compute d/dx of a^x (a>0).,a^x ln a,Derivatives,medium,exponential
+Compute d/dx of arcsin(x).,1/sqrt(1-x^2),Derivatives,medium,inverse trig
+Compute d/dx of arctan(x).,1/(1+x^2),Derivatives,medium,inverse trig
+Compute d/dx of ln|x|.,1/x,Derivatives,medium,logarithmic
+Compute ∫ a^x dx (a>0).,a^x/ln a + C,Integrals,medium,exponential
+Compute ∫ 1/√(1-x^2) dx.,arcsin(x) + C,Integrals,medium,inverse trig
+Compute ∫ 1/(1+x^2) dx.,arctan(x) + C,Integrals,medium,inverse trig
+Compute ∫ ln x dx.,x ln x - x + C,Integrals,medium,integration by parts
+Compute ∫ e^{x^2} 2x dx.,e^{x^2} + C,Integrals,medium,u-substitution
+Evaluate lim_{x→0} (sin 2x)/(2x).,1,Limits,medium,standard limit
+Evaluate lim_{x→0} (1+3x)^{1/x}.,e^{3},Limits,medium,exponential limit

@@ -1,0 +1,61 @@
+topic,difficulty,question,reference_solution,student_answer
+derivatives_power,medium,Differentiate f(x)=x^5.,f'(x)=5x^4.,5x^4 + C
+derivatives_log,hard,Differentiate f(x)=ln|x|.,f'(x)=1/x for x≠0.,1/|x|
+integrals_log,hard,Compute ∫ 1/(x-1) dx.,∫1/(x-1) dx = ln|x-1| + C.,ln|x| + C
+limits_trig,hard,Find lim_{x→0} (1-cos x)/x^2.,The limit is 1/2.,1
+limits_piecewise,medium,Find lim_{x→0} |x|/x.,"Left limit -1 and right limit 1, so the limit does not exist.",1
+integrals_trig,medium,Compute ∫ sin(x) dx.,∫sin(x) dx = -cos(x) + C.,cos(x) + C
+limits_exp,hard,Find lim_{x→0} (e^x-1)/x.,The limit is 1.,0
+derivatives_chain,hard,Differentiate f(x)=ln(3x).,f'(x)=1/x.,1/(3x)
+derivatives_log,hard,Differentiate f(x)=ln|x|.,f'(x)=1/x for x≠0.,1/x
+derivatives_log,medium,Differentiate f(x)=ln(x).,f'(x)=1/x (for x>0).,0
+limits_trig,hard,Find lim_{x→0} (1-cos x)/x^2.,The limit is 1/2.,1/2
+derivatives_product,hard,Differentiate f(x)=x·e^x.,Product rule: f'(x)=e^x(1+x).,42
+integrals_log,hard,Compute ∫ 1/(x-1) dx.,∫1/(x-1) dx = ln|x-1| + C.,1/(x-1) + C
+integrals_trig,hard,Compute ∫ sin(x) dx.,∫sin(x) dx = -cos(x) + C.,Because math is hard.
+derivatives_chain,hard,Differentiate f(x)=(2x+1)^5.,By chain rule: f'(x)=10(2x+1)^4.,(2x+1)^4
+limits_trig,hard,Find lim_{x→0} (1-cos x)/x^2.,The limit is 1/2.,0
+derivatives_chain,hard,Differentiate f(x)=(2x+1)^5.,By chain rule: f'(x)=10(2x+1)^4.,(2x+1)^4
+integrals_trig,medium,Compute ∫ sin(x) dx.,∫sin(x) dx = -cos(x) + C.,sin(x) + C
+integrals_power,medium,Compute ∫ x^3 dx.,∫x^3 dx = x^4/4 + C.,3x^2 + C
+limits_rational,medium,Find lim_{x→2} (x^2-4)/(x-2).,"Factor: (x^2-4)=(x-2)(x+2), so limit = 4.",x+2
+derivatives_log,medium,Differentiate f(x)=ln(x).,f'(x)=1/x (for x>0).,1/x
+integrals_log,hard,Compute ∫ 1/(x-1) dx.,∫1/(x-1) dx = ln|x-1| + C.,ln|x| + C
+derivatives_log,medium,Differentiate f(x)=ln(x).,f'(x)=1/x (for x>0).,0
+integrals_log,medium,Compute ∫ 1/x dx.,∫1/x dx = ln|x| + C.,ln|x|
+derivatives_product,hard,Differentiate f(x)=x·e^x.,Product rule: f'(x)=e^x(1+x).,e^x(1+x)
+limits_exp,hard,Find lim_{x→0} (e^x-1)/x.,The limit is 1.,0
+derivatives_product,medium,Differentiate f(x)=x^2·sin(x).,By product rule: f'(x)=2x·sin(x)+x^2·cos(x).,2x*sin(x)
+limits_piecewise,medium,Find lim_{x→0} |x|/x.,"Left limit -1 and right limit 1, so the limit does not exist.",-1
+derivatives_product,medium,Differentiate f(x)=x^2·sin(x).,By product rule: f'(x)=2x·sin(x)+x^2·cos(x).,x^2*cos(x)
+limits_piecewise,medium,Find lim_{x→0} |x|/x.,"Left limit -1 and right limit 1, so the limit does not exist.",Does not exist
+derivatives_log,medium,Differentiate f(x)=ln(x).,f'(x)=1/x (for x>0).,1/x
+integrals_log,hard,Compute ∫ 1/(x-1) dx.,∫1/(x-1) dx = ln|x-1| + C.,ln|x-1| + C
+integrals_trig,hard,Compute ∫ sin(x) dx.,∫sin(x) dx = -cos(x) + C.,42
+derivatives_chain,hard,Differentiate f(x)=(2x+1)^5.,By chain rule: f'(x)=10(2x+1)^4.,I don't know.
+limits_rational,medium,Find lim_{x→2} (x^2-4)/(x-2).,"Factor: (x^2-4)=(x-2)(x+2), so limit = 4.",4
+derivatives_product,medium,Differentiate f(x)=x^2·sin(x).,By product rule: f'(x)=2x·sin(x)+x^2·cos(x).,2x*sin(x) + x^2*cos(x)
+derivatives_chain,hard,Differentiate f(x)=(2x+1)^5.,By chain rule: f'(x)=10(2x+1)^4.,10(2x+1)^4
+derivatives_chain,hard,Differentiate f(x)=(2x+1)^5.,By chain rule: f'(x)=10(2x+1)^4.,10(2x+1)^4
+limits_piecewise,medium,Find lim_{x→0} |x|/x.,"Left limit -1 and right limit 1, so the limit does not exist.",0
+integrals_log,medium,Compute ∫ 1/x dx.,∫1/x dx = ln|x| + C.,ln(x) + C
+limits_exp,hard,Find lim_{x→0} (e^x-1)/x.,The limit is 1.,e
+derivatives_log,hard,Differentiate f(x)=ln|x|.,f'(x)=1/x for x≠0.,1/x
+limits_piecewise,medium,Find lim_{x→0} |x|/x.,"Left limit -1 and right limit 1, so the limit does not exist.",-1
+derivatives_log,medium,Differentiate f(x)=ln(x).,f'(x)=1/x (for x>0).,1/x
+derivatives_log,hard,Differentiate f(x)=ln|x|.,f'(x)=1/x for x≠0.,ln|x|
+derivatives_chain,hard,Differentiate f(x)=(2x+1)^5.,By chain rule: f'(x)=10(2x+1)^4.,(2x+1)^4
+integrals_power,medium,Compute ∫ x^3 dx.,∫x^3 dx = x^4/4 + C.,x^4 + C
+integrals_power,medium,Compute ∫ x^3 dx.,∫x^3 dx = x^4/4 + C.,x^4/4
+derivatives_log,hard,Differentiate f(x)=ln|x|.,f'(x)=1/x for x≠0.,42
+integrals_log,hard,Compute ∫ 1/x dx.,∫1/x dx = ln|x| + C.,Because math is hard.
+integrals_log,hard,Compute ∫ 1/(x-1) dx.,∫1/(x-1) dx = ln|x-1| + C.,1/(x-1) + C
+integrals_power,medium,Compute ∫ x^3 dx.,∫x^3 dx = x^4/4 + C.,x^4/4
+derivatives_product,medium,Differentiate f(x)=x^2·sin(x).,By product rule: f'(x)=2x·sin(x)+x^2·cos(x).,x^2*cos(x)
+limits_rational,medium,Find lim_{x→2} (x^2-4)/(x-2).,"Factor: (x^2-4)=(x-2)(x+2), so limit = 4.",2
+derivatives_log,medium,Differentiate f(x)=ln(x).,f'(x)=1/x (for x>0).,x
+derivatives_chain,hard,Differentiate f(x)=(2x+1)^5.,By chain rule: f'(x)=10(2x+1)^4.,10(2x+1)^4
+integrals_trig,hard,Compute ∫ sin(x) dx.,∫sin(x) dx = -cos(x) + C.,It depends on the weather.
+integrals_trig,medium,Compute ∫ sin(x) dx.,∫sin(x) dx = -cos(x) + C.,-cos(x) + C
+derivatives_chain,hard,Differentiate f(x)=(2x+1)^5.,By chain rule: f'(x)=10(2x+1)^4.,10(2x+1)^5
+limits_piecewise,medium,Find lim_{x→0} |x|/x.,"Left limit -1 and right limit 1, so the limit does not exist.",Does not exist

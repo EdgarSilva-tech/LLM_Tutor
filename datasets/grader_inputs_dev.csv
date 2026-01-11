@@ -1,0 +1,31 @@
+id,topic,difficulty,question,reference_solution,student_answer
+1,integrals_power,medium,Compute ∫ x^3 dx.,∫x^3 dx = x^4/4 + C.,x^4/4 + C
+2,derivatives_power,easy,Differentiate f(x)=x^2.,"Using the power rule, f'(x)=2x^1.",1x^1
+3,derivatives_power,easy,Differentiate f(x)=x^10.,"Using the power rule, f'(x)=10x^9.",I don't know.
+4,derivatives_power,easy,Differentiate f(x)=x^8.,"Using the power rule, f'(x)=8x^7.",8x^8
+5,integrals_trig,easy,Compute ∫ cos(x) dx.,∫cos(x) dx = sin(x) + C.,sin(x) + C
+6,integrals_log,medium,Compute ∫ 1/x dx.,∫1/x dx = ln|x| + C.,ln(x) + C
+7,limits_trig,hard,Find lim_{x→0} (1-cos x)/x^2.,The limit is 1/2.,0
+8,derivatives_power,easy,Differentiate f(x)=x^4.,"Using the power rule, f'(x)=4x^3.",4x^3
+9,derivatives_log,medium,Differentiate f(x)=ln(x).,f'(x)=1/x (for x>0).,0
+10,derivatives_power,easy,Differentiate f(x)=x^2.,"Using the power rule, f'(x)=2x^1.",1x^1
+11,derivatives_power,easy,Differentiate f(x)=x^8.,"Using the power rule, f'(x)=8x^7.",8x^8
+12,derivatives_chain,hard,Differentiate f(x)=(2x+1)^5.,By chain rule: f'(x)=10(2x+1)^4.,10(2x+1)^5
+13,derivatives_power,easy,Differentiate f(x)=x^2.,"Using the power rule, f'(x)=2x^1.",1x^1
+14,derivatives_power,easy,Differentiate f(x)=x^7.,"Using the power rule, f'(x)=7x^6.",I don't know.
+15,integrals_power,medium,Compute ∫ x^3 dx.,∫x^3 dx = x^4/4 + C.,x^4 + C
+16,derivatives_product,medium,Differentiate f(x)=x^2·sin(x).,By product rule: f'(x)=2x·sin(x)+x^2·cos(x).,2x*cos(x)
+17,derivatives_power,easy,Differentiate f(x)=x^8.,"Using the power rule, f'(x)=8x^7.",8x^8
+18,derivatives_product,hard,Differentiate f(x)=x·e^x.,Product rule: f'(x)=e^x(1+x).,e^x
+19,integrals_exp,easy,Compute ∫ e^x dx.,∫e^x dx = e^x + C.,e^x
+20,derivatives_power,easy,Differentiate f(x)=x^2.,"Using the power rule, f'(x)=2x^1.",2x^1
+21,integrals_exp,easy,Compute ∫ e^x dx.,∫e^x dx = e^x + C.,e^x + C
+22,integrals_log,medium,Compute ∫ 1/x dx.,∫1/x dx = ln|x| + C.,x + C
+23,derivatives_trig,easy,Differentiate f(x)=cos(x).,f'(x)=-sin(x).,cos(x)
+24,derivatives_power,easy,Differentiate f(x)=x^5.,"Using the power rule, f'(x)=5x^4.",I don't know.
+25,limits_piecewise,medium,Find lim_{x→0} |x|/x.,"Left limit -1 and right limit 1, so the limit does not exist.",-1
+26,derivatives_trig,easy,Differentiate f(x)=cos(x).,f'(x)=-sin(x).,cos(x)
+27,derivatives_power,easy,Differentiate f(x)=x^4.,"Using the power rule, f'(x)=4x^3.",x^3
+28,derivatives_power,easy,Differentiate f(x)=x^4.,"Using the power rule, f'(x)=4x^3.",4x^4
+29,limits_trig,easy,Find lim_{x→0} sin(x)/x.,The limit is 1.,0
+30,integrals_power,easy,Compute ∫ 2x dx.,∫2x dx = x^2 + C.,x^2

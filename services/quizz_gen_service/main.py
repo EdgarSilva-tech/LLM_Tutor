@@ -10,10 +10,7 @@ from logging_config import get_logger
 import uuid
 from datetime import datetime
 from fastapi import BackgroundTasks
-from mq import (
-    publish_evaluation_request_sync,
-    publish_quiz_generate_request_sync,
-)
+from mq import publish_evaluation_request_sync
 from quizz_settings import quizz_settings
 
 # Initialize the logger for this module

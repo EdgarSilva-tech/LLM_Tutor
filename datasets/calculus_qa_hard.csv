@@ -1,0 +1,17 @@
+question,expected,topic,difficulty,skills
+Compute d/dx of (x^2+1)/(x-1).,((2x)(x-1) - (x^2+1)(1))/(x-1)^2,Derivatives,hard,quotient rule
+"Find d/dx of ln(sin x). (x in (0, π))",cot(x),Derivatives,hard,chain rule;logarithmic;trig
+"Given y = x^x (x>0), find dy/dx.",x^x(1+ln x),Derivatives,hard,logarithmic differentiation
+Compute ∫ x e^x dx.,x e^x - e^x + C,Integrals,hard,integration by parts
+Compute ∫ x cos(x) dx.,x sin(x) + cos(x) + C,Integrals,hard,integration by parts
+State the definition of continuity of f at a point a.,lim_{x→a} f(x) = f(a).,Continuity,conceptual,definition
+"If f is differentiable at a, what can be said about continuity at a?","If f is differentiable at a, then f is continuous at a.",Continuity,conceptual,theorem
+Give the limit definition of the derivative f'(a).,f'(a) = lim_{h→0} (f(a+h)-f(a))/h.,Derivatives,conceptual,definition
+State the Mean Value Theorem.,"If f is continuous on [a,b] and differentiable on (a,b), there exists c in (a,b) with f'(c) = (f(b)-f(a))/(b-a).",MVT,conceptual,theorem
+State Rolle's Theorem.,"If f is continuous on [a,b], differentiable on (a,b), and f(a)=f(b), then there exists c in (a,b) with f'(c)=0.",MVT,conceptual,theorem
+How do you find critical points of a differentiable function f?,Solve f'(x)=0 or where f' is undefined; then test candidates.,Optimization,conceptual,critical points
+State the second derivative test for local extrema.,If f''(c)>0 then local min; if f''(c)<0 then local max; if f''(c)=0 test is inconclusive.,Optimization,conceptual,second derivative test
+"Define a Riemann sum for f on [a,b].",A sum ∑ f(x_i^*) Δx over a partition a=x_0<…<x_n=b with sample points x_i^*.,Riemann sums,conceptual,definition
+State the Fundamental Theorem of Calculus (Part 1).,"If F(x)=∫_{a}^{x} f(t) dt and f is continuous, then F'(x)=f(x).",FTC,conceptual,theorem
+State the Fundamental Theorem of Calculus (Part 2).,"If f is continuous on [a,b] then ∫_{a}^{b} f(x) dx = F(b)-F(a) for any antiderivative F of f.",FTC,conceptual,theorem
+"In related rates problems, what is the general approach?","Relate variables with an equation, differentiate implicitly with respect to time, then substitute known rates/values.",Related Rates,conceptual,method

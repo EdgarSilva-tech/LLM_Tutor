@@ -1,0 +1,8 @@
+topic,num_questions,difficulty,style,learning_objective,skills,constraints_num_questions,constraints_difficulty,constraints_style,constraints_level,notes
+Indefinite integrals: integration by parts,5,hard,computational,Apply integration by parts to products of functions.,integration by parts,5,hard,computational,AP Calculus / first-year calculus,
+Applications of integrals: volumes (disks and washers),5,hard,computational,Compute volumes of solids of revolution using the disk and washer methods.,volumes;disk method;washer method,5,hard,computational,AP Calculus / first-year calculus,
+Mixed review: conceptual calculus questions,6,hard,conceptual,"Focus on high-level reasoning questions about limits, derivatives, and integrals.",conceptual understanding,6,hard,conceptual,AP Calculus / first-year calculus,
+Optimization word problems,5,hard,mixed,Set up and solve optimization problems using derivatives.,optimization,5,hard,mixed,AP Calculus / first-year calculus,
+Derivatives: implicit differentiation,5,hard,mixed,Use implicit differentiation to find dy/dx when y is defined implicitly by an equation.,implicit differentiation,5,hard,mixed,AP Calculus / first-year calculus,
+Related rates problems,5,hard,mixed,Solve word problems where related quantities change over time.,related rates,5,hard,mixed,AP Calculus / first-year calculus,
+Sequences and series: convergence tests overview,5,hard,conceptual,"Review common convergence tests (comparison, ratio, root, alternating).",convergence tests;series,5,hard,conceptual,AP Calculus / first-year calculus,
