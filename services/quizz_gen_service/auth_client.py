@@ -3,7 +3,7 @@ import httpx
 import asyncio
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from data_models import User
+from .data_models import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

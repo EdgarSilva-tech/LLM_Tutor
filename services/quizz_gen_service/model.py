@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from services.quizz_gen_service import quizz_utils as qmod
 else:
-    import quizz_utils as qmod
+    from . import quizz_utils as qmod
 from opik.integrations.langchain import OpikTracer
 import ast
 from typing import Union, List, Any

@@ -1,6 +1,6 @@
 # utils/redis_config.py
 import redis
-from quizz_settings import quizz_settings
+from .quizz_settings import quizz_settings
 
 
 class RedisConfig:

@@ -3,7 +3,7 @@ import asyncio
 import aio_pika
 from aio_pika.abc import AbstractRobustConnection, AbstractChannel
 from typing import Any, Dict, Optional
-from quizz_settings import quizz_settings
+from .quizz_settings import quizz_settings
 
 # Reutilização de ligação/canal + retry simples para reduzir falhas intermitentes
 _connection: Optional[AbstractRobustConnection] | None = None

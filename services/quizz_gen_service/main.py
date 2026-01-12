@@ -1,17 +1,17 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import Annotated
-from cache import redis_client
-from model import quizz_generator
-from data_models import QuizzRequest, User, SubmitAnswers
+from .cache import redis_client
+from .model import quizz_generator
+from .data_models import QuizzRequest, User, SubmitAnswers
 import hashlib
 import json
-from auth_client import get_current_active_user
-from logging_config import get_logger
+from .auth_client import get_current_active_user
+from .logging_config import get_logger
 import uuid
 from datetime import datetime
 from fastapi import BackgroundTasks
-from mq import publish_evaluation_request_sync
-from quizz_settings import quizz_settings
+from .mq import publish_evaluation_request_sync
+from .quizz_settings import quizz_settings
 
 # Initialize the logger for this module
 logger = get_logger(__name__)

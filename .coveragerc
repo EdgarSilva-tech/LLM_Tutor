@@ -1,0 +1,11 @@
+[run]
+branch = True
+source =
+    services
+
+[report]
+show_missing = True
+omit =
+    */__main__.py
+    services/**/consumer_main.py
+    **/migrations/*
