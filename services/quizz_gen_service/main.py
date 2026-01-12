@@ -220,11 +220,14 @@ def get_questions(
 
         # Scan until the cursor returned by Redis is 0
         while cursor != 0:
-            cursor, keys = cast(Tuple[int, List[str]], redis_client.scan(
-                cursor=cursor,
-                match=f"quizz_request:{current_user.username}:*",
-                count=100,
-            ))
+            cursor, keys = cast(
+                Tuple[int, List[str]],
+                redis_client.scan(
+                    cursor=cursor,
+                    match=f"quizz_request:{current_user.username}:*",
+                    count=100,
+                ),
+            )
             matching_keys.extend(keys)
 
         # Retrieve all the values for the found keys
