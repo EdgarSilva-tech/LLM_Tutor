@@ -12,6 +12,8 @@ from datetime import datetime
 from fastapi import BackgroundTasks
 from .mq import publish_evaluation_request_sync
 from .quizz_settings import quizz_settings
+from typing import cast, Tuple, List
+
 
 # Initialize the logger for this module
 logger = get_logger(__name__)
@@ -110,7 +112,7 @@ def submit_answers(
                 status_code=404,
                 detail="Quiz not found or expired",
             )
-        questions: list[str] = json.loads(data)
+        questions: list[str] = json.loads(cast(str, data))
         if len(payload.answers) != len(questions):
             raise HTTPException(
                 status_code=400,
@@ -198,7 +200,7 @@ def get_quiz_job_status(
             # Ainda a processar (não falhe com 5xx para não inflacionar erros no load test)
             return {"status": "processing"}
         try:
-            data = json.loads(val)
+            data = json.loads(cast(str, val))
             return data
         except Exception:
             # Se o valor já é uma lista/str serializada, devolva como concluído
@@ -214,15 +216,15 @@ def get_questions(
 ):
     try:
         matching_keys = []
-        cursor = "0"  # Start with cursor 0
+        cursor = 0  # Start with cursor 0
 
         # Scan until the cursor returned by Redis is 0
         while cursor != 0:
-            cursor, keys = redis_client.scan(
+            cursor, keys = cast(Tuple[int, List[str]], redis_client.scan(
                 cursor=cursor,
                 match=f"quizz_request:{current_user.username}:*",
                 count=100,
-            )
+            ))
             matching_keys.extend(keys)
 
         # Retrieve all the values for the found keys

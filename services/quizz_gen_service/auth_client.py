@@ -76,6 +76,13 @@ async def get_current_user_from_auth_service(token: str) -> User:
                 detail="Auth service unavailable",
             )
 
+    if cached is not None:
+        return cached
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Auth service unavailable",
+    )
+
 
 async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> User:
     return await get_current_user_from_auth_service(token)
