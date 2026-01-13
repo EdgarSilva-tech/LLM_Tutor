@@ -43,8 +43,15 @@ def test_generate_quiz_caches_and_returns_questions(client, fake_redis, monkeypa
     questions = ["Q1", "Q2"]
     monkeypatch.setattr(main_mod, "quizz_generator", lambda *a, **k: questions)
 
-    body = {"topic": "t", "num_questions": 2, "difficulty": "easy", "style": "conceptual"}
-    resp = client.post("/generate-quiz", json=body, headers={"Authorization": "Bearer t"})
+    body = {
+        "topic": "t",
+        "num_questions": 2,
+        "difficulty": "easy",
+        "style": "conceptual",
+    }
+    resp = client.post(
+        "/generate-quiz", json=body, headers={"Authorization": "Bearer t"}
+    )
     assert resp.status_code == 200
     assert resp.json() == {"quizz_questions": questions}
 
@@ -60,7 +67,12 @@ def test_create_quiz_sets_redis_and_returns_id(client, fake_redis, monkeypatch):
     questions = ["Q1", "Q2", "Q3"]
     monkeypatch.setattr(main_mod, "quizz_generator", lambda *a, **k: questions)
 
-    body = {"topic": "t", "num_questions": 3, "difficulty": "easy", "style": "conceptual"}
+    body = {
+        "topic": "t",
+        "num_questions": 3,
+        "difficulty": "easy",
+        "style": "conceptual",
+    }
     resp = client.post("/create-quiz", json=body, headers={"Authorization": "Bearer t"})
     assert resp.status_code == 200
     data = resp.json()
