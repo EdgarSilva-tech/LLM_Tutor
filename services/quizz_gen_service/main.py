@@ -218,8 +218,8 @@ def get_questions(
         matching_keys = []
         cursor = 0  # Start with cursor 0
 
-        # Scan until the cursor returned by Redis is 0
-        while cursor != 0:
+        # Executa ao menos um SCAN e termina quando o cursor voltar a 0
+        while True:
             cursor, keys = cast(
                 Tuple[int, List[str]],
                 redis_client.scan(
@@ -229,6 +229,8 @@ def get_questions(
                 ),
             )
             matching_keys.extend(keys)
+            if cursor == 0:
+                break
 
         # Retrieve all the values for the found keys
         if matching_keys:
