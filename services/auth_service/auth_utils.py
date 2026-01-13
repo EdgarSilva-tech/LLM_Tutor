@@ -21,9 +21,9 @@ else:
             update_user_password as _update_user_password,
         )
     except Exception:
-        from auth_settings import auth_settings as auth_cfg
-        from data_models import User, UserInDB, User_Auth
-        from user_db import update_user_password as _update_user_password
+        from .auth_settings import auth_settings as auth_cfg
+        from .data_models import User, UserInDB, User_Auth
+        from .user_db import update_user_password as _update_user_password
 
 
 pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")

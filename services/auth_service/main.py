@@ -15,19 +15,19 @@ if TYPE_CHECKING:
     from services.auth_service.data_models import SignupUser, Token, User
     from services.auth_service.user_db import add_user, create_db_and_tables
 else:
-    from auth_utils import (
+    from .auth_utils import (
         ACCESS_TOKEN_EXPIRE_MINUTES,
         authenticate_user,
         create_access_token,
         get_current_active_user,
         get_user,
     )
-    from data_models import SignupUser, Token, User
-    from user_db import add_user, create_db_and_tables
+    from .data_models import SignupUser, Token, User
+    from .user_db import add_user, create_db_and_tables
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from logging_config import get_logger
+from .logging_config import get_logger
 
 logger = get_logger(__name__)
 
