@@ -7,7 +7,7 @@ else:
     try:
         from services.rag_service import rag_utils as rag_mod
     except Exception:
-        from rag_utils import rag_mod
+        from .rag_utils import rag_mod
 
 from opik.integrations.langchain import OpikTracer
 from langchain_core.messages import BaseMessage

@@ -1,11 +1,11 @@
 from datetime import datetime
 import re
 from sqlmodel import Session, select, Index
-from db import engine
+from .db import engine
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
-from rag_settings import rag_settings
-from data_models import Khan_Academy_Lesson, Lesson_Embeddings
+from .rag_settings import rag_settings
+from .data_models import Khan_Academy_Lesson, Lesson_Embeddings
 from pathlib import Path
 
 embeddings = OpenAIEmbeddings(model=rag_settings.model)

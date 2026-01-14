@@ -20,9 +20,9 @@ if TYPE_CHECKING:
     from services.rag_service.ingest import add_classes_and_embeddings, embeddings
     from services.rag_service.logging_config import get_logger
 else:
-    from model import question_answer
-    from cache import redis_client
-    from data_models import (
+    from .model import question_answer
+    from .cache import redis_client
+    from .data_models import (
         QueryRequest,
         QueryResponse,
         EmbeddingRequest,
@@ -30,10 +30,10 @@ else:
         User,
         Lesson_Embeddings,
     )
-    from auth_client import get_current_active_user
-    from db import create_db_and_tables, engine
-    from ingest import add_classes_and_embeddings, embeddings
-    from logging_config import get_logger
+    from .auth_client import get_current_active_user
+    from .db import create_db_and_tables, engine
+    from .ingest import add_classes_and_embeddings, embeddings
+    from .logging_config import get_logger
 
 # Initialize the logger for this module
 logger = get_logger(__name__)

@@ -8,7 +8,7 @@ else:
     try:
         from services.rag_service.rag_settings import rag_settings as rag_cfg
     except Exception:
-        from rag_settings import rag_settings as rag_cfg
+        from .rag_settings import rag_settings as rag_cfg
 
 OPIK_API_KEY = rag_cfg.OPIK_API_KEY
 if OPIK_API_KEY:

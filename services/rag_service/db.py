@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from langchain_openai.embeddings import OpenAIEmbeddings
 from sqlmodel import create_engine, Session, SQLModel
-from rag_settings import rag_settings
+from .rag_settings import rag_settings
 from langchain_experimental.text_splitter import SemanticChunker
 
 PG_PASSWORD = rag_settings.PG_PASSWORD

@@ -1,6 +1,6 @@
 # utils/redis_config.py
 import redis
-from rag_settings import rag_settings
+from .rag_settings import rag_settings
 
 
 class RedisConfig:

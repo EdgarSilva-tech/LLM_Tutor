@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import SecretStr
 
 
 class Settings(BaseSettings):
@@ -9,7 +10,7 @@ class Settings(BaseSettings):
     PG_PASSWORD: str
     HOST: str
     PORT: int = 5432
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: SecretStr | None
     model: str = "text-embedding-3-small"
     messages_after_summary: int = 5
     summary_trigger: int = 20
