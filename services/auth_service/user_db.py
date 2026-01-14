@@ -9,8 +9,8 @@ else:
         from services.auth_service.auth_settings import auth_settings as auth_cfg
         from services.auth_service.data_models import User_Auth, auth_metadata
     except Exception:
-        from auth_settings import auth_settings as auth_cfg
-        from data_models import User_Auth, auth_metadata
+        from .auth_settings import auth_settings as auth_cfg
+        from .data_models import User_Auth, auth_metadata
 from passlib.context import CryptContext
 from passlib.hash import bcrypt_sha256
 

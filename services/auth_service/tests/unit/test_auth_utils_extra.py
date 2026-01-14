@@ -1,8 +1,7 @@
 import pytest
-from unittest.mock import patch
 
 from services.auth_service import auth_utils as au
-from services.auth_service.data_models import UserInDB
+from services.auth_service.data_models import User, UserInDB
 
 
 def test_authenticate_user_triggers_rehash_and_updates_password(monkeypatch):
@@ -47,19 +46,9 @@ def test_authenticate_user_triggers_rehash_and_updates_password(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_get_current_active_user_inactive_raises(monkeypatch):
-    # Simula get_current_user a devolver um UserInDB com disabled=True
-    inactive = UserInDB(
-        username="u",
-        email="e",
-        full_name="U",
-        disabled=True,
-        hashed_password="h",
-    )
+    # Passa explicitamente o current_user (sem DI do FastAPI)
+    inactive = User(username="u", email="e", full_name="U", disabled=True)
 
-    async def _fake_get_current_user():
-        return inactive
-
-    with patch.object(au, "get_current_user", _fake_get_current_user):
-        with pytest.raises(Exception) as exc:
-            await au.get_current_active_user()
-        assert getattr(exc.value, "status_code", None) == 400
+    with pytest.raises(Exception) as exc:
+        await au.get_current_active_user(inactive)
+    assert getattr(exc.value, "status_code", None) == 400
