@@ -1,6 +1,6 @@
 # utils/redis_config.py
 import redis
-from eval_settings import eval_settings
+from .eval_settings import eval_settings
 
 
 class RedisConfig:

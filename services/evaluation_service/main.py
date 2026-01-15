@@ -1,20 +1,21 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from typing import Annotated
-from data_models import EvaluationRequest, User, SingleEvaluationRequest
-from model import eval_answer
+from .data_models import EvaluationRequest, User, SingleEvaluationRequest
+from .model import eval_answer
 import hashlib
 import json
-from cache import redis_client
-from auth_client import get_current_active_user
+from .cache import redis_client
+from .auth_client import get_current_active_user
 from contextlib import asynccontextmanager
 import contextlib
 import asyncio
-from mq_consumer import start_consumer_task
-from eval_settings import eval_settings
+from .mq_consumer import start_consumer_task
+from .eval_settings import eval_settings
 import aio_pika
-from db import create_db_and_tables
-from logging_config import get_logger
-from persistence import store_evals
+from .db import create_db_and_tables
+from .logging_config import get_logger
+from .persistence import store_evals
+from typing import Tuple, List, cast
 
 # Initialize the logger for this module
 logger = get_logger(__name__)
@@ -73,7 +74,9 @@ def evaluation(
             logger.info(f"answer_list: {answer_list}")
 
             for question, answer in zip(question_list, answer_list):
-                correct_answer = json.loads(eval_answer(question, answer).content)
+                _resp = eval_answer(question, answer)
+                _content = getattr(_resp, "content", _resp)
+                correct_answer = json.loads(cast(str, _content))
                 logger.info(f"correct_answer: {correct_answer}")
                 # request.student_responses.append(request.student_response)
                 store_evals(
@@ -116,7 +119,7 @@ def evaluate_answer(request: SingleEvaluationRequest):
     try:
         response = eval_answer(request.question, request.answer)
         logger.info(f"Question answered: {response}")
-        return json.loads(response.content)
+        return json.loads(cast(str, getattr(response, "content", response)))
 
     except Exception as e:
         logger.error(f"Evaluation failed: {str(e)}")
@@ -129,15 +132,20 @@ def evaluate_answer(request: SingleEvaluationRequest):
 @app.get("/eval-service/get-feedback")
 def get_feedback(current_user: Annotated[User, Depends(get_current_active_user)]):
     matching_keys: list[str] = []
-    cursor = "0"  # Start with cursor 0
+    cursor = 0  # Start with cursor 0
 
     # Scan until the cursor returned by Redis is 0
-    while cursor != 0:
-        cursor, keys = redis_client.scan(
-            cursor=cursor, match=f"Eval:{current_user.username}:*", count=100
+    while True:
+        cursor, keys = cast(
+            Tuple[int, List[str]],
+            redis_client.scan(
+                cursor=cursor, match=f"Eval:{current_user.username}:*", count=100
+            ),
         )
         logger.info(f"Matching keys: {matching_keys}")
         matching_keys.extend(keys)
+        if cursor == 0:
+            break
 
     # Retrieve all the values for the found keys
     if matching_keys:
@@ -157,7 +165,7 @@ def get_job_status(
     if not val:
         return {"status": "processing"}
     try:
-        return {"status": "done", "feedback": json.loads(val)}
+        return {"status": "done", "feedback": json.loads(cast(str, val))}
     except Exception:
         return {"status": "done", "feedback": val}
 

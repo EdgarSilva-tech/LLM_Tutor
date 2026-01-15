@@ -9,7 +9,7 @@ else:
     try:
         from services.evaluation_service.eval_settings import eval_settings as eval_cfg
     except Exception:
-        from eval_settings import eval_settings as eval_cfg
+        from .eval_settings import eval_settings as eval_cfg
 
 load_dotenv()
 OPIK_API_KEY = eval_cfg.OPIK_API_KEY

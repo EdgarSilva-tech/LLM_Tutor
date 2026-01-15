@@ -1,5 +1,5 @@
 from sqlmodel import create_engine, SQLModel
-from eval_settings import eval_settings
+from .eval_settings import eval_settings
 
 PG_PASSWORD = eval_settings.PG_PASSWORD
 DB_NAME = eval_settings.DB_NAME

@@ -2,12 +2,12 @@ import json
 import asyncio
 import aio_pika
 from typing import Any, Dict, List
-from logging_config import get_logger
-from data_models import EvaluationJobMessage
-from model import eval_answer
-from persistence import store_evals
-from cache import redis_client
-from eval_settings import eval_settings
+from .logging_config import get_logger
+from .data_models import EvaluationJobMessage
+from .model import eval_answer
+from .persistence import store_evals
+from .cache import redis_client
+from .eval_settings import eval_settings
 
 logger = get_logger(__name__)
 

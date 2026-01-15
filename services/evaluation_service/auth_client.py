@@ -2,7 +2,7 @@ import httpx
 import asyncio
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from data_models import User
+from .data_models import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -41,6 +41,11 @@ async def get_current_user_from_auth_service(token: str) -> User:
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Auth service unavailable",
             )
+
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Auth service unavailable",
+    )
 
 
 async def get_current_active_user(token: str = Depends(oauth2_scheme)) -> User:

@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from langchain_core.messages import AIMessage
 
 if TYPE_CHECKING:
     from services.evaluation_service.eval_utils import format_evaluator_prompt, get_llm
@@ -9,7 +10,7 @@ else:
             get_llm,
         )
     except Exception:
-        from eval_utils import format_evaluator_prompt, get_llm
+        from .eval_utils import format_evaluator_prompt, get_llm
 from opik.integrations.langchain import OpikTracer
 
 opik_tracer = OpikTracer(
@@ -19,7 +20,7 @@ opik_tracer = OpikTracer(
 )
 
 
-def eval_answer(question: str, answer: str) -> str:
+def eval_answer(question: str, answer: str) -> AIMessage:
     try:
         llm = get_llm()
 

@@ -1,8 +1,8 @@
 from datetime import datetime
 from sqlmodel import Session
-from logging_config import get_logger
-from db import engine
-from data_models import Evaluation
+from .logging_config import get_logger
+from .db import engine
+from .data_models import Evaluation
 
 logger = get_logger(__name__)
 

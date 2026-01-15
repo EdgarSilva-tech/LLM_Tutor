@@ -36,9 +36,3 @@ def quizz_generator(
         return [str(x).strip() for x in parsed]
 
     raise TypeError(f"Unexpected LLM result type: {type(val)}")
-
-
-test_quizz = quizz_generator(
-    topic="math", num_questions=3, difficulty="medium", style="computational"
-)
-print(test_quizz)
