@@ -29,7 +29,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Setup Minikube
-        uses: medyagh/setup-minikube@v0.0.14
+        uses: medyagh/setup-minikube@latest
         with:
           minikube-version: 'latest'
           kubernetes-version: 'v1.29.0'
