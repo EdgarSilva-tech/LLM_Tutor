@@ -178,6 +178,38 @@ jobs:
           kubectl -n $NAMESPACE apply -f k8s/app-config.yaml
           kubectl -n $NAMESPACE apply -f k8s/ingress-apis.yaml
 
+      - name: Create app-secrets from GitHub Secrets
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPIK_API_KEY: ${{ secrets.OPIK_API_KEY }}
+          REDIS_ENDPOINT: ${{ secrets.REDIS_ENDPOINT }}
+          REDIS_PORT: 10279
+          REDIS_USERNAME: default
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          RABBITMQ_USER: ${{ secrets.RABBITMQ_USER }}
+          RABBITMQ_PASS: ${{ secrets.RABBITMQ_PASS }}
+          HOST: postgres
+          USERNAME: postgres
+        run: |
+          kubectl -n $NAMESPACE create secret generic app-secrets \
+            --from-literal=SECRET_KEY="$SECRET_KEY" \
+            --from-literal=AUTH_SECRET="$AUTH_SECRET" \
+            --from-literal=PG_PASSWORD="$PG_PASSWORD" \
+            --from-literal=OPENAI_API_KEY="$OPENAI_API_KEY" \
+            --from-literal=OPIK_API_KEY="$OPIK_API_KEY" \
+            --from-literal=REDIS_ENDPOINT="$REDIS_ENDPOINT" \
+            --from-literal=REDIS_PORT="$REDIS_PORT" \
+            --from-literal=REDIS_USERNAME="$REDIS_USERNAME" \
+            --from-literal=REDIS_PASSWORD="$REDIS_PASSWORD" \
+            --from-literal=RABBITMQ_USER="$RABBITMQ_USER" \
+            --from-literal=RABBITMQ_PASS="$RABBITMQ_PASS" \
+            --from-literal=HOST="$HOST" \
+            --from-literal=USERNAME="$USERNAME" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Deploy services
         run: |
           kubectl -n $NAMESPACE apply -f k8s/auth.yaml
@@ -187,19 +219,10 @@ jobs:
           kubectl -n $NAMESPACE apply -f k8s/rag.yaml
         # Avoid applying CRDs/resources for KEDA in CI unless you install the operator
 
-      - name: Configure cloud Redis endpoint on services
-        env:
-          REDIS_ENDPOINT: ${{ secrets.REDIS_ENDPOINT }}
-          REDIS_PORT: 10279
-          REDIS_USERNAME: default
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      - name: Override DB port for CI
         run: |
           for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
-            kubectl -n $NAMESPACE set env deploy/$d \
-              REDIS_ENDPOINT=$REDIS_ENDPOINT \
-              REDIS_PORT=$REDIS_PORT \
-              REDIS_USERNAME=$REDIS_USERNAME \
-              REDIS_PASSWORD=$REDIS_PASSWORD || true
+            kubectl -n $NAMESPACE set env deploy/$d DB_PORT=5432 || true
           done
 
       - name: Wait for rollouts
