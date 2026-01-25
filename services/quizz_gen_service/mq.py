@@ -13,9 +13,10 @@ _channel: Optional[AbstractChannel] | None = None
 async def _get_channel() -> AbstractChannel:
     global _connection, _channel
     if _connection is None or _connection.is_closed:
+        # Aumenta timeout para lidar com arranques / flutuações de rede
         _connection = await aio_pika.connect_robust(
             quizz_settings.RABBITMQ_URL,
-            timeout=5,
+            timeout=10,
             client_properties={"connection_name": "quizz-service-publisher"},
         )
     if _channel is None or _channel.is_closed:
@@ -42,7 +43,7 @@ async def _publish(payload: Dict[str, Any], routing_key: str) -> None:
 
 
 async def _publish_with_retry(
-    payload: Dict[str, Any], routing_key: str, max_retries: int = 3
+    payload: Dict[str, Any], routing_key: str, max_retries: int = 7
 ) -> None:
     last_error: Optional[Exception] = None
     for attempt in range(max_retries):
@@ -57,7 +58,8 @@ async def _publish_with_retry(
                     await _connection.close()
             except Exception:
                 pass
-            await asyncio.sleep(0.2 * (2**attempt))
+            # backoff exponencial mais generoso para dar tempo ao broker
+            await asyncio.sleep(min(0.5 * (2**attempt), 8.0))
     if last_error:
         raise last_error
 

@@ -46,7 +46,8 @@ def fake_redis(monkeypatch):
 def test_jobs_returns_processing_when_missing(client_with_user, fake_redis):
     resp = client_with_user.get("/jobs/any-id", headers={"Authorization": "Bearer t"})
     assert resp.status_code == 200
-    assert resp.json() == {"status": "processing"}
+    data = resp.json()
+    assert data["status"] == "processing"
 
 
 def test_jobs_parses_json(client_with_user, fake_redis):
@@ -91,10 +92,13 @@ def test_submit_answers_success_publishes(client_with_user, fake_redis, monkeypa
 
     captured = {}
 
-    def fake_publish(payload):
+    async def fake_publish(payload, rk):
         captured["payload"] = payload
 
-    monkeypatch.setattr(main_mod, "publish_evaluation_request_sync", fake_publish)
+    # Patch new async publisher used by background task
+    monkeypatch.setattr(
+        "services.quizz_gen_service.mq._publish_with_retry", fake_publish, raising=True
+    )
 
     body = {"quiz_id": "q2", "answers": ["a1", "a2"]}
     resp = client_with_user.post(

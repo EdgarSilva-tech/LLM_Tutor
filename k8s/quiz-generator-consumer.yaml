@@ -17,7 +17,7 @@ spec:
         - name: regcred
       containers:
         - name: quiz-generator
-          image: ghcr.io/edgarsilva-tech/llm_tutor/quizz_service:dev-20260107220113
+          image: ghcr.io/edgarsilva-tech/llm_tutor/quizz_service:dev-20260124-223401
           command: ["python", "-m", "services.quizz_gen_service.consumer_main"]
           envFrom:
             - configMapRef:

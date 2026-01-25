@@ -24,7 +24,7 @@ spec:
         - name: regcred
       containers:
         - name: quizz
-          image: ghcr.io/edgarsilva-tech/llm_tutor/quizz_service:dev-20260110225656   # altere para a sua imagem (ex.: ghcr.io/<org>/quizz_service:v1.0.0)
+          image: ghcr.io/edgarsilva-tech/llm_tutor/quizz_service:dev-20260124-223401   # altere para a sua imagem (ex.: ghcr.io/<org>/quizz_service:v1.0.0)
           ports:
             - containerPort: 8004
           lifecycle:

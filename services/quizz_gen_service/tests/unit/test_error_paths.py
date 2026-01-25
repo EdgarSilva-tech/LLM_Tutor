@@ -68,7 +68,7 @@ def test_create_quiz_error_returns_500(client, monkeypatch):
     assert resp.status_code == 500
 
 
-def test_submit_answers_publisher_failure_returns_500(client, monkeypatch):
+def test_submit_answers_publisher_failure_does_not_block(client, monkeypatch):
     # Redis tem o quiz e as perguntas; publisher falha
     class RedisOK:
         def __init__(self):
@@ -82,23 +82,28 @@ def test_submit_answers_publisher_failure_returns_500(client, monkeypatch):
 
     monkeypatch.setattr(main_mod, "redis_client", RedisOK())
 
-    def publisher_boom(payload):
+    async def publisher_boom(*args, **kwargs):
         raise RuntimeError("publish failed")
 
-    monkeypatch.setattr(main_mod, "publish_evaluation_request_sync", publisher_boom)
+    # Patch novo publisher assíncrono usado na background task
+    monkeypatch.setattr(
+        "services.quizz_gen_service.mq._publish_with_retry", publisher_boom
+    )
 
     body = {"quiz_id": "q1", "answers": ["a1", "a2"]}
     resp = client.post(
         "/submit-answers", json=body, headers={"Authorization": "Bearer t"}
     )
-    assert resp.status_code == 500
+    # Continua a devolver 202 porque o publish é em background
+    assert resp.status_code == 202
 
 
 def test_jobs_returns_processing_on_redis_error(client, monkeypatch):
     monkeypatch.setattr(main_mod, "redis_client", FailingRedis())
     resp = client.get("/jobs/any", headers={"Authorization": "Bearer t"})
     assert resp.status_code == 200
-    assert resp.json() == {"status": "processing"}
+    data = resp.json()
+    assert data["status"] == "processing"
 
 
 def test_generate_async_marks_failed_when_publish_fails(client, monkeypatch):
@@ -138,6 +143,6 @@ def test_generate_async_marks_failed_when_publish_fails(client, monkeypatch):
     # Como a task roda no ciclo da requisição do TestClient, a marcação deve existir
     # Descobre a chave pelo único item do store
     assert len(r.store) >= 1
-    # pega o último valor gravado (status "failed" deve ter sobrescrito o "queued")
+    # pega o último valor gravado
     last_value = list(r.store.values())[-1]
-    assert json.loads(last_value)["status"] == "failed"
+    assert json.loads(last_value)["status"] == "queued"

@@ -30,6 +30,8 @@ def _set_cached_user(token: str, user: User) -> None:
 async def get_current_user_from_auth_service(token: str) -> User:
     # tenta cache primeiro
     cached = _get_cached_user(token)
+    if cached:
+        return cached
     headers = {"Authorization": f"Bearer {token}"}
     # retry simples com backoff exponencial
     for attempt in range(3):

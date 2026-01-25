@@ -1,0 +1,93 @@
+name: E2E (Minikube)
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      NAMESPACE: llm-tutor
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install test deps
+        run: pip install -r requirements.txt
+
+      - name: Setup Minikube
+        uses: medyagh/setup-minikube@v0.0.14
+        with:
+          minikube-version: 'latest'
+          kubernetes-version: 'v1.29.0'
+          driver: docker
+          addons: ingress
+
+      - name: Create namespace
+        run: kubectl create namespace $NAMESPACE || true
+
+      - name: GHCR pull secret (regcred)
+        run: |
+          kubectl -n $NAMESPACE create secret docker-registry regcred \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --docker-email=edgardasilva10@hotmail.com \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      # Opcional: instalar RabbitMQ no cluster (se não existir)
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+      - name: Install RabbitMQ (Bitnami)
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo update
+          helm upgrade --install rabbitmq bitnami/rabbitmq -n $NAMESPACE \
+            --set auth.username=appuser,auth.password=apppass,auth.vhost="/" \
+            --wait --timeout 10m
+
+      - name: Apply config/secrets/ingress
+        run: |
+          kubectl -n $NAMESPACE apply -f k8s/app-config.yaml
+          kubectl -n $NAMESPACE apply -f k8s/app-secrets.yaml
+          kubectl -n $NAMESPACE apply -f k8s/ingress-apis.yaml
+
+      - name: Deploy services
+        run: |
+          kubectl -n $NAMESPACE apply -f k8s/auth.yaml
+          kubectl -n $NAMESPACE apply -f k8s/quizz.yaml
+          kubectl -n $NAMESPACE apply -f k8s/quiz-generator-consumer.yaml
+          kubectl -n $NAMESPACE apply -f k8s/evaluation.yaml
+          kubectl -n $NAMESPACE apply -f k8s/rag.yaml
+        # Evite aplicar CRDs/recursos do KEDA no CI a menos que instale o operador
+
+      - name: Wait for rollouts
+        run: |
+          kubectl -n $NAMESPACE rollout status deploy/auth-service --timeout=300s
+          kubectl -n $NAMESPACE rollout status deploy/quizz-service --timeout=300s
+          kubectl -n $NAMESPACE rollout status deploy/quiz-generator-consumer --timeout=300s
+          kubectl -n $NAMESPACE rollout status deploy/evaluation-service --timeout=300s
+          kubectl -n $NAMESPACE rollout status deploy/rag-service --timeout=300s
+
+      - name: Export E2E_BASE_URL from Ingress
+        run: echo "E2E_BASE_URL=$(minikube service -n ingress-nginx ingress-nginx-controller --url | head -n1)" >> $GITHUB_ENV
+
+      - name: Run E2E tests
+        env:
+          E2E_BASE_URL: ${{ env.E2E_BASE_URL }}
+          E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+        run: pytest -m e2e -q

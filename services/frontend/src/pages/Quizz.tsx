@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 
 export default function Quizz() {
@@ -15,6 +15,53 @@ export default function Quizz() {
   // Passo 2: submeter respostas → job_id
   const [job, setJob] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
+  const [polling, setPolling] = useState<boolean>(false);
+  const [statusMsg, setStatusMsg] = useState<string>("");
+  const cancelRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    return () => {
+      cancelRef.current = true;
+    };
+  }, []);
+
+  async function pollQuestions(id: string) {
+    setPolling(true);
+    setStatusMsg("A gerar…");
+    let delayMs = 500;
+    const deadline = Date.now() + 60_000; // 60s
+    // loop de polling com backoff
+    // interrompe quando perguntas chegarem, timeout ou componente desmontar
+    while (!cancelRef.current && Date.now() < deadline) {
+      try {
+        const jr = await api.get(`/quiz/jobs/${id}`);
+        if (jr.status === 200) {
+          const data = jr.data ?? {};
+          const qs: string[] = Array.isArray(data?.questions) ? data.questions : [];
+          if (qs.length > 0) {
+            setQuestions(qs);
+            setAnswers(qs.map(() => ""));
+            setStatusMsg("");
+            setPolling(false);
+            return;
+          } else if (typeof data?.status === "string") {
+            setStatusMsg(`Estado: ${data.status}`);
+          }
+        } else {
+          setStatusMsg(`Estado HTTP: ${jr.status}`);
+        }
+      } catch (e: any) {
+        const msg = e?.response?.data?.detail ?? e?.message ?? "Erro no polling";
+        setStatusMsg(msg);
+      }
+      await new Promise((r) => setTimeout(r, delayMs));
+      delayMs = Math.min(5000, Math.floor(delayMs * 1.7));
+    }
+    setPolling(false);
+    if (!questions.length && !cancelRef.current) {
+      setErr("Timeout a obter questões do quiz");
+    }
+  }
 
   async function generateAsync() {
     setErr(null);
@@ -22,6 +69,7 @@ export default function Quizz() {
     setQuizId("");
     setQuestions([]);
     setAnswers([]);
+    setStatusMsg("");
     try {
       const body = {
         topic,
@@ -32,10 +80,16 @@ export default function Quizz() {
       const { data } = await api.post("/quiz/generate-async", body, {
         headers: { "Content-Type": "application/json" },
       });
-      setQuizId(data?.quiz_id || "");
+      const id = data?.quiz_id || "";
+      setQuizId(id);
       const qs: string[] = Array.isArray(data?.questions) ? data.questions : [];
-      setQuestions(qs);
-      setAnswers(qs.map(() => ""));
+      if (qs.length > 0) {
+        setQuestions(qs);
+        setAnswers(qs.map(() => ""));
+      } else if (id) {
+        // iniciar polling até obter perguntas
+        pollQuestions(id);
+      }
     } catch (e: any) {
       setErr(e?.response?.data?.detail ?? e?.message ?? "Erro a gerar quiz");
     }
@@ -86,6 +140,11 @@ export default function Quizz() {
           <div style={{ marginBottom: 8 }}>
             Quiz ID: <code>{quizId}</code>
           </div>
+          {questions.length === 0 && (
+            <div style={{ marginBottom: 8, opacity: 0.8 }}>
+              {polling ? statusMsg || "A gerar…" : statusMsg}
+            </div>
+          )}
           {questions.map((q, idx) => (
             <div key={idx} style={{ marginBottom: 8 }}>
               <div><strong>Pergunta {idx + 1}:</strong> {q}</div>
@@ -101,7 +160,10 @@ export default function Quizz() {
               />
             </div>
           ))}
-          <button onClick={submitAnswers} disabled={!answers.length}>
+          <button
+            onClick={submitAnswers}
+            disabled={questions.length === 0 || answers.length === 0}
+          >
             Submeter Respostas
           </button>
         </div>

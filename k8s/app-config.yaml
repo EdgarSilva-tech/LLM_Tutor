@@ -4,12 +4,12 @@ metadata:
   name: app-config
   namespace: llm-tutor
 data:
-  DB_PORT: "5433"              # ajuste se necessário
+  DB_PORT: "5433"              
   # Redis externo (não instalar no cluster)
-  REDIS_ENDPOINT: "redis-10279.c56.east-us.azure.cloud.redislabs.com"  # sem porta
-  REDIS_PORT: "10279"                # ou a porta do provedor (ex.: 12258)
+  REDIS_ENDPOINT: "redis-10279.c56.east-us.azure.cloud.redislabs.com"
+  REDIS_PORT: "10279"                
   # RabbitMQ externo
-  RABBITMQ_URL: "amqp://appuser:apppass@host.minikube.internal:5672/%2F"
+  RABBITMQ_URL: "amqp://appuser:apppass@rabbitmq:5672/%2F"
   RABBITMQ_EXCHANGE: "app.events"
   RABBITMQ_ROUTING_KEY: "quiz.generate.request"
   RABBITMQ_PREFETCH: "16"

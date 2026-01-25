@@ -47,9 +47,12 @@ def test_get_llm_success(MockChatOpenAI, mock_quizz_settings):
 
     # Assert
     mock_quizz_settings.configure_mock(OPENAI_API_KEY="fake-api-key")
-    MockChatOpenAI.assert_called_once_with(
-        model="test-model", temperature=0.5, api_key="fake-api-key"
-    )
+    # Allow extra kwargs (e.g., timeout/max_retries) but ensure required ones are present
+    MockChatOpenAI.assert_called_once()
+    args, kwargs = MockChatOpenAI.call_args
+    assert kwargs["model"] == "test-model"
+    assert kwargs["temperature"] == 0.5
+    assert kwargs["api_key"] == "fake-api-key"
     assert llm is mock_llm_instance
 
 

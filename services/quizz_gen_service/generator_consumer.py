@@ -2,10 +2,10 @@ import json
 import asyncio
 import aio_pika
 from typing import Any, Dict
-from logging_config import get_logger
-from quizz_settings import quizz_settings
-from cache import redis_client
-from model import quizz_generator
+from .logging_config import get_logger
+from .quizz_settings import quizz_settings
+from .cache import redis_client
+from .model import quizz_generator
 from aio_pika import abc as aio_abc
 from aiormq.types import FieldTable
 
@@ -35,18 +35,32 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
             return
 
         key = f"Quiz:{username}:{quiz_id}"
-        try:
-            # Marcar como processing
-            redis_client.setex(key, 3600, json.dumps({"status": "processing"}))
-            questions = quizz_generator(topic, num_questions, difficulty, style)
+        # Mark as processing
+        redis_client.setex(key, 3600, json.dumps({"status": "processing"}))
+        last_error: Exception | None = None
+        backoff = 0.5
+        for attempt in range(3):
+            try:
+                questions = quizz_generator(topic, num_questions, difficulty, style)
+                redis_client.setex(
+                    key,
+                    3600,
+                    json.dumps({"status": "done", "questions": questions}),
+                )
+                logger.info(
+                    "Quiz generated and stored: %s (attempt=%d)", key, attempt + 1
+                )
+                break
+            except Exception as e:
+                last_error = e
+                logger.warning("Quiz generation attempt %d failed: %s", attempt + 1, e)
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, 5.0)
+        else:
+            # All attempts failed
+            logger.exception("Quiz generation failed after retries: %s", last_error)
             redis_client.setex(
-                key, 3600, json.dumps({"status": "done", "questions": questions})
-            )
-            logger.info("Quiz generated and stored: %s", key)
-        except Exception as e:
-            logger.exception("Quiz generation failed: %s", e)
-            redis_client.setex(
-                key, 1800, json.dumps({"status": "failed", "error": str(e)})
+                key, 1800, json.dumps({"status": "failed", "error": str(last_error)})
             )
 
 

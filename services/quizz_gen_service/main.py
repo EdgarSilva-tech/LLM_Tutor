@@ -10,7 +10,6 @@ from .logging_config import get_logger
 import uuid
 from datetime import datetime
 from fastapi import BackgroundTasks
-from .mq import publish_evaluation_request_sync
 from .quizz_settings import quizz_settings
 from typing import cast, Tuple, List
 
@@ -100,8 +99,9 @@ def create_quiz(
 
 
 @app.post("/submit-answers", status_code=202)
-def submit_answers(
+async def submit_answers(
     payload: SubmitAnswers,
+    background_tasks: BackgroundTasks,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
@@ -112,7 +112,24 @@ def submit_answers(
                 status_code=404,
                 detail="Quiz not found or expired",
             )
-        questions: list[str] = json.loads(cast(str, data))
+        # Aceita tanto o formato novo {"status":"done","questions":[...]}
+        # como o legado que guardava apenas a lista de perguntas.
+        parsed = json.loads(cast(str, data))
+        if isinstance(parsed, dict) and "questions" in parsed:
+            questions = parsed["questions"]
+        else:
+            questions = parsed
+        if not isinstance(questions, list):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid quiz content",
+            )
+        logger.info(
+            "Submit answers check: quiz_id=%s q_len=%s a_len=%s",
+            payload.quiz_id,
+            len(questions),
+            len(payload.answers),
+        )
         if len(payload.answers) != len(questions):
             raise HTTPException(
                 status_code=400,
@@ -120,19 +137,31 @@ def submit_answers(
             )
 
         job_id = str(uuid.uuid4())
-        publish_evaluation_request_sync(
-            {
-                "job_id": job_id,
-                "username": current_user.username,
-                "student_id": current_user.username,
-                "quizz_questions": questions,
-                "student_answers": payload.answers,
-                "created_at": datetime.utcnow().isoformat(),
-            }
-        )
+        payload_msg = {
+            "job_id": job_id,
+            "username": current_user.username,
+            "student_id": current_user.username,
+            "quizz_questions": questions,
+            "student_answers": payload.answers,
+            "created_at": datetime.utcnow().isoformat(),
+        }
+
+        async def _do_publish_eval(p):
+            try:
+                # publicar em background para não bloquear a resposta 202
+                from .mq import _publish_with_retry, quizz_settings
+
+                await _publish_with_retry(
+                    p,
+                    quizz_settings.RABBITMQ_ROUTING_KEY,
+                )
+            except Exception as e:
+                logger.error("Evaluation publish failed (bg): %s", e)
+
+        background_tasks.add_task(_do_publish_eval, payload_msg)
         return {"job_id": job_id}
-    except HTTPException:
-        raise
+    except HTTPException as he:
+        raise he
     except Exception as e:
         logger.error(f"Submit answers failed: {str(e)}")
         raise HTTPException(
@@ -148,8 +177,9 @@ def generate_quizz_async(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     """
-    Marca o job como 'queued' e agenda a publicação no RabbitMQ em segundo plano.
-    Assim a resposta 202 é imediata, reduzindo 5xx por timeouts de rede ao broker.
+    Marca o job como 'queued' e agenda a publicação no RabbitMQ
+    em segundo plano. Assim a resposta 202 é imediata, reduzindo
+    5xx por timeouts de rede ao broker.
     """
     job_id = str(uuid.uuid4())
     quiz_id = job_id
@@ -171,17 +201,17 @@ def generate_quizz_async(
             await publish_quiz_generate(p)
         except Exception as e:
             logger.error(f"Quizz async publish failed (bg): {e}")
-            # opcional: marcar como failed para o cliente ver imediatamente
-            try:
-                redis_client.setex(key, 300, json.dumps({"status": "failed"}))
-            except Exception:
-                pass
+            # manter "queued" para permitir retries externos/novas tentativas
 
     async def publish_quiz_generate(p):
-        # usa versão assíncrona interna do publisher para evitar bloquear worker
+        # usa versão assíncrona interna do publisher para evitar
+        # bloquear worker
         from .mq import _publish_with_retry, quizz_settings
 
-        await _publish_with_retry(p, quizz_settings.RABBITMQ_ROUTING_KEY_GENERATE)
+        await _publish_with_retry(
+            p,
+            quizz_settings.RABBITMQ_ROUTING_KEY_GENERATE,
+        )
 
     # agenda publicação em background (não bloqueia response)
     background_tasks.add_task(_do_publish, payload)
@@ -197,17 +227,24 @@ def get_quiz_job_status(
         key = f"Quiz:{current_user.username}:{quiz_id}"
         val = redis_client.get(key)
         if not val:
-            # Ainda a processar (não falhe com 5xx para não inflacionar erros no load test)
+            # Ainda a processar (evitar 5xx para não inflacionar erros)
             return {"status": "processing"}
         try:
             data = json.loads(cast(str, val))
             return data
         except Exception:
-            # Se o valor já é uma lista/str serializada, devolva como concluído
-            return {"status": "done", "questions": val}
-    except Exception:
-        # Qualquer erro transitório de Redis/rede → tratar como em processamento
-        return {"status": "processing"}
+            # Se o valor já é uma lista/str serializada,
+            # devolva como concluído
+            return {
+                "status": "done",
+                "questions": val,
+            }
+    except Exception as e:
+        # Erro transitório de Redis/rede → tratar como em processamento
+        return {
+            "status": "processing",
+            "error": str(e),
+        }
 
 
 @app.get("/get-quizz-questions")
@@ -224,7 +261,7 @@ def get_questions(
                 Tuple[int, List[str]],
                 redis_client.scan(
                     cursor=cursor,
-                    match=f"quizz_request:{current_user.username}:*",
+                    match=(f"quizz_request:{current_user.username}:*"),
                     count=100,
                 ),
             )

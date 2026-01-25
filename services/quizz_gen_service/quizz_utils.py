@@ -82,14 +82,25 @@ Now generate the quiz:
 )
 
 
-def get_llm(model_name: str = "gpt-4o-mini", temperature: float = 0.7) -> ChatOpenAI:
+def get_llm(
+    model_name: str = "gpt-4o-mini",
+    temperature: float = 0.2,
+    timeout: float | None = 45.0,
+    max_retries: int = 2,
+) -> ChatOpenAI:
     api_key = quizz_cfg.OPENAI_API_KEY
     if not api_key:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="OPENAI_API_KEY is not configured in the environment.",
         )
-    llm = ChatOpenAI(model=model_name, temperature=temperature, api_key=api_key)
+    llm = ChatOpenAI(
+        model=model_name,
+        temperature=temperature,
+        api_key=api_key,
+        timeout=timeout,
+        max_retries=max_retries,
+    )
     return llm
 
 
