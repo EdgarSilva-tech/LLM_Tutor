@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NAMESPACE: llm-tutor
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,38 +49,129 @@ jobs:
             --docker-email=edgardasilva10@hotmail.com \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      # Opcional: instalar RabbitMQ no cluster (se não existir)
-      - name: Install Helm
-        uses: azure/setup-helm@v4.3.0
-
-      - name: Install RabbitMQ Operator
+      # Deploy RabbitMQ using official image (replaces Bitnami chart)
+      - name: Deploy RabbitMQ (official image)
         run: |
-          helm repo add rabbitmq https://charts.rabbitmq.com
-          helm repo update
-          helm upgrade --install rabbitmq-operator rabbitmq/rabbitmq-cluster-operator \
-            -n $NAMESPACE --create-namespace --wait
-
-      - name: Create RabbitMQ cluster
-        run: |
-          kubectl -n $NAMESPACE apply -f - <<'YAML'
-          apiVersion: rabbitmq.com/v1beta1
-          kind: RabbitmqCluster
+          cat <<'YAML' | kubectl -n $NAMESPACE apply -f -
+          apiVersion: v1
+          kind: Service
           metadata:
-            name: rmq
+            name: rabbitmq
+          spec:
+            selector:
+              app: rabbitmq
+            ports:
+              - name: amqp
+                port: 5672
+                targetPort: 5672
+              - name: mgmt
+                port: 15672
+                targetPort: 15672
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: rabbitmq
           spec:
             replicas: 1
-            persistence:
-              storage: 1Gi
-            rabbitmq:
-              additionalConfig: |
-                default_user=appuser
-                default_pass=apppass
-                default_vhost=/
+            selector:
+              matchLabels:
+                app: rabbitmq
+            template:
+              metadata:
+                labels:
+                  app: rabbitmq
+              spec:
+                containers:
+                  - name: rabbitmq
+                    image: rabbitmq:3.13-management-alpine
+                    ports:
+                      - containerPort: 5672
+                      - containerPort: 15672
+                    env:
+                      - name: RABBITMQ_DEFAULT_USER
+                        value: "appuser"
+                      - name: RABBITMQ_DEFAULT_PASS
+                        value: "apppass"
+                      - name: RABBITMQ_DEFAULT_VHOST
+                        value: "/"
+                      - name: RABBITMQ_URL
+                        value: "amqp://appuser:apppass@rabbitmq:5672/%2F"
+                    readinessProbe:
+                      tcpSocket:
+                        port: 5672
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                    livenessProbe:
+                      tcpSocket:
+                        port: 5672
+                      initialDelaySeconds: 20
+                      periodSeconds: 10
           YAML
 
       - name: Wait for RabbitMQ
         run: |
-          kubectl -n $NAMESPACE wait --for=condition=Ready rabbitmqcluster/rmq --timeout=300s
+          kubectl -n $NAMESPACE rollout status deploy/rabbitmq --timeout=300s
+          kubectl -n $NAMESPACE get svc rabbitmq
+
+      - name: Deploy Postgres (ephemeral)
+        run: |
+          cat <<'YAML' | kubectl -n $NAMESPACE apply -f -
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: postgres
+          spec:
+            selector:
+              app: postgres
+            ports:
+              - port: 5432
+                targetPort: 5432
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: postgres
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: postgres
+            template:
+              metadata:
+                labels:
+                  app: postgres
+              spec:
+                containers:
+                  - name: postgres
+                    image: postgres:16-alpine
+                    env:
+                      - name: POSTGRES_DB
+                        value: "${{ secrets.DB_NAME }}"
+                      - name: POSTGRES_PASSWORD
+                        value: "${{ secrets.PG_PASSWORD }}"
+                    ports:
+                      - containerPort: 5432
+                    readinessProbe:
+                      tcpSocket: { port: 5432 }
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                    livenessProbe:
+                      tcpSocket: { port: 5432 }
+                      initialDelaySeconds: 20
+                      periodSeconds: 10
+          YAML
+
+      - name: Wait for Postgres
+        run: kubectl -n $NAMESPACE rollout status deploy/postgres --timeout=300s
+
+      # Recommendation 1: print debug info if RabbitMQ fails
+      - name: Debug RabbitMQ (on failure)
+        if: failure()
+        run: |
+          kubectl -n $NAMESPACE get pods -o wide
+          kubectl -n $NAMESPACE describe pod -l app=rabbitmq
+          kubectl -n $NAMESPACE logs -l app=rabbitmq --tail=200
 
       - name: Apply config/secrets/ingress
         run: |
@@ -94,7 +186,22 @@ jobs:
           kubectl -n $NAMESPACE apply -f k8s/quiz-generator-consumer.yaml
           kubectl -n $NAMESPACE apply -f k8s/evaluation.yaml
           kubectl -n $NAMESPACE apply -f k8s/rag.yaml
-        # Evite aplicar CRDs/recursos do KEDA no CI a menos que instale o operador
+        # Avoid applying CRDs/resources for KEDA in CI unless you install the operator
+
+      - name: Configure cloud Redis endpoint on services
+        env:
+          REDIS_ENDPOINT: ${{ secrets.REDIS_ENDPOINT }}
+          REDIS_PORT: 10279
+          REDIS_USERNAME: default
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        run: |
+          for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
+            kubectl -n $NAMESPACE set env deploy/$d \
+              REDIS_ENDPOINT=$REDIS_ENDPOINT \
+              REDIS_PORT=$REDIS_PORT \
+              REDIS_USERNAME=$REDIS_USERNAME \
+              REDIS_PASSWORD=$REDIS_PASSWORD || true
+          done
 
       - name: Wait for rollouts
         run: |
