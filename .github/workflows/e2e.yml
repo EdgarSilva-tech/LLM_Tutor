@@ -50,14 +50,36 @@ jobs:
 
       # Opcional: instalar RabbitMQ no cluster (se não existir)
       - name: Install Helm
-        uses: azure/setup-helm@v4
-      - name: Install RabbitMQ (Bitnami)
+        uses: azure/setup-helm@v4.3.0
+
+      - name: Install RabbitMQ Operator
         run: |
-          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add rabbitmq https://charts.rabbitmq.com
           helm repo update
-          helm upgrade --install rabbitmq bitnami/rabbitmq -n $NAMESPACE \
-            --set auth.username=appuser,auth.password=apppass,auth.vhost="/" \
-            --wait --timeout 10m
+          helm upgrade --install rabbitmq-operator rabbitmq/rabbitmq-cluster-operator \
+            -n $NAMESPACE --create-namespace --wait
+
+      - name: Create RabbitMQ cluster
+        run: |
+          kubectl -n $NAMESPACE apply -f - <<'YAML'
+          apiVersion: rabbitmq.com/v1beta1
+          kind: RabbitmqCluster
+          metadata:
+            name: rmq
+          spec:
+            replicas: 1
+            persistence:
+              storage: 1Gi
+            rabbitmq:
+              additionalConfig: |
+                default_user=appuser
+                default_pass=apppass
+                default_vhost=/
+          YAML
+
+      - name: Wait for RabbitMQ
+        run: |
+          kubectl -n $NAMESPACE wait --for=condition=Ready rabbitmqcluster/rmq --timeout=300s
 
       - name: Apply config/secrets/ingress
         run: |
