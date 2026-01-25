@@ -231,6 +231,23 @@ jobs:
             {"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/initialDelaySeconds","value":60}
           ]' || true
 
+      - name: Use Recreate strategy for auth-service (avoid stuck old pods)
+        run: |
+          kubectl -n $NAMESPACE patch deploy/auth-service --type='merge' -p '{
+            "spec": { "strategy": { "type": "Recreate" } }
+          }' || true
+          # Reduce termination grace to unblock rollouts in CI
+          kubectl -n $NAMESPACE patch deploy/auth-service --type='json' -p='[
+            {"op":"add","path":"/spec/template/spec/terminationGracePeriodSeconds","value":10}
+          ]' || true
+
+      - name: Force‑delete any Terminating auth-service pods (safety)
+        run: |
+          kubectl -n $NAMESPACE get pods -l app=auth-service || true
+          kubectl -n $NAMESPACE delete pod -l app=auth-service --field-selector=status.phase=Failed --ignore-not-found=true || true
+          kubectl -n $NAMESPACE delete pod -l app=auth-service --field-selector=status.phase=Unknown --ignore-not-found=true || true
+          kubectl -n $NAMESPACE delete pod -l app=auth-service --field-selector=status.phase=Terminating --grace-period=0 --force || true
+
       - name: Override DB port for CI
         run: |
           for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
