@@ -176,7 +176,6 @@ jobs:
       - name: Apply config/secrets/ingress
         run: |
           kubectl -n $NAMESPACE apply -f k8s/app-config.yaml
-          kubectl -n $NAMESPACE apply -f k8s/app-secrets.yaml
           kubectl -n $NAMESPACE apply -f k8s/ingress-apis.yaml
 
       - name: Deploy services
