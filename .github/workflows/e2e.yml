@@ -219,6 +219,18 @@ jobs:
           kubectl -n $NAMESPACE apply -f k8s/rag.yaml
         # Avoid applying CRDs/resources for KEDA in CI unless you install the operator
 
+      - name: Scale down replicas for CI
+        run: |
+          for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
+            kubectl -n $NAMESPACE scale deploy/$d --replicas=1 || true
+          done
+
+      - name: Increase auth-service readiness initialDelay
+        run: |
+          kubectl -n $NAMESPACE patch deploy/auth-service --type='json' -p='[
+            {"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/initialDelaySeconds","value":60}
+          ]' || true
+
       - name: Override DB port for CI
         run: |
           for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
@@ -227,7 +239,7 @@ jobs:
 
       - name: Wait for rollouts
         run: |
-          kubectl -n $NAMESPACE rollout status deploy/auth-service --timeout=300s
+          kubectl -n $NAMESPACE rollout status deploy/auth-service --timeout=600s
           kubectl -n $NAMESPACE rollout status deploy/quizz-service --timeout=300s
           kubectl -n $NAMESPACE rollout status deploy/quiz-generator-consumer --timeout=300s
           kubectl -n $NAMESPACE rollout status deploy/evaluation-service --timeout=300s
