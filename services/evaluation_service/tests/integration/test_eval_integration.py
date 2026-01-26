@@ -12,7 +12,7 @@ from services.evaluation_service import eval_settings as _settings_mod
 from services.evaluation_service.data_models import Evaluation, User
 
 
-pytest.mark.integration
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture()
@@ -30,9 +30,9 @@ def client(tmp_path, monkeypatch):
             username="u", email="u@example.com", full_name="User", disabled=False
         )
 
-    monkeypatch.setattr(
-        eval_main, "get_current_active_user", _fake_current_user, raising=True
-    )
+    # Override FastAPI dependency so routes don't call real auth-service
+    app = eval_main.app
+    app.dependency_overrides[eval_main.get_current_active_user] = _fake_current_user
 
     # Avoid starting real RabbitMQ consumer task during tests
     import asyncio
@@ -49,7 +49,6 @@ def client(tmp_path, monkeypatch):
     # Ensure DB schema exists on our temp engine
     eval_db.create_db_and_tables()
 
-    app = eval_main.app
     with TestClient(app) as c:
         yield c
 
