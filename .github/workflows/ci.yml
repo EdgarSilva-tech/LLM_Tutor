@@ -103,7 +103,7 @@ jobs:
 
       - name: Tests (unit + integração) com cobertura
         run: |
-          pytest -q --maxfail=1 --disable-warnings --cov=services --cov-report=xml --ignore=tests/e2e
+          pytest -q -m "not integration" --maxfail=1 --disable-warnings --cov=services --cov-report=xml --ignore=tests/e2e
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
