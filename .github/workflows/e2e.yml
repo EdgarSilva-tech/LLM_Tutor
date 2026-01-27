@@ -191,6 +191,10 @@ jobs:
         run: |
           kubectl -n $NAMESPACE apply -f k8s/app-config.yaml
           kubectl -n $NAMESPACE apply -f k8s/ingress-apis.yaml
+          # Ensure DB_PORT is correct in ConfigMap before first pods start
+          kubectl -n $NAMESPACE patch configmap app-config --type='merge' -p '{
+            "data": { "DB_PORT": "5432" }
+          }' || true
 
       - name: Create app-secrets from GitHub Secrets
         env:
@@ -232,40 +236,34 @@ jobs:
           kubectl -n $NAMESPACE apply -f k8s/evaluation.yaml
           kubectl -n $NAMESPACE apply -f k8s/rag.yaml
         # Avoid applying CRDs/resources for KEDA in CI unless you install the operator
-
-      - name: Scale down replicas for CI
+      
+      - name: CI rollout hardening (all services)
         run: |
+          # Apply Recreate strategy to avoid RollingUpdate deadlocks in CI
           for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
-            kubectl -n $NAMESPACE scale deploy/$d --replicas=1 || true
+            kubectl -n $NAMESPACE patch deploy/$d --type='merge' -p '{
+              "spec": { "strategy": { "type": "Recreate" } }
+            }' || true
           done
-
-      - name: Increase auth-service readiness initialDelay
-        run: |
-          kubectl -n $NAMESPACE patch deploy/auth-service --type='json' -p='[
-            {"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/initialDelaySeconds","value":60}
-          ]' || true
-
-      - name: Use Recreate strategy for auth-service (avoid stuck old pods)
-        run: |
-          kubectl -n $NAMESPACE patch deploy/auth-service --type='merge' -p '{
-            "spec": { "strategy": { "type": "Recreate" } }
-          }' || true
-          # Reduce termination grace to unblock rollouts in CI
-          kubectl -n $NAMESPACE patch deploy/auth-service --type='json' -p='[
-            {"op":"add","path":"/spec/template/spec/terminationGracePeriodSeconds","value":10}
-          ]' || true
-
-      - name: Force‑delete any Terminating auth-service pods (safety)
-        run: |
-          kubectl -n $NAMESPACE get pods -l app=auth-service || true
-          kubectl -n $NAMESPACE delete pod -l app=auth-service --field-selector=status.phase=Failed --ignore-not-found=true || true
-          kubectl -n $NAMESPACE delete pod -l app=auth-service --field-selector=status.phase=Unknown --ignore-not-found=true || true
-          kubectl -n $NAMESPACE delete pod -l app=auth-service --field-selector=status.phase=Terminating --grace-period=0 --force || true
-
-      - name: Override DB port for CI
-        run: |
+          
+          # Ensure DB_PORT is 5432 on all deployments
           for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
             kubectl -n $NAMESPACE set env deploy/$d DB_PORT=5432 || true
+          done
+          
+          # Clean restart: scale down to 0, force delete leftover pods, scale up to 1
+          for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
+            kubectl -n $NAMESPACE scale deploy/$d --replicas=0 || true
+          done
+          
+          kubectl -n $NAMESPACE delete pod -l app=auth-service --grace-period=0 --force || true
+          kubectl -n $NAMESPACE delete pod -l app=quizz-service --grace-period=0 --force || true
+          kubectl -n $NAMESPACE delete pod -l app=quiz-generator-consumer --grace-period=0 --force || true
+          kubectl -n $NAMESPACE delete pod -l app=evaluation-service --grace-period=0 --force || true
+          kubectl -n $NAMESPACE delete pod -l app=rag-service --grace-period=0 --force || true
+          
+          for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
+            kubectl -n $NAMESPACE scale deploy/$d --replicas=1 || true
           done
 
       - name: Wait for rollouts
