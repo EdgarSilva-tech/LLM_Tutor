@@ -266,6 +266,17 @@ jobs:
             kubectl -n $NAMESPACE scale deploy/$d --replicas=1 || true
           done
 
+      - name: Standardize readiness probes
+        run: |
+          # Auth: use lightweight OpenAPI route (no auth) for readiness
+          kubectl -n $NAMESPACE patch deploy/auth-service --type='json' -p='[
+            {"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/path","value":"/openapi.json"},
+            {"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/initialDelaySeconds","value":60},
+            {"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/periodSeconds","value":10},
+            {"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/failureThreshold","value":12}
+          ]' || true
+          # Other services already expose /health; keep as-is
+
       - name: Wait for rollouts
         run: |
           kubectl -n $NAMESPACE rollout status deploy/auth-service --timeout=600s
@@ -273,6 +284,48 @@ jobs:
           kubectl -n $NAMESPACE rollout status deploy/quiz-generator-consumer --timeout=300s
           kubectl -n $NAMESPACE rollout status deploy/evaluation-service --timeout=300s
           kubectl -n $NAMESPACE rollout status deploy/rag-service --timeout=300s
+      
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          echo "=== Cluster objects ==="
+          kubectl -n $NAMESPACE get deploy,rs,po,svc -o wide || true
+          echo "=== Events (recent) ==="
+          kubectl -n $NAMESPACE get events --sort-by=.metadata.creationTimestamp | tail -n 100 || true
+          
+          echo "=== Describe deployments ==="
+          for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
+            echo "--- describe deploy/$d ---"
+            kubectl -n $NAMESPACE describe deploy/$d || true
+          done
+          
+          echo "=== Describe pods by app label ==="
+          for a in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
+            echo "--- describe pods app=$a ---"
+            kubectl -n $NAMESPACE describe po -l app=$a || true
+          done
+          
+          echo "=== Last logs (200 lines) for each app ==="
+          for a in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
+            echo "--- logs app=$a ---"
+            kubectl -n $NAMESPACE logs -l app=$a --all-containers=true --tail=200 || true
+          done
+          
+          echo "=== In-cluster curl to key endpoints ==="
+          kubectl -n $NAMESPACE run curl --rm -i --image=curlimages/curl:8.5.0 --restart=Never -- \
+            sh -lc '
+              set -x
+              for u in \
+                auth-service:8001/openapi.json \
+                quizz-service:8004/health \
+                evaluation-service:8003/health \
+                rag-service:8002/health \
+              ; do
+                echo ">>> GET http://$u"
+                curl -sS --max-time 10 "http://$u" || true
+                echo
+              done
+            ' || true
 
       - name: Export E2E_BASE_URL from Ingress
         run: echo "E2E_BASE_URL=$(minikube service -n ingress-nginx ingress-nginx-controller --url | head -n1)" >> $GITHUB_ENV
