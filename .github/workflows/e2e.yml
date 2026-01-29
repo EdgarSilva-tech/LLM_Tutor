@@ -170,7 +170,7 @@ jobs:
           PGPASSWORD: ${{ secrets.PG_PASSWORD }}
         run: |
           # Create a one-shot Job to initialize databases reliably and wait for completion
-          cat <<'YAML' | kubectl -n $NAMESPACE apply -f -
+          cat <<YAML | kubectl -n $NAMESPACE apply -f -
           apiVersion: batch/v1
           kind: Job
           metadata:
@@ -187,10 +187,7 @@ jobs:
                     image: pgvector/pgvector:pg16
                     env:
                       - name: PGPASSWORD
-                        valueFrom:
-                          secretKeyRef:
-                            name: app-secrets
-                            key: PG_PASSWORD
+                        value: "${PGPASSWORD}"
                     command: ["sh","-lc"]
                     args:
                       - |
