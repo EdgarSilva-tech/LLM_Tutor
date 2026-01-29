@@ -165,22 +165,47 @@ jobs:
       - name: Wait for Postgres
         run: kubectl -n $NAMESPACE rollout status deploy/postgres --timeout=300s
 
-      - name: Initialize application databases
+      - name: Initialize application databases (Job)
         env:
           PGPASSWORD: ${{ secrets.PG_PASSWORD }}
         run: |
-          # Create required databases if they don't exist
-          kubectl -n $NAMESPACE run psql-init --rm -i --image=pgvector/pgvector:pg16 --restart=Never --env="PGPASSWORD=$PGPASSWORD" -- \
-            sh -lc '
-              until pg_isready -h postgres -p 5432 -U postgres; do echo "waiting for postgres"; sleep 2; done;
-              set -e
-              psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE \\"Users\\""    || echo "Users exists or create failed"
-              psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE \\"Evaluation\\"" || echo "Evaluation exists or create failed"
-              psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "CREATE DATABASE \\"Khan_Academy\\"" || echo "Khan_Academy exists or create failed"
-              # Ensure pgvector extension is available in Khan_Academy DB
-              psql -h postgres -p 5432 -U postgres -d "Khan_Academy" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS vector;" || true
-              echo "Databases initialized"
-            '
+          # Create a one-shot Job to initialize databases reliably and wait for completion
+          cat <<'YAML' | kubectl -n $NAMESPACE apply -f -
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: db-init
+          spec:
+            backoffLimit: 2
+            template:
+              metadata:
+                name: db-init
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: psql
+                    image: pgvector/pgvector:pg16
+                    env:
+                      - name: PGPASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: app-secrets
+                            key: PG_PASSWORD
+                    command: ["sh","-lc"]
+                    args:
+                      - |
+                        set -xe
+                        until pg_isready -h postgres -p 5432 -U postgres; do echo "waiting for postgres"; sleep 2; done;
+                        psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE "Users";' || echo "Users exists"
+                        psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE "Evaluation";' || echo "Evaluation exists"
+                        psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE "Khan_Academy";' || echo "Khan_Academy exists"
+                        psql -h postgres -p 5432 -U postgres -d "Khan_Academy" -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+                        echo "DBs ready:"
+                        psql -h postgres -p 5432 -U postgres -d postgres -c '\l'
+          YAML
+          kubectl -n $NAMESPACE wait --for=condition=complete job/db-init --timeout=180s
+          echo "db-init job logs:"
+          kubectl -n $NAMESPACE logs job/db-init || true
 
       # Recommendation 1: print debug info if RabbitMQ fails
       - name: Debug RabbitMQ (on failure)
