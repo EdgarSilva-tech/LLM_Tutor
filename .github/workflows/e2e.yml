@@ -262,6 +262,12 @@ jobs:
           kubectl -n $NAMESPACE apply -f k8s/rag.yaml
         # Avoid applying CRDs/resources for KEDA in CI unless you install the operator
       
+      - name: Force single replica for evaluation-service (first boot)
+        run: |
+          # Immediately ensure only one pod for evaluation-service to avoid concurrent DDL on first boot
+          kubectl -n $NAMESPACE scale deploy/evaluation-service --replicas=1 || true
+          kubectl -n $NAMESPACE rollout status deploy/evaluation-service --timeout=300s || true
+
       - name: CI rollout hardening (all services)
         run: |
           # Apply Recreate strategy to avoid RollingUpdate deadlocks in CI
