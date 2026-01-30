@@ -204,6 +204,9 @@ jobs:
           echo "db-init job logs:"
           kubectl -n $NAMESPACE logs job/db-init || true
 
+      - name: Grace period after db-init
+        run: sleep 8
+
       # Recommendation 1: print debug info if RabbitMQ fails
       - name: Debug RabbitMQ (on failure)
         if: failure()
@@ -261,12 +264,7 @@ jobs:
           kubectl -n $NAMESPACE apply -f k8s/evaluation.yaml
           kubectl -n $NAMESPACE apply -f k8s/rag.yaml
         # Avoid applying CRDs/resources for KEDA in CI unless you install the operator
-      
-      - name: Force single replica for evaluation-service (first boot)
-        run: |
-          # Immediately ensure only one pod for evaluation-service to avoid concurrent DDL on first boot
-          kubectl -n $NAMESPACE scale deploy/evaluation-service --replicas=1 || true
-          kubectl -n $NAMESPACE rollout status deploy/evaluation-service --timeout=300s || true
+
 
       - name: CI rollout hardening (all services)
         run: |
@@ -296,6 +294,11 @@ jobs:
           for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
             kubectl -n $NAMESPACE scale deploy/$d --replicas=1 || true
           done
+
+      - name: Force single replica for evaluation-service (post-hardening)
+        run: |
+          # Ensure evaluation-service remains at a single replica after hardening to avoid DDL races
+          kubectl -n $NAMESPACE scale deploy/evaluation-service --replicas=1 || true
 
       - name: Standardize readiness probes
         run: |
