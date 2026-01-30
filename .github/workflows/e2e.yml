@@ -309,6 +309,26 @@ jobs:
           kubectl -n $NAMESPACE rollout status deploy/quiz-generator-consumer --timeout=300s
           kubectl -n $NAMESPACE rollout status deploy/evaluation-service --timeout=300s
           kubectl -n $NAMESPACE rollout status deploy/rag-service --timeout=300s
+
+      - name: Seed E2E user via /auth/signup
+        env:
+          E2E_BASE_URL: ${{ env.E2E_BASE_URL }}
+          E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+        run: |
+          set -e
+          echo "Seeding E2E user $E2E_USERNAME ..."
+          for i in {1..30}; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" \
+              -d "{\"username\":\"${E2E_USERNAME}\",\"email\":\"${E2E_USERNAME}@example.com\",\"full_name\":\"E2E User\",\"password\":\"${E2E_PASSWORD}\"}" \
+              "${E2E_BASE_URL}/auth/signup" || true)
+            if [ "$CODE" = "200" ] || [ "$CODE" = "409" ]; then
+              echo "User seed complete (HTTP $CODE)"; exit 0
+            fi
+            echo "Signup not ready (HTTP $CODE). Retrying in 2s..."
+            sleep 2
+          done
+          echo "Failed to create E2E user after retries"; exit 1
       
       - name: Diagnostics on failure
         if: failure()
