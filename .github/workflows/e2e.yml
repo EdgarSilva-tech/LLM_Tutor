@@ -319,6 +319,9 @@ jobs:
           kubectl -n $NAMESPACE rollout status deploy/evaluation-service --timeout=300s
           kubectl -n $NAMESPACE rollout status deploy/rag-service --timeout=300s
 
+      - name: Export E2E_BASE_URL from Ingress
+        run: echo "E2E_BASE_URL=$(minikube service -n ingress-nginx ingress-nginx-controller --url | head -n1)" >> $GITHUB_ENV
+
       - name: Seed E2E user via /auth/signup
         env:
           E2E_BASE_URL: ${{ env.E2E_BASE_URL }}
@@ -326,6 +329,11 @@ jobs:
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
         run: |
           set -e
+          echo "E2E_BASE_URL=${E2E_BASE_URL}"
+          if [ -z "${E2E_BASE_URL}" ]; then
+            echo "E2E_BASE_URL is empty; cannot seed user"
+            exit 1
+          fi
           echo "Seeding E2E user $E2E_USERNAME ..."
           for i in {1..30}; do
             CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" \
@@ -338,7 +346,7 @@ jobs:
             sleep 2
           done
           echo "Failed to create E2E user after retries"; exit 1
-      
+
       - name: Diagnostics on failure
         if: failure()
         run: |
@@ -380,9 +388,6 @@ jobs:
                 echo
               done
             ' || true
-
-      - name: Export E2E_BASE_URL from Ingress
-        run: echo "E2E_BASE_URL=$(minikube service -n ingress-nginx ingress-nginx-controller --url | head -n1)" >> $GITHUB_ENV
 
       - name: Run E2E tests
         env:
