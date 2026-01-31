@@ -40,7 +40,7 @@ def client(monkeypatch):
 
 
 def test_generate_quiz_caches_and_returns_questions(client, fake_redis, monkeypatch):
-    questions = ["Q1", "Q2"]
+    questions = {"questions": ["Q1", "Q2"], "tags": ["t1", "t2"]}
     monkeypatch.setattr(main_mod, "quizz_generator", lambda *a, **k: questions)
 
     body = {
@@ -53,10 +53,15 @@ def test_generate_quiz_caches_and_returns_questions(client, fake_redis, monkeypa
         "/generate-quiz", json=body, headers={"Authorization": "Bearer t"}
     )
     assert resp.status_code == 200
-    assert resp.json() == {"quizz_questions": questions}
+    assert resp.json() == {
+        "quizz_questions": questions["questions"],
+        "tags": questions["tags"],
+    }
 
     # Verifica chave no Redis com o hash esperado
-    quizz_str = json.dumps({"questions": questions}, sort_keys=True)
+    quizz_str = json.dumps(
+        {"questions": questions["questions"], "tags": questions["tags"]}, sort_keys=True
+    )
     quizz_hash = hashlib.sha256(quizz_str.encode()).hexdigest()
     key = f"quizz_request:u:{quizz_hash}"
     assert key in fake_redis.store
@@ -64,7 +69,7 @@ def test_generate_quiz_caches_and_returns_questions(client, fake_redis, monkeypa
 
 
 def test_create_quiz_sets_redis_and_returns_id(client, fake_redis, monkeypatch):
-    questions = ["Q1", "Q2", "Q3"]
+    questions = {"questions": ["Q1", "Q2", "Q3"], "tags": ["t1", "t2", "t3"]}
     monkeypatch.setattr(main_mod, "quizz_generator", lambda *a, **k: questions)
 
     body = {
@@ -76,10 +81,10 @@ def test_create_quiz_sets_redis_and_returns_id(client, fake_redis, monkeypatch):
     resp = client.post("/create-quiz", json=body, headers={"Authorization": "Bearer t"})
     assert resp.status_code == 200
     data = resp.json()
-    assert "quiz_id" in data and "questions" in data
-    assert data["questions"] == questions
+    assert "quizz_id" in data and "questions" in data
+    assert data["questions"] == questions["questions"]
 
-    key = f"Quiz:u:{data['quiz_id']}"
+    key = f"Quizz:u:{data['quizz_id']}"
     assert key in fake_redis.store
     # valor guardado é json.dumps(questions)
     assert fake_redis.store[key] == json.dumps(questions)

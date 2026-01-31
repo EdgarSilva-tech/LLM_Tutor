@@ -75,7 +75,7 @@ def test_submit_answers_publisher_failure_does_not_block(client, monkeypatch):
             self.store = {}
 
         def get(self, key):
-            return json.dumps(["Q1", "Q2"])
+            return json.dumps({"questions": ["Q1", "Q2"], "tags": ["t1", "t2"]})
 
         def setex(self, k, ttl, v):
             self.store[k] = v
@@ -90,7 +90,7 @@ def test_submit_answers_publisher_failure_does_not_block(client, monkeypatch):
         "services.quizz_gen_service.mq._publish_with_retry", publisher_boom
     )
 
-    body = {"quiz_id": "q1", "answers": ["a1", "a2"]}
+    body = {"quizz_id": "q1", "answers": ["a1", "a2"]}
     resp = client.post(
         "/submit-answers", json=body, headers={"Authorization": "Bearer t"}
     )
@@ -103,7 +103,7 @@ def test_jobs_returns_processing_on_redis_error(client, monkeypatch):
     resp = client.get("/jobs/any", headers={"Authorization": "Bearer t"})
     assert resp.status_code == 200
     data = resp.json()
-    assert data["status"] == "processing"
+    assert data["status"] == "Error getting job status"
 
 
 def test_generate_async_marks_failed_when_publish_fails(client, monkeypatch):

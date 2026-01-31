@@ -20,8 +20,11 @@ from contextlib import asynccontextmanager
 # Initialize the logger for this module
 logger = get_logger(__name__)
 
-
 app = FastAPI(title="Quiz Generation Service")
+
+
+# class current_user:
+#     username = "test_user"
 
 
 @asynccontextmanager
@@ -116,12 +119,12 @@ def create_quiz(
             tags=questions["tags"],
         )
         logger.info(f"Quizz stored: {questions}")
-        quiz_id = str(uuid.uuid4())
-        key = f"Quiz:{current_user.username}:{quiz_id}"
+        quizz_id = str(uuid.uuid4())
+        key = f"Quizz:{current_user.username}:{quizz_id}"
         # keep for 1 hour
         redis_client.setex(key, 3600, json.dumps(questions))
         return {
-            "quiz_id": quiz_id,
+            "quizz_id": quizz_id,
             "questions": questions["questions"],
             "tags": questions["tags"],
         }
@@ -140,16 +143,17 @@ async def submit_answers(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
-        key = f"Quiz:{current_user.username}:{payload.quiz_id}"
+        key = f"Quizz:{current_user.username}:{payload.quizz_id}"
         data = redis_client.get(key)
         if not data:
             raise HTTPException(
                 status_code=404,
-                detail="Quiz not found or expired",
+                detail="Quizz not found or expired",
             )
         # Aceita tanto o formato novo {"status":"done","questions":[...]}
         # como o legado que guardava apenas a lista de perguntas.
         parsed = json.loads(cast(str, data))
+        print(f"Parsed: {parsed}")
         if isinstance(parsed, dict) and "questions" in parsed:
             questions = parsed["questions"]
         else:
@@ -157,11 +161,11 @@ async def submit_answers(
         if not isinstance(questions, list):
             raise HTTPException(
                 status_code=400,
-                detail="Invalid quiz content",
+                detail="Invalid quizz content",
             )
         logger.info(
-            "Submit answers check: quiz_id=%s q_len=%s a_len=%s",
-            payload.quiz_id,
+            "Submit answers check: quizz_id=%s q_len=%s a_len=%s",
+            payload.quizz_id,
             len(questions),
             len(payload.answers),
         )
@@ -222,7 +226,7 @@ def generate_quizz_async(
     # marca como queued no Redis
     redis_client.setex(key, 3600, json.dumps({"status": "queued"}))
     payload = {
-        "quiz_id": quizz_id,
+        "quizz_id": quizz_id,
         "username": current_user.username,
         "topic": request.topic,
         "num_questions": request.num_questions,
@@ -262,21 +266,22 @@ def get_quiz_job_status(
         val = redis_client.get(key)
         if not val:
             # Ainda a processar (evitar 5xx para não inflacionar erros)
-            return {"status": "processing"}
+            return {"status": "No cache hit"}
         try:
             data = json.loads(cast(str, val))
             return data
-        except Exception:
+        except Exception as e:
             # Se o valor já é uma lista/str serializada,
             # devolva como concluído
+            logger.error(f"Error loading JSON: {e}")
             return {
-                "status": "done",
+                "status": "Failed to load JSON",
                 "questions": val,
             }
     except Exception as e:
         # Erro transitório de Redis/rede → tratar como em processamento
         return {
-            "status": "processing",
+            "status": "Error getting job status",
             "error": str(e),
         }
 

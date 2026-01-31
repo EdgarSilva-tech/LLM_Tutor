@@ -27,7 +27,7 @@ class User(BaseModel):
 
 
 class SubmitAnswers(BaseModel):
-    quiz_id: str
+    quizz_id: str
     answers: list[str]
 
 

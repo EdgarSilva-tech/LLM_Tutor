@@ -43,33 +43,33 @@ def fake_redis(monkeypatch):
     return r
 
 
-def test_jobs_returns_processing_when_missing(client_with_user, fake_redis):
+def test_jobs_returns__when_missing(client_with_user, fake_redis):
     resp = client_with_user.get("/jobs/any-id", headers={"Authorization": "Bearer t"})
     assert resp.status_code == 200
     data = resp.json()
-    assert data["status"] == "processing"
+    assert data["status"] == "No cache hit"
 
 
 def test_jobs_parses_json(client_with_user, fake_redis):
-    key = "Quiz:u:job-1"
-    fake_redis.setex(key, 10, json.dumps({"status": "queued"}))
+    key = "Quizz:u:job-1"
+    fake_redis.setex(key, 60, json.dumps({"status": "queued"}))
     resp = client_with_user.get("/jobs/job-1", headers={"Authorization": "Bearer t"})
     assert resp.status_code == 200
     assert resp.json() == {"status": "queued"}
 
 
-def test_jobs_returns_done_with_raw_value(client_with_user, fake_redis):
-    key = "Quiz:u:job-2"
+def test_jobs_returns_Failed_to_load_JSON_with_raw_value(client_with_user, fake_redis):
+    key = "Quizz:u:job-2"
     fake_redis.setex(key, 10, "['Q1','Q2']")  # valor não-JSON-objeto -> cai no except
     resp = client_with_user.get("/jobs/job-2", headers={"Authorization": "Bearer t"})
     assert resp.status_code == 200
     data = resp.json()
-    assert data["status"] == "done"
+    assert data["status"] == "Failed to load JSON"
     assert data["questions"] == "['Q1','Q2']"
 
 
 def test_submit_answers_404_when_quiz_missing(client_with_user, fake_redis):
-    body = {"quiz_id": "missing", "answers": ["a"]}
+    body = {"quizz_id": "missing", "answers": ["a"]}
     resp = client_with_user.post(
         "/submit-answers", json=body, headers={"Authorization": "Bearer t"}
     )
@@ -77,9 +77,11 @@ def test_submit_answers_404_when_quiz_missing(client_with_user, fake_redis):
 
 
 def test_submit_answers_400_on_count_mismatch(client_with_user, fake_redis):
-    key = "Quiz:u:q1"
-    fake_redis.setex(key, 10, json.dumps(["Q1", "Q2"]))
-    body = {"quiz_id": "q1", "answers": ["a"]}  # 1 resposta para 2 questões
+    key = "Quizz:u:q1"
+    fake_redis.setex(
+        key, 10, json.dumps({"questions": ["Q1", "Q2"], "tags": ["t1", "t2"]})
+    )
+    body = {"quizz_id": "q1", "answers": ["a"]}  # 1 resposta para 2 questões
     resp = client_with_user.post(
         "/submit-answers", json=body, headers={"Authorization": "Bearer t"}
     )
@@ -87,8 +89,10 @@ def test_submit_answers_400_on_count_mismatch(client_with_user, fake_redis):
 
 
 def test_submit_answers_success_publishes(client_with_user, fake_redis, monkeypatch):
-    key = "Quiz:u:q2"
-    fake_redis.setex(key, 10, json.dumps(["Q1", "Q2"]))
+    key = "Quizz:u:q2"
+    fake_redis.setex(
+        key, 10, json.dumps({"questions": ["Q1", "Q2"], "tags": ["t1", "t2"]})
+    )
 
     captured = {}
 
@@ -100,7 +104,7 @@ def test_submit_answers_success_publishes(client_with_user, fake_redis, monkeypa
         "services.quizz_gen_service.mq._publish_with_retry", fake_publish, raising=True
     )
 
-    body = {"quiz_id": "q2", "answers": ["a1", "a2"]}
+    body = {"quizz_id": "q2", "answers": ["a1", "a2"]}
     resp = client_with_user.post(
         "/submit-answers", json=body, headers={"Authorization": "Bearer t"}
     )

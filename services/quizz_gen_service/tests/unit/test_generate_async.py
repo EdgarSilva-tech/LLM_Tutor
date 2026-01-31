@@ -55,10 +55,10 @@ def test_generate_async_queues_and_returns_202(client, fake_redis):
     )
     assert resp.status_code == 202
     data = resp.json()
-    assert "quiz_id" in data
+    assert "quizz_id" in data
     assert data["status"] == "queued"
 
-    key = f"Quiz:u:{data['quiz_id']}"
+    key = f"Quizz:u:{data['quizz_id']}"
     assert key in fake_redis.store
     payload = json.loads(fake_redis.store[key])
     assert payload["status"] == "queued"
