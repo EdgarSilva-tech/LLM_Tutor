@@ -1,4 +1,10 @@
 from pydantic import BaseModel
+from sqlmodel import Field, SQLModel, Column
+import uuid
+from uuid import UUID
+from datetime import datetime
+from sqlalchemy.dialects import postgresql
+from sqlalchemy import String
 
 
 class QuizzRequest(BaseModel):
@@ -23,3 +29,18 @@ class User(BaseModel):
 class SubmitAnswers(BaseModel):
     quiz_id: str
     answers: list[str]
+
+
+class Quizz(SQLModel, table=True):
+    quizz_id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    username: str = Field(index=True)
+    topic: str
+    num_questions: int
+    difficulty: str
+    style: str
+    questions: list[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
+    tags: list[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
+    created_at: datetime = Field(default_factory=datetime.now)
+
+    class Config:
+        arbitrary_types_allowed = True

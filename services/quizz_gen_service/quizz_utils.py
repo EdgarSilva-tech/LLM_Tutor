@@ -42,7 +42,7 @@ Guidelines:
 - You must return only the questions — no answers, no explanations
 - Format clearly using numbered python list (e.g., 1., 2., 3., ...)
 - Include only the questions and don't insert unneccessary text such as ### Generated Quiz:
-- Return only the questions in a Python list format, no other text or explanations, no markdown formatting
+- Return only the questions in a Python list format and a list of tags, no other text or explanations, no markdown formatting
 
 ---
 
@@ -54,9 +54,12 @@ Guidelines:
 **Style**: computational
 
 **Generated Quiz**:
-["1. Differentiate the function f(x) = (3x² + 5x)⁴",
+
+{{"questions": ["1. Differentiate the function f(x) = (3x² + 5x)⁴",
 "2. If f(x) = e^(x²), what is f '(x)?",
-"3. Find the derivative of y = sin(2x³ + 1)"]
+"3. Find the derivative of y = sin(2x³ + 1)"],
+"tags": ["calculus", "derivatives", "chain rule"]
+}}
 
 ---
 
@@ -68,8 +71,10 @@ Guidelines:
 **Style**: conceptual
 
 
-["1. Explain how the second derivative of a function relates to the concavity of its graph and provide an example",
-"2. A function has a local maximum at x = 2. What conditions must be true about its first and second derivatives at that point"]
+{{"questions": ["1. Explain how the second derivative of a function relates to the concavity of its graph and provide an example",
+"2. A function has a local maximum at x = 2. What conditions must be true about its first and second derivatives at that point"],
+"tags": ["calculus", "derivatives", "chain rule"]
+}}
 
 ---
 
@@ -78,7 +83,7 @@ Now generate the quiz:
 - Number of questions: {num_questions}
 - Difficulty: {difficulty}
 - Style: {style}
-""",
+"""
 )
 
 

@@ -8,6 +8,7 @@ from .cache import redis_client
 from .model import quizz_generator
 from aio_pika import abc as aio_abc
 from aiormq.types import FieldTable
+from .persistence import store_quizz
 
 logger = get_logger(__name__)
 
@@ -30,6 +31,7 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
         num_questions = int(payload.get("num_questions", 3))
         difficulty = payload.get("difficulty")
         style = payload.get("style")
+
         if not (username and quiz_id and topic and difficulty and style):
             logger.error("Invalid payload for quiz generation: %s", payload)
             return
@@ -45,7 +47,16 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
                 redis_client.setex(
                     key,
                     3600,
-                    json.dumps({"status": "done", "questions": questions}),
+                    json.dumps({"status": "done", "questions": questions["questions"], "tags": questions["tags"]}),
+                )
+                store_quizz(
+                    username=username,
+                    topic=topic,
+                    num_questions=num_questions,
+                    difficulty=difficulty,
+                    style=style,
+                    questions=questions["questions"],
+                    tags=questions["tags"],
                 )
                 logger.info(
                     "Quiz generated and stored: %s (attempt=%d)", key, attempt + 1

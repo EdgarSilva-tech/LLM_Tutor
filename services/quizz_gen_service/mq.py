@@ -72,3 +72,5 @@ def publish_quiz_generate_request_sync(payload: Dict[str, Any]) -> None:
     asyncio.run(
         _publish_with_retry(payload, quizz_settings.RABBITMQ_ROUTING_KEY_GENERATE)
     )
+
+

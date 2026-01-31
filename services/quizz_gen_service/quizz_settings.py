@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     # Roteamento dedicado para geração de quizzes (100% assíncrono)
     RABBITMQ_ROUTING_KEY_GENERATE: str = "quiz.create.request"
     RABBITMQ_PREFETCH: int = 16
+    DB_NAME: str
+    DB_PORT: int
+    PG_PASSWORD: str
+    USERNAME: str
+    HOST: str
 
 
 quizz_settings = Settings()

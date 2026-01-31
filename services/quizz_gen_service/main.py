@@ -12,6 +12,9 @@ from datetime import datetime
 from fastapi import BackgroundTasks
 from .quizz_settings import quizz_settings
 from typing import cast, Tuple, List
+from .persistence import store_quizz
+from .db import create_db_and_tables
+from contextlib import asynccontextmanager
 
 
 # Initialize the logger for this module
@@ -19,6 +22,14 @@ logger = get_logger(__name__)
 
 
 app = FastAPI(title="Quiz Generation Service")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Creating Quizz tables...")
+    create_db_and_tables()
+    logger.info("Quizz tables created. Service is ready.")
+    yield
 
 
 @app.get("/health")
@@ -44,7 +55,7 @@ async def health_check():
 @app.post("/generate-quiz")
 def generate_quizz(
     request: QuizzRequest,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     try:
         quizz = quizz_generator(
@@ -54,16 +65,26 @@ def generate_quizz(
             request.style,
         )
         logger.info(f"Quizz generated: {quizz}")
+        store_quizz(
+            username=current_user.username,
+            topic=request.topic,
+            num_questions=request.num_questions,
+            difficulty=request.difficulty,
+            style=request.style,
+            questions=quizz["questions"],
+            tags=quizz["tags"],
+        )
+        logger.info(f"Quizz stored: {quizz}")
         quizz_str = json.dumps(
-            {"questions": quizz},
+            {"questions": quizz["questions"], "tags": quizz["tags"]},
             sort_keys=True,
         )
         quizz_hash = hashlib.sha256(quizz_str.encode()).hexdigest()
         cache_key = f"quizz_request:{current_user.username}:{quizz_hash}"
-        redis_client.set(cache_key, quizz_str)
+        redis_client.setex(cache_key, 3600, quizz_str)
         logger.info(f"Quizz cached: {quizz_str}, key: {cache_key}")
 
-        return {"quizz_questions": quizz}
+        return {"quizz_questions": quizz["questions"], "tags": quizz["tags"]}
 
     except Exception as e:
         logger.error(f"Quizz generation failed: {str(e)}")
@@ -76,7 +97,7 @@ def generate_quizz(
 @app.post("/create-quiz")
 def create_quiz(
     request: QuizzRequest,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     try:
         questions = quizz_generator(
@@ -85,11 +106,21 @@ def create_quiz(
             request.difficulty,
             request.style,
         )
+        store_quizz(
+            username=current_user.username,
+            topic=request.topic,
+            num_questions=request.num_questions,
+            difficulty=request.difficulty,
+            style=request.style,
+            questions=questions["questions"],
+            tags=questions["tags"],
+        )
+        logger.info(f"Quizz stored: {questions}")
         quiz_id = str(uuid.uuid4())
         key = f"Quiz:{current_user.username}:{quiz_id}"
         # keep for 1 hour
         redis_client.setex(key, 3600, json.dumps(questions))
-        return {"quiz_id": quiz_id, "questions": questions}
+        return {"quiz_id": quiz_id, "questions": questions["questions"], "tags": questions["tags"]}
     except Exception as e:
         logger.error(f"Create quiz failed: {str(e)}")
         raise HTTPException(
@@ -102,7 +133,7 @@ def create_quiz(
 async def submit_answers(
     payload: SubmitAnswers,
     background_tasks: BackgroundTasks,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     try:
         key = f"Quiz:{current_user.username}:{payload.quiz_id}"
@@ -174,7 +205,7 @@ async def submit_answers(
 def generate_quizz_async(
     request: QuizzRequest,
     background_tasks: BackgroundTasks,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     """
     Marca o job como 'queued' e agenda a publicação no RabbitMQ
@@ -182,12 +213,12 @@ def generate_quizz_async(
     5xx por timeouts de rede ao broker.
     """
     job_id = str(uuid.uuid4())
-    quiz_id = job_id
-    key = f"Quiz:{current_user.username}:{quiz_id}"
+    quizz_id = job_id
+    key = f"Quizz:{current_user.username}:{quizz_id}"
     # marca como queued no Redis
     redis_client.setex(key, 3600, json.dumps({"status": "queued"}))
     payload = {
-        "quiz_id": quiz_id,
+        "quiz_id": quizz_id,
         "username": current_user.username,
         "topic": request.topic,
         "num_questions": request.num_questions,
@@ -215,16 +246,16 @@ def generate_quizz_async(
 
     # agenda publicação em background (não bloqueia response)
     background_tasks.add_task(_do_publish, payload)
-    return {"quiz_id": quiz_id, "status": "queued"}
+    return {"quizz_id": quizz_id, "status": "queued"}
 
 
-@app.get("/jobs/{quiz_id}")
+@app.get("/jobs/{quizz_id}")
 def get_quiz_job_status(
-    quiz_id: str,
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    quizz_id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     try:
-        key = f"Quiz:{current_user.username}:{quiz_id}"
+        key = f"Quizz:{current_user.username}:{quizz_id}"
         val = redis_client.get(key)
         if not val:
             # Ainda a processar (evitar 5xx para não inflacionar erros)
@@ -249,7 +280,7 @@ def get_quiz_job_status(
 
 @app.get("/get-quizz-questions")
 def get_questions(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     try:
         matching_keys = []
