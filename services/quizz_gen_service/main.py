@@ -55,7 +55,7 @@ async def health_check():
 @app.post("/generate-quiz")
 def generate_quizz(
     request: QuizzRequest,
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
         quizz = quizz_generator(
@@ -97,7 +97,7 @@ def generate_quizz(
 @app.post("/create-quiz")
 def create_quiz(
     request: QuizzRequest,
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
         questions = quizz_generator(
@@ -120,7 +120,11 @@ def create_quiz(
         key = f"Quiz:{current_user.username}:{quiz_id}"
         # keep for 1 hour
         redis_client.setex(key, 3600, json.dumps(questions))
-        return {"quiz_id": quiz_id, "questions": questions["questions"], "tags": questions["tags"]}
+        return {
+            "quiz_id": quiz_id,
+            "questions": questions["questions"],
+            "tags": questions["tags"],
+        }
     except Exception as e:
         logger.error(f"Create quiz failed: {str(e)}")
         raise HTTPException(
@@ -133,7 +137,7 @@ def create_quiz(
 async def submit_answers(
     payload: SubmitAnswers,
     background_tasks: BackgroundTasks,
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
         key = f"Quiz:{current_user.username}:{payload.quiz_id}"
@@ -205,7 +209,7 @@ async def submit_answers(
 def generate_quizz_async(
     request: QuizzRequest,
     background_tasks: BackgroundTasks,
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     """
     Marca o job como 'queued' e agenda a publicação no RabbitMQ
@@ -251,8 +255,7 @@ def generate_quizz_async(
 
 @app.get("/jobs/{quizz_id}")
 def get_quiz_job_status(
-    quizz_id: str,
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    quizz_id: str, current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     try:
         key = f"Quizz:{current_user.username}:{quizz_id}"
@@ -279,9 +282,7 @@ def get_quiz_job_status(
 
 
 @app.get("/get-quizz-questions")
-def get_questions(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-):
+def get_questions(current_user: Annotated[User, Depends(get_current_active_user)]):
     try:
         matching_keys = []
         cursor = 0  # Start with cursor 0

@@ -47,7 +47,13 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
                 redis_client.setex(
                     key,
                     3600,
-                    json.dumps({"status": "done", "questions": questions["questions"], "tags": questions["tags"]}),
+                    json.dumps(
+                        {
+                            "status": "done",
+                            "questions": questions["questions"],
+                            "tags": questions["tags"],
+                        }
+                    ),
                 )
                 store_quizz(
                     username=username,

@@ -7,9 +7,6 @@ else:
     from . import quizz_utils as qmod
 from opik.integrations.langchain import OpikTracer
 import ast
-from typing import Union, List, Any
-import json
-import re
 
 opik_tracer = OpikTracer(
     tags=["langchain", "quizz"],
@@ -23,11 +20,21 @@ def quizz_generator(
 ) -> dict:
     llm = qmod.get_llm()
     prompt = qmod.format_quizz_prompt(topic, num_questions, difficulty, style)
-    quizz = ast.literal_eval(llm.invoke(prompt, config={"callbacks": [opik_tracer]}).content)
+    quizz = llm.invoke(prompt, config={"callbacks": [opik_tracer]}).content
+    print(f"Quizz: {type(quizz)}")
+    quizz = ast.literal_eval(str(quizz))
 
     if isinstance(quizz, dict):
         if "questions" in quizz and "tags" in quizz:
             if quizz["questions"] is not None and quizz["tags"] is not None:
                 return quizz
-        else:
-            raise ValueError("LLM did not return a parseable list of questions or tags.")
+
+    return {
+        "Output": "Error: LLM did not return a parseable list of questions or tags."
+    }
+
+
+teste = quizz_generator(
+    topic="calculus", num_questions=3, difficulty="medium", style="computational"
+)
+print(f"Teste: {teste}")

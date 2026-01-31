@@ -83,7 +83,7 @@ Now generate the quiz:
 - Number of questions: {num_questions}
 - Difficulty: {difficulty}
 - Style: {style}
-"""
+""",
 )
 
 

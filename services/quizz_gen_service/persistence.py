@@ -26,7 +26,7 @@ def store_quizz(
                 style=style,
                 questions=questions,
                 tags=tags,
-                created_at=datetime.now()
+                created_at=datetime.now(),
             )
             session.add(quizz)
             session.commit()
