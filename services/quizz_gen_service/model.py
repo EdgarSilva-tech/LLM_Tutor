@@ -32,9 +32,3 @@ def quizz_generator(
     return {
         "Output": "Error: LLM did not return a parseable list of questions or tags."
     }
-
-
-teste = quizz_generator(
-    topic="calculus", num_questions=3, difficulty="medium", style="computational"
-)
-print(f"Teste: {teste}")

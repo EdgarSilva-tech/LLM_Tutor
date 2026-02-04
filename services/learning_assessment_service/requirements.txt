@@ -1,0 +1,15 @@
+sqlalchemy
+sqlmodel
+pydantic
+pydantic-settings
+langchain-openai
+langchain
+fastapi
+uvicorn
+python-dotenv
+redis
+sqlmodel
+passlib
+jwt
+httpx
+python-json-logger
