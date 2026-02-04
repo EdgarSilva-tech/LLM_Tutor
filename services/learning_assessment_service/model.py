@@ -40,4 +40,3 @@ def learning_assessment_adviser(
 
     except Exception as e:
         return f"Error in learning assessment service: {e}"
-

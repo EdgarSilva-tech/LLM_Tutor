@@ -30,7 +30,14 @@ async def health_check():
 async def learning_assessment_service(request: LearningAssessmentRequest):
     """Learning assessment endpoint"""
     try:
-        return learning_assessment_adviser(request.quizz_questions, request.student_answers, request.scores, request.feedback)
+        return learning_assessment_adviser(
+            request.quizz_questions,
+            request.student_answers,
+            request.scores,
+            request.feedback,
+        )
     except Exception as e:
         logger.error(f"Error in learning assessment service: {e}")
-        raise HTTPException(status_code=500, detail=f"Error in learning assessment service: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error in learning assessment service: {e}"
+        )
