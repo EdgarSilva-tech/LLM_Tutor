@@ -41,6 +41,7 @@ async def lifespan(app: FastAPI):
         logger.info("Consumer task stopped")
     yield
 
+
 app = FastAPI(title="Evaluation Service", lifespan=lifespan)
 
 
@@ -110,9 +111,13 @@ def evaluation(
                     "assessment_id": question_hash,
                     "quizz_questions": question_list,
                     "student_answers": answer_list,
-                    "correct_answers": [correct_answer["correct_answer"] for correct_answer in feedback],
+                    "correct_answers": [
+                        correct_answer["correct_answer"] for correct_answer in feedback
+                    ],
                     "scores": [correct_answer["score"] for correct_answer in feedback],
-                    "feedback": [correct_answer["feedback"] for correct_answer in feedback],
+                    "feedback": [
+                        correct_answer["feedback"] for correct_answer in feedback
+                    ],
                 }
             )
             return {"request_id": question_hash, "feedback": feedback}

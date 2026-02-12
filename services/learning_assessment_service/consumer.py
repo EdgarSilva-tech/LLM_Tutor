@@ -12,7 +12,9 @@ from fastapi import HTTPException
 logger = get_logger(__name__)
 
 EXCHANGE_NAME = la_settings.model_dump().get("RABBITMQ_EXCHANGE", "app.events")
-ROUTING_KEY = la_settings.model_dump().get("RABBITMQ_ROUTING_KEY", "evaluation.completed")
+ROUTING_KEY = la_settings.model_dump().get(
+    "RABBITMQ_ROUTING_KEY", "evaluation.completed"
+)
 PREFETCH = int(la_settings.model_dump().get("RABBITMQ_PREFETCH", 16))
 RABBIT_URL = la_settings.model_dump().get("RABBITMQ_URL")
 
@@ -25,7 +27,7 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
     async with message.process(requeue=False):
         payload: Dict[str, Any] = json.loads(message.body)
         msg = LearningAssessmentRequest(**payload)
-        logger.info(f"Consuming assessment_id={msg.assessment_id}")
+        logger.info(f"Consuming assessment: {msg}")
         await handle_learning_assessment(msg)
 
 
@@ -57,7 +59,9 @@ async def handle_learning_assessment(msg: LearningAssessmentRequest) -> None:
         logger.info(f"Learning assessment response: {response}")
     except Exception as e:
         logger.error(f"Error in learning assessment: {e}")
-        raise HTTPException(status_code=500, detail=f"Error in learning assessment: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error in learning assessment: {e}"
+        )
 
 
 async def run_consumer(stop_event: asyncio.Event) -> None:
@@ -75,7 +79,7 @@ async def run_consumer(stop_event: asyncio.Event) -> None:
                 await _handle_message(message)
 
 
-async def start_consumer_task() -> asyncio.Task:
+def start_consumer_task() -> asyncio.Task:
     stop_event = asyncio.Event()
 
     async def _runner():
@@ -83,6 +87,7 @@ async def start_consumer_task() -> asyncio.Task:
             await run_consumer(stop_event)
         except Exception as e:
             logger.error(f"Consumer stopped with error: {e}")
+
     task = asyncio.create_task(_runner())
     task.stop_event = stop_event  # type: ignore[attr-defined]
     return task

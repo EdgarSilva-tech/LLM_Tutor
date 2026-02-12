@@ -30,7 +30,9 @@ def learning_assessment_adviser(
     }
 
     try:
-        for q, a, c, s, f in zip(quizz_questions, student_answers, correct_answers, scores, feedback):
+        for q, a, c, s, f in zip(
+            quizz_questions, student_answers, correct_answers, scores, feedback
+        ):
             evaluation_results["quizz_questions"].append(q)
             evaluation_results["student_answers"].append(a)
             evaluation_results["correct_answers"].append(c)
