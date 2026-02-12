@@ -18,6 +18,7 @@ class User(BaseModel):
 class LearningAssessmentRequest(BaseModel):
     quizz_questions: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
     student_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
+    correct_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
     scores: List[float] = Field(sa_column=Column(postgresql.ARRAY(Float())))
     feedback: List[dict] = Field(sa_column=Column(postgresql.ARRAY(String())))
 

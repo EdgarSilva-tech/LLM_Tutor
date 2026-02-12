@@ -16,6 +16,7 @@ from .db import create_db_and_tables
 from .logging_config import get_logger
 from .persistence import store_evals
 from typing import Tuple, List, cast
+from .mq_producer import publish_evaluation_completed_sync
 
 # Initialize the logger for this module
 logger = get_logger(__name__)
@@ -37,7 +38,8 @@ async def lifespan(app: FastAPI):
         consumer_task.cancel()
         with contextlib.suppress(Exception):
             asyncio.get_event_loop().run_until_complete(consumer_task)
-
+        logger.info("Consumer task stopped")
+    yield
 
 app = FastAPI(title="Evaluation Service", lifespan=lifespan)
 
@@ -103,7 +105,16 @@ def evaluation(
             key = f"Eval:{current_user.username}:{question_hash}"
             redis_client.set(key, question_str)
             logger.info(f"Feedback cached: {feedback}")
-
+            publish_evaluation_completed_sync(
+                {
+                    "assessment_id": question_hash,
+                    "quizz_questions": question_list,
+                    "student_answers": answer_list,
+                    "correct_answers": [correct_answer["correct_answer"] for correct_answer in feedback],
+                    "scores": [correct_answer["score"] for correct_answer in feedback],
+                    "feedback": [correct_answer["feedback"] for correct_answer in feedback],
+                }
+            )
             return {"request_id": question_hash, "feedback": feedback}
 
     except Exception as e:

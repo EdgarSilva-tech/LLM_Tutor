@@ -16,6 +16,7 @@ opik_tracer = OpikTracer(
 def learning_assessment_adviser(
     quizz_questions: list[str],
     student_answers: list[str],
+    correct_answers: list[str],
     scores: list[float],
     feedback: list[dict],
 ):
@@ -23,14 +24,16 @@ def learning_assessment_adviser(
     evaluation_results: dict = {
         "quizz_questions": [],
         "student_answers": [],
+        "correct_answers": [],
         "scores": [],
         "feedback": [],
     }
 
     try:
-        for q, a, s, f in zip(quizz_questions, student_answers, scores, feedback):
+        for q, a, c, s, f in zip(quizz_questions, student_answers, correct_answers, scores, feedback):
             evaluation_results["quizz_questions"].append(q)
             evaluation_results["student_answers"].append(a)
+            evaluation_results["correct_answers"].append(c)
             evaluation_results["scores"].append(s)
             evaluation_results["feedback"].append(f)
 

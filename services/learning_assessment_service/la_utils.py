@@ -15,7 +15,7 @@ LEARNING_ASSESSMENT_PROMPT = opik.Prompt(
     prompt="""
 You are an expert learning assessor. Analyze the student’s evaluated quiz and decide whether a focused follow‑up quiz is warranted on topics the student struggled with.
 
-Inputs you are given (as a dictionary of lists with the following keys: quizz_questions, student_answers, scores, feedback):
+Inputs you are given (as a dictionary of lists with the following keys: quizz_questions, student_answers, correct_answers, scores, feedback):
 
 Evaluation results: {evaluation_results}
 
@@ -78,6 +78,7 @@ def format_learning_assessment_prompt(evaluation_results: dict) -> str:
     Expects a dict with keys:
       - quizz_questions: list[str]
       - student_answers: list[str]
+      - correct_answers: list[str]
       - scores: list[float]
       - feedback: list[dict|str]
     """

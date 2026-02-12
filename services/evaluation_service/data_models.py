@@ -49,3 +49,11 @@ class EvaluationJobMessage(BaseModel):
     student_answers: List[str]
     created_at: str = PydField(description="ISO8601 datetime string")
     trace_id: str | None = None
+
+
+class EvaluationCompleted(BaseModel):
+    quizz_questions: List[str]
+    student_answers: List[str]
+    correct_answers: List[str]
+    scores: List[float]
+    feedback: List[dict]
