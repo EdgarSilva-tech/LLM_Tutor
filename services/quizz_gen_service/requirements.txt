@@ -18,3 +18,4 @@ pytest-asyncio
 aio-pika
 aiormq
 sqlalchemy
+psycopg2-binary

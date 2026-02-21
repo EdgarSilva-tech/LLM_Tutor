@@ -5,6 +5,9 @@ services:
     image: rabbitmq:3.13-management
     container_name: llm_tutor-rabbitmq
     restart: unless-stopped
+    volumes:
+      - ./rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.13.0.ez:/opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.13.0.ez:ro
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
     ports:
       - "0.0.0.0:5672:5672"
       - "127.0.0.1:15672:15672"

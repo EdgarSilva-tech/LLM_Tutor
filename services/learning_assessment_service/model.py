@@ -7,8 +7,8 @@ else:
 from opik.integrations.langchain import OpikTracer
 
 opik_tracer = OpikTracer(
-    tags=["langchain", "quizz"],
-    metadata={"use-case": "question generation", "version": "1.0"},
+    tags=["langchain", "learning assessment"],
+    metadata={"use-case": "learning assessment", "version": "1.0"},
     project_name="LLM_Tutor",
 )
 

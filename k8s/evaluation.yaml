@@ -17,7 +17,7 @@ spec:
         - name: regcred
       containers:
         - name: evaluation
-          image: ghcr.io/edgarsilva-tech/llm_tutor/evaluation_service:dev-20260109234937   # altere para a sua imagem (ex.: ghcr.io/<org>/evaluation_service:v1.0.0)
+          image: ghcr.io/edgarsilva-tech/llm_tutor/evaluation_service:20260214-020032   # altere para a sua imagem (ex.: ghcr.io/<org>/evaluation_service:v1.0.0)
           ports:
             - containerPort: 8003
           envFrom:

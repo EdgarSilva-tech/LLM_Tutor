@@ -26,9 +26,11 @@ class Settings(BaseSettings):
     RABBITMQ_ROUTING_KEY: str = "evaluation.completed"
     RABBITMQ_PREFETCH: int = 16
     RABBITMQ_QUEUE_NAME: str = "evaluation.completed.q"
+    RABBITMQ_ROUTING_KEY_GENERATE: str = "quiz.create.request"
     RABBITMQ_DLX_NAME: str = "app.dlx"
     RABBITMQ_DLQ_NAME: str = "evaluation.completed.dlq"
     RABBITMQ_EXCHANGE_NAME: str = "app.events"
+    RABBITMQ_DELAYED_EXCHANGE: str = "app.delayed"
 
 
 la_settings = Settings()

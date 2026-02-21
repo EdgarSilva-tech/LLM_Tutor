@@ -1,36 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: quizz-service
+  name: learning-assessment-service
   namespace: llm-tutor
 spec:
-  replicas: 3
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
-  minReadySeconds: 10
+  replicas: 2
   selector:
     matchLabels:
-      app: quizz-service
+      app: learning-assessment-service
   template:
     metadata:
       labels:
-        app: quizz-service
+        app: learning-assessment-service
     spec:
-      terminationGracePeriodSeconds: 30
       imagePullSecrets:
         - name: regcred
       containers:
-        - name: quizz
-          image: ghcr.io/edgarsilva-tech/llm_tutor/quizz_service:dev-20260217-175542  # altere para a sua imagem (ex.: ghcr.io/<org>/quizz_service:v1.0.0)
+        - name: learning-assessment
+          image: ghcr.io/edgarsilva-tech/llm_tutor/learning_assessment_service:20260214-020032
           ports:
-            - containerPort: 8004
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh","-c","sleep 5"]
+            - containerPort: 8005
           envFrom:
             - configMapRef:
                 name: app-config
@@ -38,11 +27,13 @@ spec:
                 name: app-secrets
           env:
             - name: PORT
-              value: "8004"
+              value: "8005"
+            - name: DB_NAME
+              value: "LearningAssessment"
           readinessProbe:
             httpGet:
               path: /health
-              port: 8004
+              port: 8005
             initialDelaySeconds: 30
             timeoutSeconds: 3
             periodSeconds: 10
@@ -50,29 +41,29 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 8004
+              port: 8005
             initialDelaySeconds: 30
             timeoutSeconds: 3
             periodSeconds: 10
             failureThreshold: 5
           resources:
             requests:
-              cpu: 300m
-              memory: 512Mi
+              cpu: 100m
+              memory: 256Mi
             limits:
-              cpu: "1"
-              memory: "1Gi"
+              cpu: 500m
+              memory: 1Gi
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: quizz-service
+  name: learning-assessment-service
   namespace: llm-tutor
 spec:
   selector:
-    app: quizz-service
+    app: learning-assessment-service
   ports:
-    - port: 8004
-      targetPort: 8004
+    - port: 8005
+      targetPort: 8005
 
 

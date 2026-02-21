@@ -85,3 +85,19 @@ def format_learning_assessment_prompt(evaluation_results: dict) -> str:
     return LEARNING_ASSESSMENT_PROMPT.prompt.format(
         evaluation_results=evaluation_results
     )
+
+
+def event_handler(event: dict) -> None:
+    """
+    Event handler for learning assessment service.
+    """
+    try:
+        if event["needs_focus"] == True:
+            publish_quizz_create_request(event["payloads"])
+        else:
+            logger.info(f"No focused follow-up quiz is warranted on topics the student struggled with.")
+    except Exception as e:
+        logger.error(f"Error in event handler: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error in event handler: {e}"
+        )

@@ -13,3 +13,8 @@ passlib
 jwt
 httpx
 python-json-logger
+psycopg2-binary
+opik
+aio-pika
+aiormq
+orjson

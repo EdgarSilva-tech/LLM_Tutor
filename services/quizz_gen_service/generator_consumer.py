@@ -17,9 +17,9 @@ ROUTING_KEY = quizz_settings.RABBITMQ_ROUTING_KEY_GENERATE
 PREFETCH = int(quizz_settings.RABBITMQ_PREFETCH)
 RABBIT_URL = quizz_settings.RABBITMQ_URL
 
-QUEUE_NAME = "quiz.create.q"
-DLX_NAME = "app.dlx"
-DLQ_NAME = "quiz.create.dlq"
+QUEUE_NAME = quizz_settings.RABBITMQ_QUEUE_NAME
+DLX_NAME = quizz_settings.RABBITMQ_DLX_NAME
+DLQ_NAME = quizz_settings.RABBITMQ_DLQ_NAME
 
 
 async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
@@ -93,8 +93,16 @@ async def _declare_topology(channel: aio_abc.AbstractChannel) -> None:
     exchange = await channel.declare_exchange(
         EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
     )
+    delayed_exchange = await channel.declare_exchange(
+        quizz_settings.RABBITMQ_DELAYED_EXCHANGE,
+        type="x-delayed-message",
+        durable=True,
+        arguments={"x-delayed-type": "topic"},
+    )
     args: FieldTable = {"x-dead-letter-exchange": DLX_NAME}
     queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
+    await delayed_exchange.bind(exchange, routing_key="#")
+
     await queue.bind(exchange, routing_key=ROUTING_KEY)
 
 

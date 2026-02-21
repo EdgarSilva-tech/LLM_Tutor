@@ -33,3 +33,21 @@ class LearningAssessment(SQLModel, table=True):
     scores: List[float] = Field(sa_column=Column(postgresql.ARRAY(Float())))
     feedback: List[dict] = Field(sa_column=Column(postgresql.ARRAY(String())))
     created_at: datetime = Field(default_factory=datetime.now)
+
+
+class MasteryStore(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    username: str = Field(index=True)
+    topic: str = Field(index=True)
+    score: float
+    attempts: int = Field(default=0)
+    rolling_avg: float
+    last_quiz_id: UUID
+    updated_at: datetime = Field(default_factory=datetime.now)
+    mastery_band: str
+    recency_days: int
+    evidence_count: int
+    created_at: datetime = Field(default_factory=datetime.now)
+    status: str
+    action_type: str
+    due_at: datetime

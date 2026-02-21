@@ -1,0 +1,78 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq
+  namespace: llm-tutor
+spec:
+  replicas: 1
+  image: rabbitmq:3.13-management
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+  persistence:
+    storage: 5Gi
+    storageClassName: standard   # adjust for your cluster if needed
+  service:
+    type: ClusterIP
+  secretBackend:
+    externalSecret:
+      name: app-secrets
+  rabbitmq:
+    # The operator enables these plugins when present in /opt/rabbitmq/plugins
+    additionalPlugins:
+      - rabbitmq_management
+      - rabbitmq_delayed_message_exchange
+    # Optional basic config (turn off guest loopback if desired)
+    additionalConfig: |
+      loopback_users.guest = false
+
+  # Override the StatefulSet pod spec to add an initContainer that fetches the .ez file
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: rmq-plugins
+                emptyDir: {}
+            initContainers:
+              - name: fetch-delayed-plugin
+                image: curlimages/curl:8.7.1
+                imagePullPolicy: IfNotPresent
+                command: ["sh","-lc"]
+                args:
+                  - >
+                    set -euo pipefail;
+                    echo "Downloading delayed-message plugin...";
+                    curl -L -o /plugins/rabbitmq_delayed_message_exchange-3.13.0.ez
+                    https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.13.0/rabbitmq_delayed_message_exchange-3.13.0.ez;
+                    ls -l /plugins
+                volumeMounts:
+                  - name: rmq-plugins
+                    mountPath: /plugins
+            containers:
+              - name: rabbitmq
+                volumeMounts:
+                  # Mount ONLY the single .ez file via subPath so we don't hide built-in plugins
+                  - name: rmq-plugins
+                    mountPath: /opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.13.0.ez
+                    subPath: rabbitmq_delayed_message_exchange-3.13.0.ez
+                    readOnly: true
+                readinessProbe:
+                  exec:
+                    command: ["rabbitmq-diagnostics", "-q", "ping"]
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 6
+                livenessProbe:
+                  exec:
+                    command: ["rabbitmq-diagnostics", "-q", "ping"]
+                  initialDelaySeconds: 40
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 6
