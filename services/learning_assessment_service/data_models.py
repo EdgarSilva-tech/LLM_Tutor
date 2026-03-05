@@ -16,6 +16,8 @@ class User(BaseModel):
 
 
 class LearningAssessmentRequest(BaseModel):
+    username: str
+    assessment_id: UUID
     quizz_questions: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
     student_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
     correct_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
@@ -45,9 +47,7 @@ class MasteryStore(SQLModel, table=True):
     last_quiz_id: UUID
     updated_at: datetime = Field(default_factory=datetime.now)
     mastery_band: str
-    recency_days: int
-    evidence_count: int
     created_at: datetime = Field(default_factory=datetime.now)
-    status: str
-    action_type: str
+    status: str = Field(default="pending")
+    action_type: str = Field(default="quiz")
     due_at: datetime

@@ -45,3 +45,13 @@ def learning_assessment_adviser(
 
     except Exception as e:
         return f"Error in learning assessment service: {e}"
+
+
+def reminder_generator(evaluation_results: dict) -> str:
+    try:
+        llm = la_mod.get_llm()
+        prompt = la_mod.format_reminder_prompt(evaluation_results)
+        response = llm.invoke(prompt, config={"callbacks": [opik_tracer]})
+        return response.content
+    except Exception as e:
+        return f"Error in reminder generator: {e}"

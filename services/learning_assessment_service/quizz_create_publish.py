@@ -49,7 +49,7 @@ async def _publish(payload: Dict[str, Any], routing_key: str, delay: int = 0) ->
         body=json.dumps(payload).encode("utf-8"),
         content_type="application/json",
         delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-        headers={"x-delay": delay}
+        headers={"x-delay": delay},
     )
     await exchange.publish(message, routing_key=routing_key)
     logger.info(f"Quizz create request published: {payload}")
@@ -73,4 +73,8 @@ async def _publish_with_retry(
 
 
 def publish_quizz_create_request(payload: Dict[str, Any], delay: int = 0) -> None:
-    asyncio.run(_publish_with_retry(payload, la_settings.RABBITMQ_ROUTING_KEY_GENERATE, delay=delay))
+    asyncio.run(
+        _publish_with_retry(
+            payload, la_settings.RABBITMQ_ROUTING_KEY_GENERATE, delay=delay
+        )
+    )

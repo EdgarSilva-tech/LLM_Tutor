@@ -24,7 +24,6 @@ class Settings(BaseSettings):
     RABBITMQ_QUEUE_NAME: str = "quiz.create.q"
     RABBITMQ_DLX_NAME: str = "app.dlx"
     RABBITMQ_DLQ_NAME: str = "quiz.create.dlq"
-    RABBITMQ_DELAYED_EXCHANGE: str = "app.delayed"
     RABBITMQ_PREFETCH: int = 16
     DB_NAME: str = "Quizz"
     DB_PORT: int

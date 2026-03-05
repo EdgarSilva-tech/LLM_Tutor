@@ -14,6 +14,7 @@ class SingleEvaluationRequest(BaseModel):
 
 class EvaluationRequest(BaseModel):
     student_id: str
+    topic: str
     quizz_questions: List[str]
     student_answers: List[str]
 

@@ -56,23 +56,31 @@ spec:
                     mountPath: /plugins
             containers:
               - name: rabbitmq
+                env:
+                  - name: RABBITMQ_PLUGINS_DIR
+                    value: /opt/rabbitmq/plugins:/opt/rabbitmq/extra-plugins
                 volumeMounts:
-                  # Mount ONLY the single .ez file via subPath so we don't hide built-in plugins
                   - name: rmq-plugins
-                    mountPath: /opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.13.0.ez
-                    subPath: rabbitmq_delayed_message_exchange-3.13.0.ez
+                    mountPath: /opt/rabbitmq/extra-plugins
                     readOnly: true
                 readinessProbe:
                   exec:
                     command: ["rabbitmq-diagnostics", "-q", "ping"]
                   initialDelaySeconds: 30
                   periodSeconds: 10
-                  timeoutSeconds: 5
-                  failureThreshold: 6
+                  timeoutSeconds: 10
+                  failureThreshold: 10
                 livenessProbe:
                   exec:
                     command: ["rabbitmq-diagnostics", "-q", "ping"]
                   initialDelaySeconds: 40
                   periodSeconds: 10
-                  timeoutSeconds: 5
-                  failureThreshold: 6
+                  timeoutSeconds: 10
+                  failureThreshold: 10
+                startupProbe:
+                  exec:
+                    command: ["rabbitmq-diagnostics", "-q", "ping"]
+                  initialDelaySeconds: 20
+                  periodSeconds: 10
+                  timeoutSeconds: 10
+                  failureThreshold: 18

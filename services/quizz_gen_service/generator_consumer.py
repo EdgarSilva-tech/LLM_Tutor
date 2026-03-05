@@ -9,6 +9,7 @@ from .model import quizz_generator
 from aio_pika import abc as aio_abc
 from aiormq.types import FieldTable
 from .persistence import store_quizz
+from .db import create_db_and_tables
 
 logger = get_logger(__name__)
 
@@ -101,12 +102,15 @@ async def _declare_topology(channel: aio_abc.AbstractChannel) -> None:
     )
     args: FieldTable = {"x-dead-letter-exchange": DLX_NAME}
     queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
-    await delayed_exchange.bind(exchange, routing_key="#")
+    # Ensure delayed exchange forwards to the main events exchange
+    await exchange.bind(delayed_exchange, routing_key="#")
 
     await queue.bind(exchange, routing_key=ROUTING_KEY)
 
 
 async def run_consumer(stop_event: asyncio.Event) -> None:
+    # Ensure database tables exist (idempotent)
+    create_db_and_tables()
     assert RABBIT_URL, "RABBITMQ_URL must be set"
     connection = await aio_pika.connect_robust(RABBIT_URL)
     async with connection:

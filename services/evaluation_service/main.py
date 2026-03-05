@@ -108,6 +108,7 @@ def evaluation(
             logger.info(f"Feedback cached: {feedback}")
             publish_evaluation_completed_sync(
                 {
+                    "username": current_user.username,
                     "assessment_id": question_hash,
                     "quizz_questions": question_list,
                     "student_answers": answer_list,
