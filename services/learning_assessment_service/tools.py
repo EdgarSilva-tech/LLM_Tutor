@@ -22,7 +22,10 @@ def get_mastery(username: str, topic: str) -> dict:
                 logger.error(
                     f"Mastery not found for user: {username} and topic: {topic}"
                 )
-                raise HTTPException(status_code=404, detail=f"Mastery not found for user: {username} and topic: {topic}")
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Mastery not found for user: {username} and topic: {topic}",
+                )
             return mastery.model_dump()
     except Exception as e:
         logger.error(f"Error getting mastery: {e}")
@@ -43,4 +46,6 @@ def list_recent_evaluations(username: str, days: int) -> list[dict]:
             return [evaluation.model_dump() for evaluation in evaluations]
     except Exception as e:
         logger.error(f"Error listing recent evaluations: {e}")
-        raise HTTPException(status_code=500, detail=f"Error listing recent evaluations: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error listing recent evaluations: {e}"
+        )

@@ -1,5 +1,6 @@
 import json
 import uuid
+import asyncio
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import create_engine, Session, select
@@ -34,9 +35,6 @@ def client(tmp_path, monkeypatch):
     app = eval_main.app
     app.dependency_overrides[eval_main.get_current_active_user] = _fake_current_user
 
-    # Avoid starting real RabbitMQ consumer task during tests
-    import asyncio
-
     def _fake_start_consumer_task():
         t = asyncio.create_task(asyncio.sleep(0))
         t.stop_event = asyncio.Event()
@@ -46,8 +44,24 @@ def client(tmp_path, monkeypatch):
         eval_main, "start_consumer_task", _fake_start_consumer_task, raising=True
     )
 
+    def _create_eval_tables_only():
+        Evaluation.metadata.create_all(engine, tables=[Evaluation.__table__])
+
+    monkeypatch.setattr(
+        eval_db, "create_db_and_tables", _create_eval_tables_only, raising=True
+    )
+    monkeypatch.setattr(
+        eval_main, "create_db_and_tables", _create_eval_tables_only, raising=True
+    )
+    monkeypatch.setattr(
+        eval_main,
+        "publish_evaluation_completed_sync",
+        lambda payload: None,
+        raising=True,
+    )
+
     # Ensure DB schema exists on our temp engine
-    eval_db.create_db_and_tables()
+    _create_eval_tables_only()
 
     with TestClient(app) as c:
         yield c
@@ -86,6 +100,7 @@ def test_evaluation_flow_with_stubbed_llm(client, monkeypatch):
     # Call /eval-service with two questions
     payload = {
         "student_id": "u",
+        "topic": "arithmetic",
         "quizz_questions": ["What is 6*7?", "What is 1+1?"],
         "student_answers": ["41", "2"],
     }
@@ -142,9 +157,9 @@ def test_get_feedback_and_jobs_endpoints(client, monkeypatch):
     assert jr.json().get("status") == "done"
 
 
-def test_feedback_not_visible_to_other_user(monkeypatch):
+def test_feedback_not_visible_to_other_user(client):
     # Seed feedback for user 'u'
-    from services.evaluation_service.main import redis_client, app as eval_app
+    from services.evaluation_service.main import redis_client
 
     redis_client.set("Eval:u:req-1", json.dumps([{"q": "Q", "score": 1.0}]), ex=3600)
 
@@ -152,9 +167,8 @@ def test_feedback_not_visible_to_other_user(monkeypatch):
     async def _fake_user_v():
         return User(username="v", email="v@example.com", full_name="V", disabled=False)
 
-    eval_app.dependency_overrides[eval_main.get_current_active_user] = _fake_user_v
-    with TestClient(eval_app) as c2:
-        r = c2.get("/eval-service/get-feedback", headers={"Authorization": "Bearer t"})
-        assert r.status_code == 200
-        # No Eval:v:* keys exist, endpoint returns informative string
-        assert r.json() == "No keys found for the pattern."
+    eval_main.app.dependency_overrides[eval_main.get_current_active_user] = _fake_user_v
+    r = client.get("/eval-service/get-feedback", headers={"Authorization": "Bearer t"})
+    assert r.status_code == 200
+    # No Eval:v:* keys exist, endpoint returns informative string
+    assert r.json() == "No keys found for the pattern."

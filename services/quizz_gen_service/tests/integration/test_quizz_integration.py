@@ -57,8 +57,13 @@ def client(monkeypatch):
 
 def test_generate_quiz_caches_and_returns_questions_integration(client, monkeypatch):
     questions = ["Q1", "Q2", "Q3"]
+    tags = ["algebra", "easy"]
     # Avoid hitting real LLM
-    monkeypatch.setattr(main_mod, "quizz_generator", lambda *a, **k: questions)
+    monkeypatch.setattr(
+        main_mod,
+        "quizz_generator",
+        lambda *a, **k: {"questions": questions, "tags": tags},
+    )
 
     body = {
         "topic": "algebra",
@@ -72,11 +77,11 @@ def test_generate_quiz_caches_and_returns_questions_integration(client, monkeypa
         headers={"Authorization": "Bearer t"},
     )
     assert resp.status_code == 200
-    assert resp.json() == {"quizz_questions": questions}
+    assert resp.json() == {"quizz_questions": questions, "tags": tags}
 
     # Verify cache written
     r: redis.Redis = main_mod.redis_client
-    quizz_str = json.dumps({"questions": questions}, sort_keys=True)
+    quizz_str = json.dumps({"questions": questions, "tags": tags}, sort_keys=True)
     import hashlib
 
     quizz_hash = hashlib.sha256(quizz_str.encode()).hexdigest()
@@ -86,11 +91,16 @@ def test_generate_quiz_caches_and_returns_questions_integration(client, monkeypa
 
 def test_create_quiz_sets_redis_and_submit_answers_publishes_bg(client, monkeypatch):
     questions = ["A", "B"]
+    tags = ["probability", "easy"]
     # Stub generator
-    monkeypatch.setattr(main_mod, "quizz_generator", lambda *a, **k: questions)
+    monkeypatch.setattr(
+        main_mod,
+        "quizz_generator",
+        lambda *a, **k: {"questions": questions, "tags": tags},
+    )
 
     # Stub publisher to avoid real RabbitMQ in integration test
-    async def _noop_publish(payload):
+    async def _noop_publish(payload, routing_key, max_retries=7):
         await asyncio.sleep(0)  # simulate async
         return None
 
@@ -113,14 +123,16 @@ def test_create_quiz_sets_redis_and_submit_answers_publishes_bg(client, monkeypa
     )
     assert r.status_code == 200
     data = r.json()
-    assert "quiz_id" in data and data["questions"] == questions
+    assert (
+        "quizz_id" in data and data["questions"] == questions and data["tags"] == tags
+    )
 
-    quiz_id = data.get("id") or data["quiz_id"]
+    quizz_id = data["quizz_id"]
 
     # Now submit answers; should return 202 and enqueue background publish
     sr = client.post(
         "/submit-answers",
-        json={"quiz_id": quiz_id, "answers": ["x", "y"]},
+        json={"quizz_id": quizz_id, "answers": ["x", "y"]},
         headers={"Authorization": "Bearer t"},
     )
     assert sr.status_code == 202

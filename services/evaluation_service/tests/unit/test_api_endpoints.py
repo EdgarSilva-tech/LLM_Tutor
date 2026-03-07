@@ -96,6 +96,9 @@ def test_eval_service_success(client_with_user, monkeypatch):
         calls["saved"].append((username, q, a, correct, score, feedback))
 
     monkeypatch.setattr(main_mod, "store_evals", fake_store)
+    monkeypatch.setattr(
+        main_mod, "publish_evaluation_completed_sync", lambda payload: None
+    )
 
     class AIMessage:
         def __init__(self, content):
@@ -110,6 +113,7 @@ def test_eval_service_success(client_with_user, monkeypatch):
 
     body = {
         "student_id": "u",
+        "topic": "arithmetic",
         "quizz_questions": ["Q1", "Q2"],
         "student_answers": ["a1", "a2"],
     }
@@ -135,6 +139,7 @@ def test_eval_service_error_500(client_with_user, monkeypatch):
 
     body = {
         "student_id": "u",
+        "topic": "arithmetic",
         "quizz_questions": ["Q1"],
         "student_answers": ["a1"],
     }

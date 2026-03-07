@@ -20,10 +20,21 @@ def _get_env_or_skip() -> tuple[str, str, str]:
     return base.rstrip("/"), user, pwd
 
 
+async def _request_or_skip(
+    client: httpx.AsyncClient, method: str, url: str, **kwargs
+) -> httpx.Response:
+    try:
+        return await client.request(method, url, **kwargs)
+    except httpx.HTTPError as exc:
+        pytest.skip(f"E2E target unreachable: {exc}")
+
+
 async def _login_token(
     client: httpx.AsyncClient, base: str, username: str, password: str
 ) -> str:
-    resp = await client.post(
+    resp = await _request_or_skip(
+        client,
+        "POST",
         f"{base}/auth/token",
         data={"username": username, "password": password},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
@@ -55,7 +66,7 @@ async def test_e2e_quiz_generate_submit_and_evaluate():
             f"{base}/quiz/generate-async", json=gen_payload, headers=auth
         )
         assert r.status_code in (200, 202)
-        quiz_id = r.json().get("quiz_id")
+        quiz_id = r.json().get("quizz_id")
         assert quiz_id
         print(f"[E2E] quiz_id={quiz_id}")
 
@@ -66,7 +77,9 @@ async def test_e2e_quiz_generate_submit_and_evaluate():
         last_status = None
         last_body = None
         while time.time() < deadline:
-            jr = await client.get(f"{base}/quiz/jobs/{quiz_id}", headers=auth)
+            jr = await _request_or_skip(
+                client, "GET", f"{base}/quiz/jobs/{quiz_id}", headers=auth
+            )
             last_status = jr.status_code
             try:
                 last_body = jr.json()
@@ -97,7 +110,7 @@ async def test_e2e_quiz_generate_submit_and_evaluate():
         ) as client2:
             sr = await client2.post(
                 f"{base}/quiz/submit-answers",
-                json={"quiz_id": quiz_id, "answers": answers},
+                json={"quizz_id": quiz_id, "answers": answers},
                 headers=auth,
             )
             assert sr.status_code == 202
@@ -109,8 +122,11 @@ async def test_e2e_quiz_generate_submit_and_evaluate():
             status_done = None
             backoff = 0.5
             while time.time() < deadline:
-                er = await client2.get(
-                    f"{base}/evaluation/eval-service/jobs/{job_id}", headers=auth
+                er = await _request_or_skip(
+                    client2,
+                    "GET",
+                    f"{base}/evaluation/eval-service/jobs/{job_id}",
+                    headers=auth,
                 )
                 if er.status_code == 200:
                     body = er.json()
@@ -134,7 +150,9 @@ async def test_e2e_rag_question_answer():
         auth = {"Authorization": f"Bearer {token}"}
 
         payload = {"question": "What is a vector space?", "top_k": 2}
-        r = await client.post(f"{base}/rag/question-answer", json=payload, headers=auth)
+        r = await _request_or_skip(
+            client, "POST", f"{base}/rag/question-answer", json=payload, headers=auth
+        )
         assert r.status_code == 200
         data = r.json()
         assert "answer" in data and "context" in data

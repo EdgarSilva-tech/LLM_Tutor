@@ -47,7 +47,7 @@ def client(monkeypatch):
 
 def test_generate_async_sets_queued_and_jobs_progress(client, monkeypatch):
     # Stub async publisher to no-op so we don't require RabbitMQ
-    async def _noop_publish(payload):
+    async def _noop_publish(payload, routing_key, max_retries=7):
         await asyncio.sleep(0)
         return None
 
@@ -65,7 +65,7 @@ def test_generate_async_sets_queued_and_jobs_progress(client, monkeypatch):
         "/generate-async", json=body, headers={"Authorization": "Bearer t"}
     )
     assert res.status_code == 202
-    quiz_id = res.json().get("quiz_id")
+    quiz_id = res.json().get("quizz_id")
     assert quiz_id
 
     # Immediately after, job status should be queued/processing (not done)
@@ -76,7 +76,7 @@ def test_generate_async_sets_queued_and_jobs_progress(client, monkeypatch):
 
     # Simulate consumer writing result into Redis
     r: redis.Redis = main_mod.redis_client
-    key = f"Quiz:u:{quiz_id}"
+    key = f"Quizz:u:{quiz_id}"
     r.setex(
         key,
         3600,
@@ -94,13 +94,13 @@ def test_submit_answers_mismatch_returns_400(client):
     # Seed a quiz with 2 questions
     r: redis.Redis = main_mod.redis_client
     quiz_id = "qid-123"
-    key = f"Quiz:u:{quiz_id}"
+    key = f"Quizz:u:{quiz_id}"
     r.setex(key, 3600, json.dumps({"status": "done", "questions": ["Q1", "Q2"]}))
 
     # Provide only one answer → should 400
     resp = client.post(
         "/submit-answers",
-        json={"quiz_id": quiz_id, "answers": ["only-one"]},
+        json={"quizz_id": quiz_id, "answers": ["only-one"]},
         headers={"Authorization": "Bearer t"},
     )
     assert resp.status_code == 400
@@ -110,7 +110,7 @@ def test_jobs_failure_status_is_returned(client):
     # Simulate consumer marking job as failed in Redis
     r: redis.Redis = main_mod.redis_client
     quiz_id = "qid-fail"
-    key = f"Quiz:u:{quiz_id}"
+    key = f"Quizz:u:{quiz_id}"
     r.setex(key, 3600, json.dumps({"status": "failed", "error": "LLM parse error"}))
 
     jr = client.get(f"/jobs/{quiz_id}", headers={"Authorization": "Bearer t"})
@@ -124,13 +124,13 @@ def test_submit_answers_returns_404_after_quiz_ttl_expiry(client):
     # Seed a quiz with very short TTL and let it expire
     r: redis.Redis = main_mod.redis_client
     quiz_id = "qid-expire"
-    key = f"Quiz:u:{quiz_id}"
+    key = f"Quizz:u:{quiz_id}"
     r.setex(key, 1, json.dumps({"status": "done", "questions": ["Q1"]}))
     time.sleep(1.2)
 
     resp = client.post(
         "/submit-answers",
-        json={"quiz_id": quiz_id, "answers": ["A1"]},
+        json={"quizz_id": quiz_id, "answers": ["A1"]},
         headers={"Authorization": "Bearer t"},
     )
     assert resp.status_code == 404

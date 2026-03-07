@@ -27,7 +27,7 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
     async with message.process(requeue=False):
         payload: Dict[str, Any] = json.loads(message.body)
         username = payload.get("username")
-        quiz_id = payload.get("quiz_id")
+        quiz_id = payload.get("quizz_id") or payload.get("quiz_id")
         topic = payload.get("topic")
         num_questions = int(payload.get("num_questions", 3))
         difficulty = payload.get("difficulty")
@@ -37,7 +37,7 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
             logger.error("Invalid payload for quiz generation: %s", payload)
             return
 
-        key = f"Quiz:{username}:{quiz_id}"
+        key = f"Quizz:{username}:{quiz_id}"
         # Mark as processing
         redis_client.setex(key, 3600, json.dumps({"status": "processing"}))
         last_error: Exception | None = None

@@ -178,7 +178,6 @@ async def submit_answers(
         job_id = str(uuid.uuid4())
         payload_msg = {
             "job_id": job_id,
-            
             "username": current_user.username,
             "student_id": current_user.username,
             "quizz_questions": questions,

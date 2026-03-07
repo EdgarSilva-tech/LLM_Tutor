@@ -39,7 +39,6 @@ async def lifespan(app: FastAPI):
         with contextlib.suppress(Exception):
             asyncio.get_event_loop().run_until_complete(consumer_task)
         logger.info("Consumer task stopped")
-    yield
 
 
 app = FastAPI(title="Evaluation Service", lifespan=lifespan)
