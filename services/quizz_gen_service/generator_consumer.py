@@ -44,9 +44,7 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
         backoff = 0.5
         for attempt in range(3):
             try:
-                questions = quizz_generator(
-                    topic, num_questions, difficulty, style
-                )
+                questions = quizz_generator(topic, num_questions, difficulty, style)
                 redis_client.setex(
                     key,
                     3600,
@@ -75,16 +73,12 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
                 break
             except Exception as e:
                 last_error = e
-                logger.warning(
-                    "Quiz generation attempt %d failed: %s", attempt + 1, e
-                )
+                logger.warning("Quiz generation attempt %d failed: %s", attempt + 1, e)
                 await asyncio.sleep(backoff)
                 backoff = min(backoff * 2, 5.0)
         else:
             # All attempts failed
-            logger.exception(
-                "Quiz generation failed after retries: %s", last_error
-            )
+            logger.exception("Quiz generation failed after retries: %s", last_error)
             redis_client.setex(
                 key,
                 1800,
@@ -105,9 +99,7 @@ async def _declare_topology(channel: aio_abc.AbstractChannel) -> None:
         EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
     )
     args: FieldTable = {"x-dead-letter-exchange": DLX_NAME}
-    queue = await channel.declare_queue(
-        QUEUE_NAME, durable=True, arguments=args
-    )
+    queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
     await queue.bind(exchange, routing_key=ROUTING_KEY)
 
     if quizz_settings.RABBITMQ_ENABLE_DELAYED_EXCHANGE:
@@ -120,9 +112,7 @@ async def _declare_topology(channel: aio_abc.AbstractChannel) -> None:
         # Ensure delayed exchange forwards to the main events exchange
         await exchange.bind(delayed_exchange, routing_key="#")
     else:
-        logger.info(
-            "Delayed exchange disabled; skipping app.delayed topology setup"
-        )
+        logger.info("Delayed exchange disabled; skipping app.delayed topology setup")
 
 
 async def run_consumer(stop_event: asyncio.Event) -> None:
