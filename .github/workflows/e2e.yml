@@ -319,6 +319,29 @@ jobs:
           kubectl -n $NAMESPACE rollout status deploy/evaluation-service --timeout=300s
           kubectl -n $NAMESPACE rollout status deploy/rag-service --timeout=300s
 
+      - name: Restart quiz generator consumer after broker settle
+        run: |
+          kubectl -n $NAMESPACE rollout restart deploy/quiz-generator-consumer
+          kubectl -n $NAMESPACE rollout status deploy/quiz-generator-consumer --timeout=300s
+
+      - name: Wait for quiz.create.q consumer registration
+        run: |
+          set -e
+          for i in {1..60}; do
+            OUT="$(kubectl -n $NAMESPACE exec rabbitmq-server-0 -c rabbitmq -- rabbitmqctl list_queues name consumers 2>/dev/null || true)"
+            echo "$OUT"
+            if echo "$OUT" | grep -E "quiz.create.q[[:space:]]+[1-9][0-9]*" >/dev/null; then
+              echo "quiz.create.q has an active consumer"
+              exit 0
+            fi
+            echo "quiz.create.q still has no active consumers, retrying in 5s..."
+            sleep 5
+          done
+          echo "Timed out waiting for quiz.create.q consumer registration"
+          kubectl -n $NAMESPACE logs deploy/quiz-generator-consumer --tail=300 || true
+          kubectl -n $NAMESPACE exec rabbitmq-server-0 -c rabbitmq -- rabbitmqctl list_consumers || true
+          exit 1
+
       - name: Export E2E_BASE_URL from Ingress
         run: echo "E2E_BASE_URL=$(minikube service -n ingress-nginx ingress-nginx-controller --url | head -n1)" >> $GITHUB_ENV
 

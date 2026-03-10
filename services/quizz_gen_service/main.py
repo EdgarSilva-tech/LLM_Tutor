@@ -153,7 +153,7 @@ async def submit_answers(
         # Aceita tanto o formato novo {"status":"done","questions":[...]}
         # como o legado que guardava apenas a lista de perguntas.
         parsed = json.loads(cast(str, data))
-        print(f"Parsed: {parsed}")
+        logger.info(f"Parsed: {parsed}")
         if isinstance(parsed, dict) and "questions" in parsed:
             questions = parsed["questions"]
         else:
