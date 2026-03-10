@@ -194,7 +194,9 @@ jobs:
                         set -xe
                         until pg_isready -h postgres -p 5432 -U postgres; do echo "waiting for postgres"; sleep 2; done;
                         psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE "Users";' || echo "Users exists"
+                        psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE "Quizz";' || echo "Quizz exists"
                         psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE "Evaluation";' || echo "Evaluation exists"
+                        psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE "LearningAssessment";' || echo "LearningAssessment exists"
                         psql -h postgres -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE "Khan_Academy";' || echo "Khan_Academy exists"
                         psql -h postgres -p 5432 -U postgres -d "Khan_Academy" -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS vector;'
                         echo "DBs ready:"
@@ -328,7 +330,7 @@ jobs:
         run: |
           set -e
           for i in {1..60}; do
-            OUT="$(kubectl -n $NAMESPACE exec rabbitmq-server-0 -c rabbitmq -- rabbitmqctl list_queues name consumers 2>/dev/null || true)"
+            OUT="$(kubectl -n $NAMESPACE exec deploy/rabbitmq -- rabbitmqctl list_queues name consumers 2>/dev/null || true)"
             echo "$OUT"
             if echo "$OUT" | grep -E "quiz.create.q[[:space:]]+[1-9][0-9]*" >/dev/null; then
               echo "quiz.create.q has an active consumer"
@@ -339,7 +341,7 @@ jobs:
           done
           echo "Timed out waiting for quiz.create.q consumer registration"
           kubectl -n $NAMESPACE logs deploy/quiz-generator-consumer --tail=300 || true
-          kubectl -n $NAMESPACE exec rabbitmq-server-0 -c rabbitmq -- rabbitmqctl list_consumers || true
+          kubectl -n $NAMESPACE exec deploy/rabbitmq -- rabbitmqctl list_consumers || true
           exit 1
 
       - name: Export E2E_BASE_URL from Ingress
