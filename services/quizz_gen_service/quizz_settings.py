@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     RABBITMQ_URL: str
     RABBITMQ_EXCHANGE: str = "app.events"
     RABBITMQ_DELAYED_EXCHANGE: str = "app.delayed"
+    RABBITMQ_ENABLE_DELAYED_EXCHANGE: bool = True
     RABBITMQ_ROUTING_KEY: str = "quiz.generate.request"
     RABBITMQ_ROUTING_KEY_GENERATE: str = "quiz.create.request"
     RABBITMQ_QUEUE_NAME: str = "quiz.create.q"

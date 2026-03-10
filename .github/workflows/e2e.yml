@@ -281,6 +281,7 @@ jobs:
           for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do
             kubectl -n $NAMESPACE set env deploy/$d DB_PORT=5432 || true
           done
+          kubectl -n $NAMESPACE set env deploy/quiz-generator-consumer RABBITMQ_ENABLE_DELAYED_EXCHANGE=false || true
           
           # Clean restart: scale down to 0, force delete leftover pods, scale up to 1
           for d in auth-service quizz-service quiz-generator-consumer evaluation-service rag-service; do

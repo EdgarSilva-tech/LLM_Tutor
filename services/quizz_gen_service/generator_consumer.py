@@ -44,7 +44,9 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
         backoff = 0.5
         for attempt in range(3):
             try:
-                questions = quizz_generator(topic, num_questions, difficulty, style)
+                questions = quizz_generator(
+                    topic, num_questions, difficulty, style
+                )
                 redis_client.setex(
                     key,
                     3600,
@@ -66,19 +68,27 @@ async def _handle_message(message: aio_abc.AbstractIncomingMessage) -> None:
                     tags=questions["tags"],
                 )
                 logger.info(
-                    "Quiz generated and stored: %s (attempt=%d)", key, attempt + 1
+                    "Quiz generated and stored: %s (attempt=%d)",
+                    key,
+                    attempt + 1,
                 )
                 break
             except Exception as e:
                 last_error = e
-                logger.warning("Quiz generation attempt %d failed: %s", attempt + 1, e)
+                logger.warning(
+                    "Quiz generation attempt %d failed: %s", attempt + 1, e
+                )
                 await asyncio.sleep(backoff)
                 backoff = min(backoff * 2, 5.0)
         else:
             # All attempts failed
-            logger.exception("Quiz generation failed after retries: %s", last_error)
+            logger.exception(
+                "Quiz generation failed after retries: %s", last_error
+            )
             redis_client.setex(
-                key, 1800, json.dumps({"status": "failed", "error": str(last_error)})
+                key,
+                1800,
+                json.dumps({"status": "failed", "error": str(last_error)}),
             )
 
 
@@ -94,18 +104,25 @@ async def _declare_topology(channel: aio_abc.AbstractChannel) -> None:
     exchange = await channel.declare_exchange(
         EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
     )
-    delayed_exchange = await channel.declare_exchange(
-        quizz_settings.RABBITMQ_DELAYED_EXCHANGE,
-        type="x-delayed-message",
-        durable=True,
-        arguments={"x-delayed-type": "topic"},
-    )
     args: FieldTable = {"x-dead-letter-exchange": DLX_NAME}
-    queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
-    # Ensure delayed exchange forwards to the main events exchange
-    await exchange.bind(delayed_exchange, routing_key="#")
-
+    queue = await channel.declare_queue(
+        QUEUE_NAME, durable=True, arguments=args
+    )
     await queue.bind(exchange, routing_key=ROUTING_KEY)
+
+    if quizz_settings.RABBITMQ_ENABLE_DELAYED_EXCHANGE:
+        delayed_exchange = await channel.declare_exchange(
+            quizz_settings.RABBITMQ_DELAYED_EXCHANGE,
+            type="x-delayed-message",
+            durable=True,
+            arguments={"x-delayed-type": "topic"},
+        )
+        # Ensure delayed exchange forwards to the main events exchange
+        await exchange.bind(delayed_exchange, routing_key="#")
+    else:
+        logger.info(
+            "Delayed exchange disabled; skipping app.delayed topology setup"
+        )
 
 
 async def run_consumer(stop_event: asyncio.Event) -> None:
