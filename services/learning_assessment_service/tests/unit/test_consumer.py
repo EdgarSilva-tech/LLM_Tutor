@@ -44,7 +44,7 @@ def _ensure_opik_stub() -> None:
                 self.args = args
                 self.kwargs = kwargs
 
-        langchain_module.OpikTracer = DummyTracer
+        setattr(langchain_module, "OpikTracer", DummyTracer)
         sys.modules["opik"] = opik_module
         sys.modules["opik.integrations"] = integrations_module
         sys.modules["opik.integrations.langchain"] = langchain_module
@@ -52,9 +52,7 @@ def _ensure_opik_stub() -> None:
 
 _ensure_opik_stub()
 
-consumer_mod = importlib.import_module(
-    "services.learning_assessment_service.consumer"
-)
+consumer_mod = importlib.import_module("services.learning_assessment_service.consumer")
 persistence_mod = importlib.import_module(
     "services.learning_assessment_service.persistence"
 )
@@ -184,7 +182,11 @@ async def test_handle_message_persists_fixed_schedule_and_calls_adviser(
         ).all()
 
     assert len(rows) == 3
-    assert [row.action_type for row in rows] == ["reminder", "reminder", "quiz"]
+    assert [row.action_type for row in rows] == [
+        "reminder",
+        "reminder",
+        "quiz",
+    ]
     assert [row.due_at for row in rows] == [
         datetime(2026, 3, 12, 12, 0, 0),
         datetime(2026, 3, 14, 12, 0, 0),
@@ -326,9 +328,7 @@ def test_get_learning_assessment_mastery_by_username_returns_due_dates_and_statu
         due_at=datetime(2026, 3, 18, 9, 0, 0),
     )
 
-    result = persistence_mod.get_learning_assessment_mastery_by_username(
-        "carol"
-    )
+    result = persistence_mod.get_learning_assessment_mastery_by_username("carol")
 
     assert result["username"] == "carol"
     assert [row["id"] for row in result["schedule"]] == [

@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from sqlmodel import Session
 from .db import engine
 from .data_models import (
@@ -48,6 +50,8 @@ def get_learning_assessment_by_username(username: str):
                     LearningAssessment.username == username
                 )
             ).first()
+            if learning_assessment is None:
+                return None
             return learning_assessment.model_dump()
         except Exception as e:
             logger.exception("Error getting learning assessment by username: %s", e)
@@ -60,7 +64,7 @@ def get_learning_assessment_mastery_by_username(username: str):
             mastery_store = session.exec(
                 select(MasteryStore)
                 .where(MasteryStore.username == username)
-                .order_by(MasteryStore.due_at)
+                .order_by(cast(Any, MasteryStore.due_at))
             ).all()
             schedule = [
                 MasteryScheduleItemResponse(

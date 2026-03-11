@@ -50,9 +50,7 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
         msg = LearningAssessmentRequest(**payload)
         score = sum(msg.scores)
         now = datetime.now()
-        mastery_band = (
-            "low" if score < 0.6 else "medium" if score < 0.8 else "high"
-        )
+        mastery_band = "low" if score < 0.6 else "medium" if score < 0.8 else "high"
         schedule = _build_fixed_schedule(now)
         try:
             with Session(engine) as session:
@@ -84,9 +82,7 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
                 session.commit()
         except Exception as e:
             logger.error(f"Error storing mastery: {e}")
-            raise HTTPException(
-                status_code=500, detail=f"Error storing mastery: {e}"
-            )
+            raise HTTPException(status_code=500, detail=f"Error storing mastery: {e}")
         logger.info(f"Consuming assessment: {msg}")
         await handle_learning_assessment(msg)
 
@@ -103,9 +99,7 @@ async def _declare_topology(channel: AbstractChannel) -> None:
         EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
     )
     args = {"x-dead-letter-exchange": DLX_NAME}
-    queue = await channel.declare_queue(
-        QUEUE_NAME, durable=True, arguments=args
-    )
+    queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
     await queue.bind(exchange, routing_key=ROUTING_KEY)
 
 
