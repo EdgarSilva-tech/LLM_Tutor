@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     RABBITMQ_DLQ_NAME: str = "evaluation.completed.dlq"
     RABBITMQ_EXCHANGE_NAME: str = "app.events"
     RABBITMQ_DELAYED_EXCHANGE: str = "app.delayed"
+    LA_REMINDER_1_DELAY_DAYS: int = 1
+    LA_REMINDER_2_DELAY_DAYS: int = 2
+    LA_FOLLOW_UP_QUIZ_DELAY_DAYS: int = 4
 
 
 la_settings = Settings()

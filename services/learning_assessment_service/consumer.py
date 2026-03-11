@@ -9,7 +9,7 @@ from .data_models import LearningAssessmentRequest, MasteryStore
 from .model import learning_assessment_adviser
 from fastapi import HTTPException
 from datetime import datetime, timedelta
-from sqlmodel import Session
+from sqlmodel import Session, select
 from .db import engine
 
 logger = get_logger(__name__)
@@ -24,6 +24,24 @@ RABBIT_URL = la_settings.model_dump().get("RABBITMQ_URL")
 QUEUE_NAME = "evaluation.completed.q"
 DLX_NAME = "app.dlx"
 DLQ_NAME = "evaluation.completed.dlq"
+ACTION_TYPE_REMINDER = "reminder"
+ACTION_TYPE_FOLLOW_UP_QUIZ = "quiz"
+REMINDER_1_DELAY_DAYS = la_settings.LA_REMINDER_1_DELAY_DAYS
+REMINDER_2_DELAY_DAYS = la_settings.LA_REMINDER_2_DELAY_DAYS
+FOLLOW_UP_QUIZ_DELAY_DAYS = la_settings.LA_FOLLOW_UP_QUIZ_DELAY_DAYS
+
+
+def _build_fixed_schedule(start_at: datetime) -> list[tuple[str, datetime]]:
+    reminder_1_due_at = start_at + timedelta(days=REMINDER_1_DELAY_DAYS)
+    reminder_2_due_at = reminder_1_due_at + timedelta(days=REMINDER_2_DELAY_DAYS)
+    follow_up_quiz_due_at = reminder_2_due_at + timedelta(
+        days=FOLLOW_UP_QUIZ_DELAY_DAYS
+    )
+    return [
+        (ACTION_TYPE_REMINDER, reminder_1_due_at),
+        (ACTION_TYPE_REMINDER, reminder_2_due_at),
+        (ACTION_TYPE_FOLLOW_UP_QUIZ, follow_up_quiz_due_at),
+    ]
 
 
 async def _handle_message(message: aio_pika.IncomingMessage) -> None:
@@ -31,37 +49,44 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
         payload: Dict[str, Any] = json.loads(message.body)
         msg = LearningAssessmentRequest(**payload)
         score = sum(msg.scores)
-        mastery_band = "low" if score < 0.6 else "medium" if score < 0.8 else "high"
-        due_at = datetime.now() + timedelta(days=7)
+        now = datetime.now()
+        mastery_band = (
+            "low" if score < 0.6 else "medium" if score < 0.8 else "high"
+        )
+        schedule = _build_fixed_schedule(now)
         try:
             with Session(engine) as session:
-                attempts = (
-                    session.query(MasteryStore)
-                    .filter(
-                        MasteryStore.username == msg.username,
-                        MasteryStore.topic == msg.topic,
+                attempts = len(
+                    session.exec(
+                        select(MasteryStore).where(
+                            MasteryStore.username == msg.username,
+                            MasteryStore.topic == msg.topic,
+                            MasteryStore.action_type == ACTION_TYPE_FOLLOW_UP_QUIZ,
+                        )
+                    ).all()
+                )
+                for action_type, due_at in schedule:
+                    mastery = MasteryStore(
+                        username=msg.username,
+                        topic=msg.topic,
+                        score=score,
+                        attempts=attempts + 1,
+                        rolling_avg=score / (attempts + 1),
+                        last_quiz_id=msg.assessment_id,
+                        updated_at=now,
+                        mastery_band=mastery_band,
+                        created_at=now,
+                        status="pending",
+                        action_type=action_type,
+                        due_at=due_at,
                     )
-                    .count()
-                )
-                rolling_avg = score / (attempts + 1)
-                mastery = MasteryStore(
-                    username=msg.username,
-                    topic=msg.topic,
-                    score=score,
-                    attempts=attempts + 1,
-                    rolling_avg=rolling_avg,
-                    last_quiz_id=msg.assessment_id,
-                    updated_at=datetime.now(),
-                    mastery_band=mastery_band,
-                    created_at=datetime.now(),
-                    status="pending",
-                    action_type="quizz",
-                    due_at=due_at,
-                )
-                session.add(mastery)
+                    session.add(mastery)
+                session.commit()
         except Exception as e:
             logger.error(f"Error storing mastery: {e}")
-            raise HTTPException(status_code=500, detail=f"Error storing mastery: {e}")
+            raise HTTPException(
+                status_code=500, detail=f"Error storing mastery: {e}"
+            )
         logger.info(f"Consuming assessment: {msg}")
         await handle_learning_assessment(msg)
 
@@ -78,7 +103,9 @@ async def _declare_topology(channel: AbstractChannel) -> None:
         EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
     )
     args = {"x-dead-letter-exchange": DLX_NAME}
-    queue = await channel.declare_queue(QUEUE_NAME, durable=True, arguments=args)
+    queue = await channel.declare_queue(
+        QUEUE_NAME, durable=True, arguments=args
+    )
     await queue.bind(exchange, routing_key=ROUTING_KEY)
 
 

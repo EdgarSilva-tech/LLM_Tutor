@@ -8,8 +8,10 @@ data:
   # Redis externo (não instalar no cluster)
   REDIS_ENDPOINT: "redis-10279.c56.east-us.azure.cloud.redislabs.com"
   REDIS_PORT: "10279"                
-  # RabbitMQ externo
+  # RabbitMQ compartilhado entre serviços
   RABBITMQ_URL: "amqp://appuser:apppass@rabbitmq:5672/%2F"
   RABBITMQ_EXCHANGE: "app.events"
+  # Default usado pelos serviços de quiz/evaluation.
+  # Serviços com rota própria devem sobrescrever no Deployment.
   RABBITMQ_ROUTING_KEY: "quiz.generate.request"
   RABBITMQ_PREFETCH: "16"

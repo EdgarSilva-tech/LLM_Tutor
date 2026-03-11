@@ -52,3 +52,32 @@ class MasteryStore(SQLModel, table=True):
     status: str = Field(default="pending")
     action_type: str = Field(default="quiz")
     due_at: datetime
+
+
+class ReminderRequest(BaseModel):
+    username: str
+    quizz_questions: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
+    student_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
+    correct_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
+    scores: List[float] = Field(sa_column=Column(postgresql.ARRAY(Float())))
+    feedback: List[dict] = Field(sa_column=Column(postgresql.ARRAY(String())))
+
+
+class MasteryScheduleItemResponse(BaseModel):
+    id: UUID
+    topic: str
+    score: float
+    attempts: int
+    rolling_avg: float
+    last_quiz_id: UUID
+    updated_at: datetime
+    mastery_band: str
+    created_at: datetime
+    status: str
+    action_type: str
+    due_at: datetime
+
+
+class MasteryScheduleResponse(BaseModel):
+    username: str
+    schedule: List[MasteryScheduleItemResponse]
