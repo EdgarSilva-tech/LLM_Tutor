@@ -18,7 +18,7 @@ def learning_assessment_adviser(
     student_answers: list[str],
     correct_answers: list[str],
     scores: list[float],
-    feedback: list[dict],
+    feedback: list[str | dict],
 ):
     llm = la_mod.get_llm()
     evaluation_results: dict = {

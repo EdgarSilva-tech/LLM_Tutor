@@ -99,7 +99,7 @@ def _store_mastery(engine, **overrides):
         "score": 0.4,
         "attempts": 1,
         "rolling_avg": 0.4,
-        "last_quiz_id": uuid.uuid4(),
+        "last_quiz_id": str(uuid.uuid4()),
         "updated_at": datetime(2026, 3, 1, 9, 0, 0),
         "mastery_band": "low",
         "created_at": datetime(2026, 3, 1, 9, 0, 0),
@@ -152,8 +152,15 @@ async def test_handle_message_persists_fixed_schedule_and_calls_adviser(
     mastery_engine, monkeypatch, scores, expected_band
 ):
     adviser_mock = AsyncMock()
+    notification_mock = AsyncMock()
     monkeypatch.setattr(
         consumer_mod, "handle_learning_assessment", adviser_mock, raising=True
+    )
+    monkeypatch.setattr(
+        consumer_mod,
+        "publish_notification_email_request",
+        notification_mock,
+        raising=True,
     )
     assessment_id = uuid.uuid4()
     frozen_now = datetime(2026, 3, 11, 12, 0, 0)
@@ -163,6 +170,7 @@ async def test_handle_message_persists_fixed_schedule_and_calls_adviser(
         FakeMessage(
             {
                 "username": f"user-{expected_band}",
+                "email": f"user-{expected_band}@example.com",
                 "assessment_id": str(assessment_id),
                 "quizz_questions": ["Q1"],
                 "student_answers": ["A1"],
@@ -177,7 +185,7 @@ async def test_handle_message_persists_fixed_schedule_and_calls_adviser(
     with Session(mastery_engine) as session:
         rows = session.exec(
             select(MasteryStore)
-            .where(MasteryStore.last_quiz_id == assessment_id)
+            .where(MasteryStore.last_quiz_id == str(assessment_id))
             .order_by(MasteryStore.due_at)
         ).all()
 
@@ -192,6 +200,16 @@ async def test_handle_message_persists_fixed_schedule_and_calls_adviser(
         datetime(2026, 3, 14, 12, 0, 0),
         datetime(2026, 3, 18, 12, 0, 0),
     ]
+    assert notification_mock.await_count == 2
+    first_payload = notification_mock.await_args_list[0].args[0]
+    second_payload = notification_mock.await_args_list[1].args[0]
+    assert first_payload["to"] == f"user-{expected_band}@example.com"
+    assert first_payload["subject"] == "Study reminder 1: review fractions"
+    assert first_payload["scheduled_at"] == "2026-03-12T12:00:00"
+    assert second_payload["subject"] == "Study reminder 2: review fractions"
+    assert second_payload["scheduled_at"] == "2026-03-14T12:00:00"
+    assert notification_mock.await_args_list[0].kwargs["delay"] == 86400000
+    assert notification_mock.await_args_list[1].kwargs["delay"] == 259200000
 
     for row in rows:
         assert row.username == f"user-{expected_band}"
@@ -207,7 +225,7 @@ async def test_handle_message_persists_fixed_schedule_and_calls_adviser(
     adviser_mock.assert_awaited_once()
     message_arg = adviser_mock.await_args.args[0]
     assert message_arg.username == f"user-{expected_band}"
-    assert message_arg.assessment_id == assessment_id
+    assert message_arg.assessment_id == str(assessment_id)
     assert message_arg.scores == scores
 
 
@@ -216,8 +234,15 @@ async def test_handle_message_uses_existing_attempt_count_for_same_user_and_topi
     mastery_engine, monkeypatch
 ):
     adviser_mock = AsyncMock()
+    notification_mock = AsyncMock()
     monkeypatch.setattr(
         consumer_mod, "handle_learning_assessment", adviser_mock, raising=True
+    )
+    monkeypatch.setattr(
+        consumer_mod,
+        "publish_notification_email_request",
+        notification_mock,
+        raising=True,
     )
     _store_mastery(mastery_engine, action_type="reminder")
     _store_mastery(mastery_engine)
@@ -230,6 +255,7 @@ async def test_handle_message_uses_existing_attempt_count_for_same_user_and_topi
         FakeMessage(
             {
                 "username": "alice",
+                "email": "alice@example.com",
                 "assessment_id": str(assessment_id),
                 "quizz_questions": ["Q1"],
                 "student_answers": ["A1"],
@@ -244,7 +270,7 @@ async def test_handle_message_uses_existing_attempt_count_for_same_user_and_topi
     with Session(mastery_engine) as session:
         rows = session.exec(
             select(MasteryStore)
-            .where(MasteryStore.last_quiz_id == assessment_id)
+            .where(MasteryStore.last_quiz_id == str(assessment_id))
             .order_by(MasteryStore.due_at)
         ).all()
 
@@ -253,6 +279,7 @@ async def test_handle_message_uses_existing_attempt_count_for_same_user_and_topi
         assert row.attempts == 2
         assert row.rolling_avg == pytest.approx(0.375)
         assert row.mastery_band == "medium"
+    assert notification_mock.await_count == 2
     adviser_mock.assert_awaited_once()
 
 
@@ -261,8 +288,15 @@ async def test_handle_message_invalid_payload_does_not_persist_rows(
     mastery_engine, monkeypatch
 ):
     adviser_mock = AsyncMock()
+    notification_mock = AsyncMock()
     monkeypatch.setattr(
         consumer_mod, "handle_learning_assessment", adviser_mock, raising=True
+    )
+    monkeypatch.setattr(
+        consumer_mod,
+        "publish_notification_email_request",
+        notification_mock,
+        raising=True,
     )
 
     with pytest.raises(ValidationError):
@@ -270,12 +304,12 @@ async def test_handle_message_invalid_payload_does_not_persist_rows(
             FakeMessage(
                 {
                     "username": "alice",
-                    "assessment_id": "not-a-uuid",
+                    "assessment_id": "assessment-123",
                     "quizz_questions": ["Q1"],
                     "student_answers": ["A1"],
                     "correct_answers": ["C1"],
                     "topic": "fractions",
-                    "scores": [0.5],
+                    "scores": "invalid-scores",
                     "feedback": [{"message": "invalid"}],
                 }
             )
@@ -286,6 +320,44 @@ async def test_handle_message_invalid_payload_does_not_persist_rows(
 
     assert rows == []
     adviser_mock.assert_not_awaited()
+    notification_mock.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_handle_message_without_email_skips_notification_publish(
+    mastery_engine, monkeypatch
+):
+    adviser_mock = AsyncMock()
+    notification_mock = AsyncMock()
+    monkeypatch.setattr(
+        consumer_mod, "handle_learning_assessment", adviser_mock, raising=True
+    )
+    monkeypatch.setattr(
+        consumer_mod,
+        "publish_notification_email_request",
+        notification_mock,
+        raising=True,
+    )
+    assessment_id = uuid.uuid4()
+    _freeze_consumer_now(monkeypatch, datetime(2026, 3, 11, 12, 0, 0))
+
+    await consumer_mod._handle_message(
+        FakeMessage(
+            {
+                "username": "eve",
+                "assessment_id": str(assessment_id),
+                "quizz_questions": ["Q1"],
+                "student_answers": ["A1"],
+                "correct_answers": ["C1"],
+                "topic": "fractions",
+                "scores": [0.5],
+                "feedback": [{"message": "review basics"}],
+            }
+        )
+    )
+
+    notification_mock.assert_not_awaited()
+    adviser_mock.assert_awaited_once()
 
 
 def test_get_learning_assessment_mastery_by_username_returns_due_dates_and_statuses(

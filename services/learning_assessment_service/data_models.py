@@ -17,13 +17,14 @@ class User(BaseModel):
 
 class LearningAssessmentRequest(BaseModel):
     username: str
-    assessment_id: UUID
+    email: str | None = None
+    assessment_id: str
     quizz_questions: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
     student_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
     correct_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
     topic: str
     scores: List[float] = Field(sa_column=Column(postgresql.ARRAY(Float())))
-    feedback: List[dict] = Field(sa_column=Column(postgresql.ARRAY(String())))
+    feedback: List[str | dict] = Field(sa_column=Column(postgresql.ARRAY(String())))
 
 
 class LearningAssessment(SQLModel, table=True):
@@ -45,7 +46,7 @@ class MasteryStore(SQLModel, table=True):
     score: float
     attempts: int = Field(default=0)
     rolling_avg: float
-    last_quiz_id: UUID
+    last_quiz_id: str
     updated_at: datetime = Field(default_factory=datetime.now)
     mastery_band: str
     created_at: datetime = Field(default_factory=datetime.now)
@@ -60,7 +61,7 @@ class ReminderRequest(BaseModel):
     student_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
     correct_answers: List[str] = Field(sa_column=Column(postgresql.ARRAY(String())))
     scores: List[float] = Field(sa_column=Column(postgresql.ARRAY(Float())))
-    feedback: List[dict] = Field(sa_column=Column(postgresql.ARRAY(String())))
+    feedback: List[str | dict] = Field(sa_column=Column(postgresql.ARRAY(String())))
 
 
 class MasteryScheduleItemResponse(BaseModel):
@@ -69,7 +70,7 @@ class MasteryScheduleItemResponse(BaseModel):
     score: float
     attempts: int
     rolling_avg: float
-    last_quiz_id: UUID
+    last_quiz_id: str
     updated_at: datetime
     mastery_band: str
     created_at: datetime

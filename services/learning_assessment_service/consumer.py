@@ -7,6 +7,7 @@ from typing import Any, Dict
 from .logging_config import get_logger
 from .data_models import LearningAssessmentRequest, MasteryStore
 from .model import learning_assessment_adviser
+from .notification_publish import publish_notification_email_request
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from sqlmodel import Session, select
@@ -42,6 +43,61 @@ def _build_fixed_schedule(start_at: datetime) -> list[tuple[str, datetime]]:
         (ACTION_TYPE_REMINDER, reminder_2_due_at),
         (ACTION_TYPE_FOLLOW_UP_QUIZ, follow_up_quiz_due_at),
     ]
+
+
+def _get_delay_ms(now: datetime, due_at: datetime) -> int:
+    delta_ms = int((due_at - now).total_seconds() * 1000)
+    return max(delta_ms, 0)
+
+
+def _build_reminder_email_payload(
+    msg: LearningAssessmentRequest,
+    due_at: datetime,
+    mastery_band: str,
+    reminder_number: int,
+) -> dict[str, str]:
+    subject = f"Study reminder {reminder_number}: review {msg.topic}"
+    html = (
+        f"<p>Hello {msg.username},</p>"
+        f"<p>This is reminder {reminder_number} to review <strong>{msg.topic}</strong>.</p>"
+        f"<p>Your latest mastery band was <strong>{mastery_band}</strong>. "
+        f"Please revisit the material before {due_at.isoformat()}.</p>"
+    )
+    return {
+        "to": msg.email or "",
+        "subject": subject,
+        "html": html,
+        "scheduled_at": due_at.isoformat(),
+    }
+
+
+async def _publish_scheduled_notifications(
+    msg: LearningAssessmentRequest,
+    schedule: list[tuple[str, datetime]],
+    mastery_band: str,
+    now: datetime,
+) -> None:
+    if not msg.email:
+        logger.warning(
+            "Skipping reminder notifications for user=%s because email is missing",
+            msg.username,
+        )
+        return
+
+    reminder_count = 0
+    for action_type, due_at in schedule:
+        if action_type != ACTION_TYPE_REMINDER:
+            continue
+        reminder_count += 1
+        await publish_notification_email_request(
+            _build_reminder_email_payload(
+                msg=msg,
+                due_at=due_at,
+                mastery_band=mastery_band,
+                reminder_number=reminder_count,
+            ),
+            delay=_get_delay_ms(now, due_at),
+        )
 
 
 async def _handle_message(message: aio_pika.IncomingMessage) -> None:
@@ -83,6 +139,7 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
         except Exception as e:
             logger.error(f"Error storing mastery: {e}")
             raise HTTPException(status_code=500, detail=f"Error storing mastery: {e}")
+        await _publish_scheduled_notifications(msg, schedule, mastery_band, now)
         logger.info(f"Consuming assessment: {msg}")
         await handle_learning_assessment(msg)
 

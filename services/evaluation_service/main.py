@@ -108,7 +108,9 @@ def evaluation(
             publish_evaluation_completed_sync(
                 {
                     "username": current_user.username,
+                    "email": current_user.email,
                     "assessment_id": question_hash,
+                    "topic": request.topic,
                     "quizz_questions": question_list,
                     "student_answers": answer_list,
                     "correct_answers": [
