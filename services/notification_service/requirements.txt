@@ -1,0 +1,11 @@
+resend
+python-dotenv
+fastapi
+uvicorn
+python-json-logger
+pytest
+pytest-mock
+pytest-asyncio
+pydantic
+pika
+aio-pika
