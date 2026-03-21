@@ -153,6 +153,7 @@ async def test_handle_message_persists_fixed_schedule_and_calls_adviser(
 ):
     adviser_mock = AsyncMock()
     notification_mock = AsyncMock()
+    quiz_publish_mock = AsyncMock()
     monkeypatch.setattr(
         consumer_mod, "handle_learning_assessment", adviser_mock, raising=True
     )
@@ -160,6 +161,12 @@ async def test_handle_message_persists_fixed_schedule_and_calls_adviser(
         consumer_mod,
         "publish_notification_email_request",
         notification_mock,
+        raising=True,
+    )
+    monkeypatch.setattr(
+        consumer_mod,
+        "publish_quizz_create_request_async",
+        quiz_publish_mock,
         raising=True,
     )
     assessment_id = uuid.uuid4()
@@ -210,6 +217,16 @@ async def test_handle_message_persists_fixed_schedule_and_calls_adviser(
     assert second_payload["scheduled_at"] == "2026-03-14T12:00:00"
     assert notification_mock.await_args_list[0].kwargs["delay"] == 86400000
     assert notification_mock.await_args_list[1].kwargs["delay"] == 259200000
+    quiz_payload = quiz_publish_mock.await_args.args[0]
+    assert quiz_payload == {
+        "username": f"user-{expected_band}",
+        "quiz_id": f"{assessment_id}-follow-up",
+        "topic": "fractions",
+        "num_questions": 5,
+        "difficulty": "easy" if expected_band == "low" else "medium",
+        "style": "mixed",
+    }
+    assert quiz_publish_mock.await_args.kwargs["delay"] == 604800000
 
     for row in rows:
         assert row.username == f"user-{expected_band}"
@@ -235,6 +252,7 @@ async def test_handle_message_uses_existing_attempt_count_for_same_user_and_topi
 ):
     adviser_mock = AsyncMock()
     notification_mock = AsyncMock()
+    quiz_publish_mock = AsyncMock()
     monkeypatch.setattr(
         consumer_mod, "handle_learning_assessment", adviser_mock, raising=True
     )
@@ -242,6 +260,12 @@ async def test_handle_message_uses_existing_attempt_count_for_same_user_and_topi
         consumer_mod,
         "publish_notification_email_request",
         notification_mock,
+        raising=True,
+    )
+    monkeypatch.setattr(
+        consumer_mod,
+        "publish_quizz_create_request_async",
+        quiz_publish_mock,
         raising=True,
     )
     _store_mastery(mastery_engine, action_type="reminder")
@@ -280,6 +304,7 @@ async def test_handle_message_uses_existing_attempt_count_for_same_user_and_topi
         assert row.rolling_avg == pytest.approx(0.375)
         assert row.mastery_band == "medium"
     assert notification_mock.await_count == 2
+    assert quiz_publish_mock.await_count == 1
     adviser_mock.assert_awaited_once()
 
 
@@ -289,6 +314,7 @@ async def test_handle_message_invalid_payload_does_not_persist_rows(
 ):
     adviser_mock = AsyncMock()
     notification_mock = AsyncMock()
+    quiz_publish_mock = AsyncMock()
     monkeypatch.setattr(
         consumer_mod, "handle_learning_assessment", adviser_mock, raising=True
     )
@@ -296,6 +322,12 @@ async def test_handle_message_invalid_payload_does_not_persist_rows(
         consumer_mod,
         "publish_notification_email_request",
         notification_mock,
+        raising=True,
+    )
+    monkeypatch.setattr(
+        consumer_mod,
+        "publish_quizz_create_request_async",
+        quiz_publish_mock,
         raising=True,
     )
 
@@ -321,6 +353,7 @@ async def test_handle_message_invalid_payload_does_not_persist_rows(
     assert rows == []
     adviser_mock.assert_not_awaited()
     notification_mock.assert_not_awaited()
+    quiz_publish_mock.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -329,6 +362,7 @@ async def test_handle_message_without_email_skips_notification_publish(
 ):
     adviser_mock = AsyncMock()
     notification_mock = AsyncMock()
+    quiz_publish_mock = AsyncMock()
     monkeypatch.setattr(
         consumer_mod, "handle_learning_assessment", adviser_mock, raising=True
     )
@@ -336,6 +370,12 @@ async def test_handle_message_without_email_skips_notification_publish(
         consumer_mod,
         "publish_notification_email_request",
         notification_mock,
+        raising=True,
+    )
+    monkeypatch.setattr(
+        consumer_mod,
+        "publish_quizz_create_request_async",
+        quiz_publish_mock,
         raising=True,
     )
     assessment_id = uuid.uuid4()
@@ -357,6 +397,7 @@ async def test_handle_message_without_email_skips_notification_publish(
     )
 
     notification_mock.assert_not_awaited()
+    quiz_publish_mock.assert_awaited_once()
     adviser_mock.assert_awaited_once()
 
 

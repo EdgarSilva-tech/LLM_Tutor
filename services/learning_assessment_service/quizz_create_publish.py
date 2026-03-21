@@ -72,9 +72,15 @@ async def _publish_with_retry(
     raise Exception("Quizz create request publish failed after all retries")
 
 
-def publish_quizz_create_request(payload: Dict[str, Any], delay: int = 0) -> None:
-    asyncio.run(
-        _publish_with_retry(
-            payload, la_settings.RABBITMQ_ROUTING_KEY_GENERATE, delay=delay
-        )
+async def publish_quizz_create_request_async(
+    payload: Dict[str, Any], delay: int = 0
+) -> None:
+    await _publish_with_retry(
+        payload,
+        la_settings.RABBITMQ_ROUTING_KEY_GENERATE,
+        delay=delay,
     )
+
+
+def publish_quizz_create_request(payload: Dict[str, Any], delay: int = 0) -> None:
+    asyncio.run(publish_quizz_create_request_async(payload, delay=delay))

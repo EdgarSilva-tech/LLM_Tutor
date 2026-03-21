@@ -65,8 +65,12 @@ _ensure_opik_stub()
 _ensure_resend_stub()
 
 eval_main_mod = importlib.import_module("services.evaluation_service.main")
-eval_data_models_mod = importlib.import_module("services.evaluation_service.data_models")
-la_consumer_mod = importlib.import_module("services.learning_assessment_service.consumer")
+eval_data_models_mod = importlib.import_module(
+    "services.evaluation_service.data_models"
+)
+la_consumer_mod = importlib.import_module(
+    "services.learning_assessment_service.consumer"
+)
 la_persistence_mod = importlib.import_module(
     "services.learning_assessment_service.persistence"
 )
@@ -75,6 +79,9 @@ la_data_models_mod = importlib.import_module(
 )
 notification_consumer_mod = importlib.import_module(
     "services.notification_service.consumer"
+)
+quiz_consumer_mod = importlib.import_module(
+    "services.quizz_gen_service.generator_consumer"
 )
 
 MasteryStore = la_data_models_mod.MasteryStore
@@ -89,6 +96,10 @@ class FakeRedis:
         return self.store.get(key)
 
     def set(self, key, value):
+        self.store[key] = value
+
+    def setex(self, key, ttl, value):
+        _ = ttl
         self.store[key] = value
 
 
@@ -129,9 +140,9 @@ def client_with_user(monkeypatch):
             disabled=False,
         )
 
-    eval_main_mod.app.dependency_overrides[
-        eval_main_mod.get_current_active_user
-    ] = _fake_user
+    eval_main_mod.app.dependency_overrides[eval_main_mod.get_current_active_user] = (
+        _fake_user
+    )
     yield TestClient(eval_main_mod.app)
     eval_main_mod.app.dependency_overrides.clear()
 
@@ -187,6 +198,7 @@ async def test_evaluation_to_learning_assessment_to_notification_reminder_flow(
 
     adviser_mock = AsyncMock()
     reminder_publish_mock = AsyncMock()
+    quiz_publish_mock = AsyncMock()
     monkeypatch.setattr(
         la_consumer_mod, "handle_learning_assessment", adviser_mock, raising=True
     )
@@ -194,6 +206,12 @@ async def test_evaluation_to_learning_assessment_to_notification_reminder_flow(
         la_consumer_mod,
         "publish_notification_email_request",
         reminder_publish_mock,
+        raising=True,
+    )
+    monkeypatch.setattr(
+        la_consumer_mod,
+        "publish_quizz_create_request_async",
+        quiz_publish_mock,
         raising=True,
     )
     _freeze_consumer_now(monkeypatch, datetime(2026, 3, 11, 12, 0, 0))
@@ -229,12 +247,23 @@ async def test_evaluation_to_learning_assessment_to_notification_reminder_flow(
     assert len(rows) == 3
     assert [row.action_type for row in rows] == ["reminder", "reminder", "quiz"]
     assert reminder_publish_mock.await_count == 2
+    assert quiz_publish_mock.await_count == 1
 
     first_reminder_payload = reminder_publish_mock.await_args_list[0].args[0]
     assert first_reminder_payload["to"] == "u@example.com"
     assert first_reminder_payload["subject"] == "Study reminder 1: review arithmetic"
     assert first_reminder_payload["scheduled_at"] == "2026-03-12T12:00:00"
     assert reminder_publish_mock.await_args_list[0].kwargs["delay"] == 86400000
+    follow_up_quiz_payload = quiz_publish_mock.await_args.args[0]
+    assert follow_up_quiz_payload == {
+        "username": "u",
+        "quiz_id": f"{event_payload['assessment_id']}-follow-up",
+        "topic": "arithmetic",
+        "num_questions": 5,
+        "difficulty": "easy",
+        "style": "mixed",
+    }
+    assert quiz_publish_mock.await_args.kwargs["delay"] == 604800000
     adviser_mock.assert_awaited_once()
 
     send_email_mock = AsyncMock()
@@ -242,9 +271,7 @@ async def test_evaluation_to_learning_assessment_to_notification_reminder_flow(
         notification_consumer_mod, "send_email", send_email_mock, raising=True
     )
 
-    await notification_consumer_mod._handle_message(
-        FakeMessage(first_reminder_payload)
-    )
+    await notification_consumer_mod._handle_message(FakeMessage(first_reminder_payload))
 
     send_email_mock.assert_awaited_once()
     email_request = send_email_mock.await_args.args[0]
@@ -252,3 +279,30 @@ async def test_evaluation_to_learning_assessment_to_notification_reminder_flow(
     assert email_request.subject == "Study reminder 1: review arithmetic"
     assert "arithmetic" in email_request.html
 
+    quiz_redis = FakeRedis()
+    stored_quizzes: list[dict] = []
+    monkeypatch.setattr(quiz_consumer_mod, "redis_client", quiz_redis, raising=True)
+    monkeypatch.setattr(
+        quiz_consumer_mod,
+        "quizz_generator",
+        lambda topic, num_questions, difficulty, style: {
+            "questions": [f"{topic}-{difficulty}-q{i}" for i in range(num_questions)],
+            "tags": [topic, style],
+        },
+        raising=True,
+    )
+    monkeypatch.setattr(
+        quiz_consumer_mod,
+        "store_quizz",
+        lambda **kwargs: stored_quizzes.append(kwargs),
+        raising=True,
+    )
+
+    await quiz_consumer_mod._handle_message(FakeMessage(follow_up_quiz_payload))
+
+    assert stored_quizzes[0]["username"] == "u"
+    assert stored_quizzes[0]["topic"] == "arithmetic"
+    assert stored_quizzes[0]["difficulty"] == "easy"
+    assert stored_quizzes[0]["style"] == "mixed"
+    assert len(stored_quizzes[0]["questions"]) == 5
+    assert any(key.startswith("Quizz:u:") for key in quiz_redis.store.keys())

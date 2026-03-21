@@ -8,6 +8,7 @@ from .logging_config import get_logger
 from .data_models import LearningAssessmentRequest, MasteryStore
 from .model import learning_assessment_adviser
 from .notification_publish import publish_notification_email_request
+from .quizz_create_publish import publish_quizz_create_request_async
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from sqlmodel import Session, select
@@ -100,6 +101,36 @@ async def _publish_scheduled_notifications(
         )
 
 
+def _build_follow_up_quiz_payload(
+    msg: LearningAssessmentRequest,
+    mastery_band: str,
+) -> dict[str, Any]:
+    difficulty = "easy" if mastery_band == "low" else "medium"
+    return {
+        "username": msg.username,
+        "quiz_id": f"{msg.assessment_id}-follow-up",
+        "topic": msg.topic,
+        "num_questions": 5,
+        "difficulty": difficulty,
+        "style": "mixed",
+    }
+
+
+async def _publish_scheduled_follow_up_quiz(
+    msg: LearningAssessmentRequest,
+    schedule: list[tuple[str, datetime]],
+    mastery_band: str,
+    now: datetime,
+) -> None:
+    for action_type, due_at in schedule:
+        if action_type != ACTION_TYPE_FOLLOW_UP_QUIZ:
+            continue
+        await publish_quizz_create_request_async(
+            _build_follow_up_quiz_payload(msg, mastery_band),
+            delay=_get_delay_ms(now, due_at),
+        )
+
+
 async def _handle_message(message: aio_pika.IncomingMessage) -> None:
     async with message.process(requeue=False):
         payload: Dict[str, Any] = json.loads(message.body)
@@ -140,6 +171,7 @@ async def _handle_message(message: aio_pika.IncomingMessage) -> None:
             logger.error(f"Error storing mastery: {e}")
             raise HTTPException(status_code=500, detail=f"Error storing mastery: {e}")
         await _publish_scheduled_notifications(msg, schedule, mastery_band, now)
+        await _publish_scheduled_follow_up_quiz(msg, schedule, mastery_band, now)
         logger.info(f"Consuming assessment: {msg}")
         await handle_learning_assessment(msg)
 
